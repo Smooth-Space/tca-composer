@@ -260,6 +260,10 @@ export function Canvas({
       titleSeed={comp.titleSeed}
       titleSizePx={comp.titleSizePx}
       titleColor={comp.titleColor}
+      titleSizeMode={comp.titleSizeMode}
+      titleShift={comp.titleShift}
+      titleShiftSeed={comp.titleShiftSeed}
+      contentWidthPx={w - 80}
     />
   );
 
