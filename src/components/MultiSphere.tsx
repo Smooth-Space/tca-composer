@@ -80,9 +80,15 @@ export function MultiSphere({
     canvas.style.height = `${h}px`;
     mount.appendChild(canvas);
 
-    const group = new THREE.Group();
-    scene.add(group);
-    groupRef.current = group;
+    // Group nesting: spinGroup (world Y spin) → tiltGroup (constant X tilt) → tiles.
+    const spinGroup = new THREE.Group();
+    scene.add(spinGroup);
+    groupRef.current = spinGroup;
+
+    const TILT = THREE.MathUtils.degToRad(30);
+    const tiltGroup = new THREE.Group();
+    tiltGroup.rotation.x = TILT;
+    spinGroup.add(tiltGroup);
 
     const loader = new THREE.TextureLoader();
     const textures: THREE.Texture[] = [];
