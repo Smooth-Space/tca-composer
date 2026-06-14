@@ -3,6 +3,7 @@ import type { Placement } from "@/lib/multiLayout";
 import { Caption } from "@/components/Caption";
 import { TemplateLayout } from "@/components/TemplateLayout";
 import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
+import { MultiSphere } from "@/components/MultiSphere";
 
 export function TemplateA({
   comp,
@@ -114,7 +115,18 @@ export function TemplateA({
   } else if (comp.variant === "multi") {
     imageLayer = (
       <div style={{ position: "absolute", inset: 0 }}>
-        <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
+        {comp.animate ? (
+          <MultiSphere
+            images={comp.images}
+            w={w}
+            h={h}
+            imageOverlay={comp.imageOverlay}
+            animSeed={comp.animSeed}
+            playing={comp.animPlaying}
+          />
+        ) : (
+          <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
+        )}
       </div>
     );
   }
