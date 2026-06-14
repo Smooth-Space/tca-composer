@@ -1,29 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { ControlPanel } from "@/components/ControlPanel";
+import { Canvas } from "@/components/Canvas";
+import { defaultComposition, type Composition } from "@/lib/composition";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Typographic Composer" },
+      { name: "description", content: "A minimal tool for building typographic compositions." },
+      { property: "og:title", content: "Typographic Composer" },
+      { property: "og:description", content: "A minimal tool for building typographic compositions." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const [comp, setComp] = useState<Composition>(defaultComposition);
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex h-screen w-screen overflow-hidden">
+      <ControlPanel comp={comp} setComp={setComp} />
+      <main className="flex-1">
+        <Canvas comp={comp} />
+      </main>
     </div>
   );
 }
