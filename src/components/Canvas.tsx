@@ -320,7 +320,10 @@ export function Canvas({
     if (comp.variant === "full") {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
-          <div style={{ position: "absolute", inset: 0 }}>{coverImg}</div>
+          <div style={{ position: "absolute", inset: 0 }}>
+            {coverImg}
+            {overlay({ inset: 0 })}
+          </div>
           <div
             style={{
               position: "absolute",
@@ -343,20 +346,14 @@ export function Canvas({
         <div style={{ position: "absolute", inset: 0 }}>
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
             {multiPlacements.map((p) => (
-              <img
-                key={p.id}
-                src={comp.images.find((im) => im.id === p.id)?.src}
-                alt=""
-                style={{
-                  position: "absolute",
-                  left: p.x,
-                  top: p.y,
-                  width: p.width,
-                  height: p.height,
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
+              <div key={p.id} style={{ position: "absolute", left: p.x, top: p.y, width: p.width, height: p.height }}>
+                <img
+                  src={comp.images.find((im) => im.id === p.id)?.src}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+                {overlay({ inset: 0 })}
+              </div>
             ))}
           </div>
           <div
