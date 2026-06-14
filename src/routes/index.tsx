@@ -5,6 +5,7 @@ import { toJpeg } from "html-to-image";
 import { ControlPanel } from "@/components/ControlPanel";
 import { Canvas } from "@/components/Canvas";
 import { defaultComposition, type Composition, type Format } from "@/lib/composition";
+import { newSeed } from "@/lib/engine";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/")({
 });
 
 const STORAGE_KEY = "tca-composition";
-const VERSION = 1;
+const VERSION = 2;
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -64,7 +65,19 @@ function Composer() {
           | { version: number; data: Partial<Composition> }
           | undefined;
         if (!cancelled && saved && saved.version === VERSION && saved.data) {
-          setComp({ ...defaultComposition, ...saved.data });
+          const restored = { ...defaultComposition, ...saved.data } as Composition;
+          if (
+            typeof restored.titleShiftSeed !== "number" ||
+            !Number.isFinite(restored.titleShiftSeed)
+          ) {
+            restored.titleShiftSeed = newSeed();
+          }
+          if (typeof restored.titleShift !== "boolean") restored.titleShift = false;
+          if (restored.titleSizeMode !== "fixed" && restored.titleSizeMode !== "fit") {
+            restored.titleSizeMode = "fixed";
+          }
+          delete (restored as Record<string, unknown>).titleShiftOffsets;
+          setComp(restored);
         }
       } catch {
         // ignore — keep defaults, never crash on bad/old saved state
