@@ -208,7 +208,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
             />
             <div className="flex items-center gap-3">
               <img
-                src={comp.images[0]?.src ?? "/placeholder.jpg"}
+                src={comp.images[0]?.src ?? PLACEHOLDER_SRC}
                 alt=""
                 className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
               />
