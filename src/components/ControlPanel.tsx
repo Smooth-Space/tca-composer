@@ -89,22 +89,21 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
   const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
+    e.target.value = "";
+    (async () => {
+      const url = await fileToDataUrl(file);
+      const { naturalWidth, naturalHeight } = await loadDimensions(url);
       update({
         images: [
           {
             id: comp.images[0]?.id ?? crypto.randomUUID(),
             src: url,
-            naturalWidth: img.naturalWidth,
-            naturalHeight: img.naturalHeight,
+            naturalWidth,
+            naturalHeight,
           },
         ],
       });
-    };
-    img.src = url;
-    e.target.value = "";
+    })();
   };
 
   const onUploadMulti = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,21 +112,11 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
     e.target.value = "";
     Promise.all(
       files.map(
-        (file) =>
-          new Promise<{ id: string; src: string; naturalWidth: number; naturalHeight: number }>(
-            (resolve) => {
-              const url = URL.createObjectURL(file);
-              const img = new Image();
-              img.onload = () =>
-                resolve({
-                  id: crypto.randomUUID(),
-                  src: url,
-                  naturalWidth: img.naturalWidth,
-                  naturalHeight: img.naturalHeight,
-                });
-              img.src = url;
-            },
-          ),
+        async (file) => {
+          const url = await fileToDataUrl(file);
+          const { naturalWidth, naturalHeight } = await loadDimensions(url);
+          return { id: crypto.randomUUID(), src: url, naturalWidth, naturalHeight };
+        },
       ),
     ).then((items) => {
       setComp((c) => ({ ...c, images: [...c.images, ...items].slice(0, 6) }));
