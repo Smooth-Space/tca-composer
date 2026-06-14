@@ -256,7 +256,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
                 </Button>
               </div>
             </div>
-            {comp.variant === "split" && (
+            {comp.variant === "split" && comp.template !== "B" && (
               <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
                 {(["image-first", "title-first"] as SplitOrder[]).map((o) => (
                   <button

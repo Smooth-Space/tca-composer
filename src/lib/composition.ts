@@ -40,7 +40,7 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
 
 export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   A: ["none", "split", "full", "multi"],
-  B: ["none", "inset", "full", "multi"],
+  B: ["none", "split", "full", "multi"],
   C: ["none", "split", "full", "multi"],
   D: ["none", "split", "full", "multi"],
 };
