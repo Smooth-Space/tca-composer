@@ -229,6 +229,13 @@ export function Canvas({
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
   const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
+  const inset = getTextInset(comp);
+  const padStyle: React.CSSProperties = {
+    paddingTop: inset.top,
+    paddingBottom: inset.bottom,
+    paddingLeft: inset.left,
+    paddingRight: inset.right,
+  };
 
   const multiPlacements = useMemo(
     () =>
@@ -268,7 +275,7 @@ export function Canvas({
       titleSizeMode={comp.titleSizeMode}
       titleShift={comp.titleShift}
       titleShiftSeed={comp.titleShiftSeed}
-      contentWidthPx={w - 80}
+      contentWidthPx={w - inset.left - inset.right}
     />
   );
 
@@ -321,7 +328,7 @@ export function Canvas({
 
   const renderInner = () => {
     if (comp.template === "D") {
-      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} coverImg={coverImg} />;
+      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} coverImg={coverImg} inset={inset} />;
     }
     if (comp.template !== "A") {
       return renderTemplate();
