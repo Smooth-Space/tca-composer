@@ -84,14 +84,47 @@ export function MultiSphere({
 
     const loader = new THREE.TextureLoader();
     const textures: THREE.Texture[] = [];
+    const geoms: THREE.PlaneGeometry[] = [];
     const points = fibonacciSphere(TILE_COUNT);
-    const geom = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
     const tiles: THREE.Mesh[] = [];
 
     const srcs = images.length > 0 ? images.map((im) => im.src) : [];
+
+    // Each tile takes its image's native aspect ratio: longer edge = TILE_SIZE.
+    const dims = points.map((_, i) => {
+      const im = images[i % images.length];
+      const ar =
+        im && im.naturalWidth > 0 && im.naturalHeight > 0
+          ? im.naturalWidth / im.naturalHeight
+          : 1;
+      let tw: number, th: number;
+      if (ar >= 1) {
+        tw = TILE_SIZE;
+        th = TILE_SIZE / ar;
+      } else {
+        th = TILE_SIZE;
+        tw = TILE_SIZE * ar;
+      }
+      return { tw, th };
+    });
+
+    // Auto-shrink: scale all tiles by a single factor so none overlap.
+    let shrink = 1;
+    for (let i = 0; i < points.length; i++) {
+      const ri = 0.5 * Math.sqrt(dims[i].tw ** 2 + dims[i].th ** 2);
+      for (let j = i + 1; j < points.length; j++) {
+        const rj = 0.5 * Math.sqrt(dims[j].tw ** 2 + dims[j].th ** 2);
+        const chord = points[i].distanceTo(points[j]) * SPHERE_RADIUS;
+        if (chord < ri + rj) shrink = Math.min(shrink, chord / (ri + rj));
+      }
+    }
+
     points.forEach((p, i) => {
       const tileGroup = new THREE.Group();
       tileGroup.position.copy(p.clone().multiplyScalar(SPHERE_RADIUS));
+
+      const geom = new THREE.PlaneGeometry(dims[i].tw * shrink, dims[i].th * shrink);
+      geoms.push(geom);
 
       let material: THREE.Material;
       if (srcs.length > 0) {
@@ -122,6 +155,15 @@ export function MultiSphere({
       group.add(tileGroup);
     });
 
+    // Constant axis tilt: rotation runs around a tilted axis so no tile is
+    // parked on a pole. The spin group lives inside the tilted group.
+    const TILT = THREE.MathUtils.degToRad(25);
+    const tiltGroup = new THREE.Group();
+    tiltGroup.rotation.x = TILT;
+    scene.remove(group);
+    tiltGroup.add(group);
+    scene.add(tiltGroup);
+
     // Derive 3 poses from the seed; Y steps sum to 360deg for a seamless loop.
     const rng = makeRng(animSeed);
     const startY = rng() * Math.PI * 2;
@@ -129,12 +171,8 @@ export function MultiSphere({
     const step1 = (Math.PI * 2) / 3 + stepJitter();
     const step2 = (Math.PI * 2) / 3 + stepJitter();
     const step3 = Math.PI * 2 - step1 - step2; // guarantees full 360 sum
-    const tiltA = (rng() * 2 - 1) * 0.35;
-    const tiltB = (rng() * 2 - 1) * 0.35;
-    const tiltC = (rng() * 2 - 1) * 0.35;
 
     group.rotation.y = startY;
-    group.rotation.x = tiltA;
 
     const tl = gsap.timeline({ repeat: -1 });
     tl.to(group.rotation, { duration: 1.3, y: startY }) // hold pose1
@@ -142,31 +180,30 @@ export function MultiSphere({
         duration: 1.7,
         ease: "power2.inOut",
         y: startY + step1,
-        x: tiltB,
       })
       .to(group.rotation, { duration: 1.3, y: startY + step1 }) // hold pose2
       .to(group.rotation, {
         duration: 1.7,
         ease: "power2.inOut",
         y: startY + step1 + step2,
-        x: tiltC,
       })
       .to(group.rotation, { duration: 1.3, y: startY + step1 + step2 }) // hold pose3
       .to(group.rotation, {
         duration: 1.7,
         ease: "power2.inOut",
         y: startY + step1 + step2 + step3,
-        x: tiltA,
       });
     tlRef.current = tl;
     if (!playing) tl.pause();
 
     let raf = 0;
     const tmpQ = new THREE.Quaternion();
+    const parentQ = new THREE.Quaternion();
     const render = () => {
-      // Billboard: each tile faces the camera.
+      // Billboard: each tile faces the camera, accounting for tilt + spin.
       camera.getWorldQuaternion(tmpQ);
-      for (const t of tiles) t.quaternion.copy(group.quaternion).invert().multiply(tmpQ);
+      group.getWorldQuaternion(parentQ);
+      for (const t of tiles) t.quaternion.copy(parentQ).invert().multiply(tmpQ);
       renderer.render(scene, camera);
       raf = requestAnimationFrame(render);
     };
