@@ -1,4 +1,4 @@
-import type { Composition, Format, Mode, Template, SplitOrder, CaptionKey, SocialSafe } from "@/lib/composition";
+import type { Composition, Format, Mode, Template, SplitOrder, CaptionKey } from "@/lib/composition";
 import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS, PLACEHOLDER_SRC } from "@/lib/composition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +28,6 @@ interface Props {
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
 const TEMPLATES: Template[] = ["A", "B", "C", "D"];
-const SOCIAL_SAFE: { id: SocialSafe; label: string }[] = [
-  { id: "off", label: "Off" },
-  { id: "instagram", label: "Instagram" },
-  { id: "tiktok", label: "TikTok" },
-];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
@@ -151,27 +146,6 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
             </button>
           ))}
         </div>
-        {comp.format === "9:16" && (
-          <div className="space-y-1.5 pt-3">
-            <Label className="text-xs">Safe zones</Label>
-            <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-              {SOCIAL_SAFE.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => update({ socialSafe: s.id })}
-                  className={cn(
-                    "rounded-md py-1.5 text-sm font-medium transition-colors",
-                    comp.socialSafe === s.id
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </Section>
 
       <Section title="Template">

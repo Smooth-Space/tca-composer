@@ -1,4 +1,4 @@
-import type { CaptionSlot, CaptionKey, TextInset } from "@/lib/composition";
+import type { CaptionSlot, CaptionKey } from "@/lib/composition";
 
 type Captions = Record<string, string>;
 type CaptionColors = Record<CaptionKey, string>;
@@ -67,14 +67,12 @@ export function TemplateLayout({
   captions,
   captionColors,
   gap = 0,
-  inset = { top: 40, bottom: 40, left: 40, right: 40 },
   children,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
   captionColors: CaptionColors;
   gap?: number;
-  inset?: TextInset;
   children: React.ReactNode;
 }) {
   return (
@@ -82,10 +80,7 @@ export function TemplateLayout({
       style={{
         position: "absolute",
         inset: 0,
-        paddingTop: inset.top,
-        paddingBottom: inset.bottom,
-        paddingLeft: inset.left,
-        paddingRight: inset.right,
+        padding: 40,
         display: "flex",
         flexDirection: "column",
         gap,

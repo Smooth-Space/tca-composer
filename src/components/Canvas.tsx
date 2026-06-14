@@ -1,4 +1,4 @@
-import { PLACEHOLDER_SRC, TEMPLATE_CAPTIONS, getTextInset, type Composition, type TextInset } from "@/lib/composition";
+import { PLACEHOLDER_SRC, TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
 import { TemplateLayout } from "@/components/TemplateLayout";
@@ -77,14 +77,12 @@ function TemplateD({
   h,
   imgSrc,
   coverImg,
-  inset,
 }: {
   comp: Composition;
   w: number;
   h: number;
   imgSrc: string;
   coverImg: React.ReactNode;
-  inset: TextInset;
 }) {
   const dRows = useMemo(
     () => [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""],
@@ -158,10 +156,7 @@ function TemplateD({
           position: "absolute",
           inset: 0,
           zIndex: 1,
-          paddingTop: inset.top,
-          paddingBottom: inset.bottom,
-          paddingLeft: inset.left,
-          paddingRight: inset.right,
+          padding: 40,
           display: "flex",
           flexDirection: "column",
           gap: 40,
@@ -229,13 +224,6 @@ export function Canvas({
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
   const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
-  const inset = getTextInset(comp);
-  const padStyle: React.CSSProperties = {
-    paddingTop: inset.top,
-    paddingBottom: inset.bottom,
-    paddingLeft: inset.left,
-    paddingRight: inset.right,
-  };
 
   const multiPlacements = useMemo(
     () =>
@@ -275,7 +263,7 @@ export function Canvas({
       titleSizeMode={comp.titleSizeMode}
       titleShift={comp.titleShift}
       titleShiftSeed={comp.titleShiftSeed}
-      contentWidthPx={w - inset.left - inset.right}
+      contentWidthPx={w - 80}
     />
   );
 
@@ -328,7 +316,7 @@ export function Canvas({
 
   const renderInner = () => {
     if (comp.template === "D") {
-      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} coverImg={coverImg} inset={inset} />;
+      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} coverImg={coverImg} />;
     }
     if (comp.template !== "A") {
       return renderTemplate();
@@ -344,7 +332,7 @@ export function Canvas({
             style={{
               position: "absolute",
               inset: 0,
-              ...padStyle,
+              padding: 40,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -377,7 +365,7 @@ export function Canvas({
               position: "absolute",
               inset: 0,
               zIndex: 1,
-              ...padStyle,
+              padding: 40,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -420,10 +408,7 @@ export function Canvas({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              paddingTop: inset.top,
-              paddingBottom: imageTop ? inset.bottom + 90 : inset.bottom,
-              paddingLeft: inset.left,
-              paddingRight: inset.right,
+              padding: imageTop ? "40px 40px 130px 40px" : "40px",
               boxSizing: "border-box",
             } as React.CSSProperties
           }
@@ -435,7 +420,7 @@ export function Canvas({
         <div style={{ position: "absolute", inset: 0 }}>
           {imageHalf}
           {titleHalf}
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, ...padStyle }}>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 40 }}>
             {infoRow}
           </div>
         </div>
@@ -448,7 +433,7 @@ export function Canvas({
         style={{
           position: "absolute",
           inset: 0,
-          ...padStyle,
+          padding: 40,
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -477,7 +462,6 @@ export function Canvas({
             captions={comp.captions}
             captionColors={comp.captionColors}
             gap={40}
-            inset={inset}
           >
             <div style={{ position: "absolute", inset: 0 }}>
               {coverImg}
@@ -513,7 +497,7 @@ export function Canvas({
       );
       return (
         <div style={{ position: "absolute", inset: 0 }}>
-          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={40} inset={inset}>
+          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={40}>
             {middle}
           </TemplateLayout>
         </div>
@@ -567,7 +551,7 @@ export function Canvas({
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
         )}
         <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={comp.template === "B" ? 40 : 0} inset={inset}>
+          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={comp.template === "B" ? 40 : 0}>
             {centeredTitle}
           </TemplateLayout>
         </div>

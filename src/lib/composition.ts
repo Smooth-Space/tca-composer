@@ -6,7 +6,6 @@ export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi" | "inset";
 export type SplitOrder = "image-first" | "title-first";
 export type Template = "A" | "B" | "C" | "D";
-export type SocialSafe = "off" | "instagram" | "tiktok";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
 
@@ -48,22 +47,6 @@ export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
 
 export const PLACEHOLDER_SRC = lagunaGloriaAsset.url;
 
-export interface TextInset {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
-
-const DEFAULT_INSET: TextInset = { top: 40, bottom: 40, left: 40, right: 40 };
-const SAFE_INSET: TextInset = { top: 250, bottom: 480, left: 40, right: 120 };
-
-// Text-only safe area. Only 9:16 has app chrome; other formats are unaffected.
-export function getTextInset(comp: Composition): TextInset {
-  if (comp.format === "9:16" && comp.socialSafe !== "off") return SAFE_INSET;
-  return DEFAULT_INSET;
-}
-
 export interface Title {
   id: string;
   text: string;
@@ -93,7 +76,6 @@ export interface Composition {
   splitOrder: SplitOrder;
   multiSeed: number;
   imageOverlay: number;
-  socialSafe: SocialSafe;
   captions: { text1: string; text2: string; text3: string; text4: string };
   captionColors: { text1: string; text2: string; text3: string; text4: string };
 }
@@ -115,7 +97,6 @@ export const defaultComposition: Composition = {
   splitOrder: "image-first",
   multiSeed: (Math.random() * 0xffffffff) >>> 0,
   imageOverlay: 0.2,
-  socialSafe: "instagram",
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
 };
