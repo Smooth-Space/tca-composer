@@ -234,6 +234,23 @@ export function Canvas({
       <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
     );
 
+    // C-split: middle is title (top half) + image (bottom half).
+    if (comp.variant === "split") {
+      const middle = (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{centeredTitle}</div>
+          <div style={{ flex: 1, minHeight: 0 }}>{coverImg}</div>
+        </div>
+      );
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor}>
+            {middle}
+          </TemplateLayout>
+        </div>
+      );
+    }
+
     let imageLayer: React.ReactNode = null;
     if (comp.variant === "full") {
       imageLayer = <div style={{ position: "absolute", inset: 0 }}>{coverImg}</div>;
