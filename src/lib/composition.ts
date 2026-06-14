@@ -44,7 +44,7 @@ export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   D: ["none", "split", "full", "multi"],
 };
 
-export const PLACEHOLDER_SRC = "/placeholder.jpg";
+export const PLACEHOLDER_SRC = lagunaGloriaAsset.url;
 
 export interface Title {
   id: string;
