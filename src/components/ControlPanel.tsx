@@ -479,6 +479,8 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
                     ...comp.titles,
                     { id: crypto.randomUUID(), text: "New title" },
                   ],
+                  // Fit only applies to a single line; revert when a 2nd line appears.
+                  titleSizeMode: "fixed",
                 })
               }
             >
@@ -487,18 +489,71 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
           </div>
         )}
 
+        {comp.template !== "D" && comp.titles.length >= 2 && (
+          <div className="flex items-center justify-between pt-3">
+            <Label className="text-xs">Shift lines</Label>
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="block">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={!comp.titleShift}
+                        onClick={() => update({ titleShiftSeed: newSeed() })}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {comp.titleShift ? "Reroll shift" : "Turn shift on to reroll"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Switch
+                checked={comp.titleShift}
+                onCheckedChange={(v) =>
+                  update({ titleShift: v, ...(v ? { titleShiftSeed: newSeed() } : {}) })
+                }
+              />
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2 pt-3">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Size</Label>
-            <span className="text-xs text-muted-foreground">{comp.titleSizePx}px</span>
+            {comp.template !== "D" && comp.titles.length === 1 && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Fit width</Label>
+                <Switch
+                  checked={comp.titleSizeMode === "fit"}
+                  onCheckedChange={(v) =>
+                    update({ titleSizeMode: v ? "fit" : "fixed" })
+                  }
+                />
+              </div>
+            )}
           </div>
-          <Slider
-            min={48}
-            max={240}
-            step={1}
-            value={[comp.titleSizePx]}
-            onValueChange={([v]) => update({ titleSizePx: v })}
-          />
+          {comp.titleSizeMode === "fit" && comp.template !== "D" && comp.titles.length === 1 ? (
+            <p className="text-xs text-muted-foreground">Auto-scaled to fit the width.</p>
+          ) : (
+            <>
+              <div className="flex items-center justify-end">
+                <span className="text-xs text-muted-foreground">{comp.titleSizePx}px</span>
+              </div>
+              <Slider
+                min={48}
+                max={240}
+                step={1}
+                value={[comp.titleSizePx]}
+                onValueChange={([v]) => update({ titleSizePx: v })}
+              />
+            </>
+          )}
         </div>
       </Section>
 
