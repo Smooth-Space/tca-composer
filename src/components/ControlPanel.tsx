@@ -525,6 +525,17 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
         <Button className="w-full" onClick={onExport} disabled={exporting}>
           {exporting ? "Exporting…" : "Export JPG"}
         </Button>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            if (window.confirm("Reset to a new composition? This clears your saved work.")) {
+              onReset();
+            }
+          }}
+        >
+          Reset / New
+        </Button>
       </Section>
     </aside>
   );
