@@ -187,7 +187,28 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs">Variant</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Variant</Label>
+            {comp.variant === "multi" && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="block">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => update({ multiSeed: newSeed() })}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Reroll layout</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
             {TEMPLATE_VARIANTS[comp.template].map((v) => (
               <button
