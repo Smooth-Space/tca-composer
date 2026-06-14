@@ -397,6 +397,23 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
                 />
               </div>
             </div>
+            {comp.animate && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Globe size</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {comp.globeScale.toFixed(2)}×
+                  </span>
+                </div>
+                <Slider
+                  min={0.5}
+                  max={1.5}
+                  step={0.05}
+                  value={[comp.globeScale]}
+                  onValueChange={([v]) => update({ globeScale: v })}
+                />
+              </div>
+            )}
           </div>
         )}
 
