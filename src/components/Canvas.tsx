@@ -9,7 +9,13 @@ const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }>
   "9:16": { w: 1080, h: 1920 },
 };
 
-export function Canvas({ comp }: { comp: Composition }) {
+export function Canvas({
+  comp,
+  compositionRef,
+}: {
+  comp: Composition;
+  compositionRef?: React.Ref<HTMLDivElement>;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
@@ -224,6 +230,7 @@ export function Canvas({ comp }: { comp: Composition }) {
     >
       <div style={{ width: w * scale, height: h * scale }} className="shadow-2xl">
         <div
+          ref={compositionRef}
           style={{
             width: w,
             height: h,
