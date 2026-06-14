@@ -2,7 +2,7 @@ export type Format = "1:1" | "4:5" | "9:16";
 export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi" | "inset";
 export type SplitOrder = "image-first" | "title-first";
-export type Template = "A" | "B" | "C";
+export type Template = "A" | "B" | "C" | "D";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
 
