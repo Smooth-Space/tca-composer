@@ -23,14 +23,14 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
     { key: "text2", anchor: "bottom", column: "right", align: "left", label: "Text 2" },
   ],
   B: [
-    { key: "text1", anchor: "top", column: "right", align: "left", label: "Text 1 (top)" },
-    { key: "text2", anchor: "bottom", column: "right", align: "left", label: "Text 2 (bottom)" },
-  ],
-  C: [
     { key: "text1", anchor: "top", column: "left", align: "left", label: "Text 1 (top-left)" },
     { key: "text2", anchor: "top", column: "right", align: "right", label: "Text 2 (top-right)" },
     { key: "text3", anchor: "bottom", column: "left", align: "left", label: "Text 3 (bottom-left)" },
     { key: "text4", anchor: "bottom", column: "right", align: "right", label: "Text 4 (bottom-right)" },
+  ],
+  C: [
+    { key: "text1", anchor: "top", column: "right", align: "left", label: "Text 1 (top)" },
+    { key: "text2", anchor: "bottom", column: "right", align: "left", label: "Text 2 (bottom)" },
   ],
   D: [
     { key: "text1", anchor: "middle", column: "left", align: "left", label: "Text 1" },

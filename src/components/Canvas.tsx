@@ -452,9 +452,9 @@ export function Canvas({
       <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
     );
 
-    // B-split: image fills the full-width band between Text 1 (top) and Text 2 (bottom),
+    // C-split: image fills the full-width band between Text 1 (top) and Text 2 (bottom),
     // with 40px gaps; the centered title is overlaid on top of the image (no scrim).
-    if (comp.template === "B" && comp.variant === "split") {
+    if (comp.template === "C" && comp.variant === "split") {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
           <TemplateLayout
@@ -551,7 +551,7 @@ export function Canvas({
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
         )}
         <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={comp.template === "C" ? 40 : 0}>
+          <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={comp.template === "B" ? 40 : 0}>
             {centeredTitle}
           </TemplateLayout>
         </div>
