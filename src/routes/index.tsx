@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
 });
 
 const STORAGE_KEY = "tca-composition";
-const VERSION = 3;
+const VERSION = 4;
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -80,6 +80,14 @@ function Composer() {
           if (typeof restored.animPlaying !== "boolean") restored.animPlaying = true;
           if (typeof restored.animSeed !== "number" || !Number.isFinite(restored.animSeed)) {
             restored.animSeed = newSeed();
+          }
+          if (
+            typeof restored.globeScale !== "number" ||
+            !Number.isFinite(restored.globeScale)
+          ) {
+            restored.globeScale = 1.0;
+          } else {
+            restored.globeScale = Math.min(1.5, Math.max(0.5, restored.globeScale));
           }
           delete (restored as unknown as Record<string, unknown>).titleShiftOffsets;
           setComp(restored);

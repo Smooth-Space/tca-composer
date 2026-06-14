@@ -218,7 +218,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
         },
       ),
     ).then((items) => {
-      setComp((c) => ({ ...c, images: [...c.images, ...items].slice(0, 6) }));
+      setComp((c) => ({ ...c, images: [...c.images, ...items] }));
     });
   };
 
@@ -338,7 +338,6 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
               variant="outline"
               size="sm"
               className="w-full"
-              disabled={comp.images.length >= 6}
               onClick={() => multiFileRef.current?.click()}
             >
               <Plus className="mr-1 h-4 w-4" /> Add images
@@ -398,6 +397,23 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
                 />
               </div>
             </div>
+            {comp.animate && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Globe size</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {comp.globeScale.toFixed(2)}×
+                  </span>
+                </div>
+                <Slider
+                  min={0.5}
+                  max={1.5}
+                  step={0.05}
+                  value={[comp.globeScale]}
+                  onValueChange={([v]) => update({ globeScale: v })}
+                />
+              </div>
+            )}
           </div>
         )}
 

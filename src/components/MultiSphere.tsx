@@ -4,9 +4,9 @@ import gsap from "gsap";
 import type { ImageItem } from "@/lib/composition";
 import { makeRng } from "@/lib/engine";
 
-const TILE_COUNT = 24;
 const SPHERE_RADIUS = 1;
 const TILE_SIZE = 0.42;
+const HERO_FRACTION = 0.46; // front tile ≈ static-multi hero (0.46 × max(w,h))
 
 // Evenly distributed points on a unit sphere (Fibonacci sphere).
 function fibonacciSphere(n: number): THREE.Vector3[] {
@@ -28,6 +28,7 @@ export function MultiSphere({
   imageOverlay,
   animSeed,
   playing,
+  globeScale,
 }: {
   images: ImageItem[];
   w: number;
@@ -35,14 +36,20 @@ export function MultiSphere({
   imageOverlay: number;
   animSeed: number;
   playing: boolean;
+  globeScale: number;
 }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const groupRef = useRef<THREE.Group | null>(null);
+  const baseScaleRef = useRef<number>(1);
 
   // Build scene whenever inputs that affect geometry/textures change.
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
+    // Empty state: render nothing.
+    if (images.length === 0) return;
+    const TILE_COUNT = images.length;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
@@ -63,6 +70,7 @@ export function MultiSphere({
 
     const group = new THREE.Group();
     scene.add(group);
+    groupRef.current = group;
 
     const loader = new THREE.TextureLoader();
     const textures: THREE.Texture[] = [];
@@ -103,6 +111,21 @@ export function MultiSphere({
 
       group.add(tileGroup);
     });
+
+    // Calibrate: project a front-facing tile's bounding box to screen px at
+    // group scale 1, then derive baseScale so the front tile ≈ hero size.
+    {
+      const half = TILE_SIZE / 2;
+      // Front tile sits closest to the camera along +Z after billboarding;
+      // approximate with a tile centered at the sphere front.
+      const center = new THREE.Vector3(0, 0, SPHERE_RADIUS);
+      const a = center.clone().add(new THREE.Vector3(-half, 0, 0)).project(camera);
+      const b = center.clone().add(new THREE.Vector3(half, 0, 0)).project(camera);
+      const measuredPx = (Math.abs(b.x - a.x) / 2) * w; // NDC half-width → px width
+      const target = HERO_FRACTION * Math.max(w, h);
+      baseScaleRef.current = measuredPx > 0 ? target / measuredPx : 1;
+    }
+    group.scale.setScalar(baseScaleRef.current * globeScale);
 
     // Derive 3 poses from the seed; Y steps sum to 360deg for a seamless loop.
     const rng = makeRng(animSeed);
@@ -158,6 +181,7 @@ export function MultiSphere({
       cancelAnimationFrame(raf);
       tl.kill();
       tlRef.current = null;
+      groupRef.current = null;
       geom.dispose();
       textures.forEach((t) => t.dispose());
       tiles.forEach((t) => {
@@ -171,6 +195,13 @@ export function MultiSphere({
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     };
   }, [images, w, h, imageOverlay, animSeed]);
+
+  // Re-apply globe scale without rebuilding the scene.
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    group.scale.setScalar(baseScaleRef.current * globeScale);
+  }, [globeScale]);
 
   // Play/pause without rebuilding the scene.
   useEffect(() => {

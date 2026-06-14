@@ -94,6 +94,7 @@ export function TemplateBC({
             imageOverlay={comp.imageOverlay}
             animSeed={comp.animSeed}
             playing={comp.animPlaying}
+            globeScale={comp.globeScale}
           />
         ) : (
           <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />

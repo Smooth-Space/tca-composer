@@ -82,6 +82,7 @@ export interface Composition {
   animate: boolean;
   animSeed: number;
   animPlaying: boolean;
+  globeScale: number;
   imageOverlay: number;
   captions: { text1: string; text2: string; text3: string; text4: string };
   captionColors: { text1: string; text2: string; text3: string; text4: string };
@@ -106,6 +107,7 @@ export const defaultComposition: Composition = {
   animate: false,
   animSeed: newSeed(),
   animPlaying: true,
+  globeScale: 1.0,
   imageOverlay: 0.2,
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
