@@ -1,4 +1,5 @@
 import lagunaGloriaAsset from "@/assets/laguna-gloria.jpg.asset.json";
+import { newSeed } from "@/lib/engine";
 
 export type Format = "1:1" | "4:5" | "9:16";
 export type Mode = "light" | "mixed" | "heavy";
@@ -66,8 +67,11 @@ export interface Composition {
   titleColor: string;
   titles: Title[];
   titleSizePx: number;
+  titleSizeMode: "fixed" | "fit";
   titleMode: Mode;
   titleSeed: number;
+  titleShift: boolean;
+  titleShiftSeed: number;
   images: ImageItem[];
   splitOrder: SplitOrder;
   multiSeed: number;
@@ -84,8 +88,11 @@ export const defaultComposition: Composition = {
   titleColor: "#000000",
   titles: [{ id: "t1", text: "Title one" }],
   titleSizePx: 120,
+  titleSizeMode: "fixed",
   titleMode: "mixed",
   titleSeed: (Math.random() * 0xffffffff) >>> 0,
+  titleShift: false,
+  titleShiftSeed: newSeed(),
   images: [],
   splitOrder: "image-first",
   multiSeed: (Math.random() * 0xffffffff) >>> 0,
