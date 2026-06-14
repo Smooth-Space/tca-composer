@@ -31,7 +31,7 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
   ],
   D: [
     { key: "text1", anchor: "middle", column: "left", align: "left", label: "Text 1" },
-    { key: "text2", anchor: "middle", column: "right", align: "left", label: "Text 2" },
+    { key: "text2", anchor: "middle", column: "right", align: "right", label: "Text 2" },
   ],
 };
 
