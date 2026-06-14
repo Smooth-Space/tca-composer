@@ -6,6 +6,7 @@ export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi" | "inset";
 export type SplitOrder = "image-first" | "title-first";
 export type Template = "A" | "B" | "C" | "D";
+export type SocialSafe = "off" | "instagram" | "tiktok";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
 
@@ -76,6 +77,7 @@ export interface Composition {
   splitOrder: SplitOrder;
   multiSeed: number;
   imageOverlay: number;
+  socialSafe: SocialSafe;
   captions: { text1: string; text2: string; text3: string; text4: string };
   captionColors: { text1: string; text2: string; text3: string; text4: string };
 }
@@ -97,6 +99,7 @@ export const defaultComposition: Composition = {
   splitOrder: "image-first",
   multiSeed: (Math.random() * 0xffffffff) >>> 0,
   imageOverlay: 0.2,
+  socialSafe: "instagram",
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
 };
