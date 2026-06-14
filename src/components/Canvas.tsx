@@ -3,12 +3,203 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
 import { TemplateLayout } from "@/components/TemplateLayout";
 import { computeMultiLayout } from "@/lib/multiLayout";
+import { computeAxes, type Axes } from "@/lib/engine";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
   "1:1": { w: 1080, h: 1080 },
   "4:5": { w: 1080, h: 1350 },
   "9:16": { w: 1080, h: 1920 },
 };
+
+function TitleLine({
+  text,
+  axes,
+  startOffset,
+  titleSizePx,
+  color,
+}: {
+  text: string;
+  axes: Axes[];
+  startOffset: number;
+  titleSizePx: number;
+  color: string;
+}) {
+  const chars = Array.from(text);
+  return (
+    <div
+      style={{
+        lineHeight: 0.9,
+        textAlign: "center",
+        fontFamily: "'ABC Arizona Plus Variable'",
+        fontSize: titleSizePx,
+        letterSpacing: "-0.02em",
+        color,
+      }}
+    >
+      <div
+        style={{
+          width: "fit-content",
+          maxWidth: "100%",
+          marginLeft: "auto",
+          marginRight: "auto",
+          whiteSpace: "normal",
+          overflowWrap: "normal",
+          wordBreak: "normal",
+          hyphens: "none",
+        }}
+      >
+        {chars.length === 0
+          ? "\u00A0"
+          : chars.map((ch, i) => {
+              const a = axes[startOffset + i];
+              return (
+                <span
+                  key={i}
+                  style={{
+                    display: "inline",
+                    fontVariationSettings: a
+                      ? `'wght' ${a.wght}, 'SRFF' ${a.SRFF}, 'wdth' ${a.wdth}`
+                      : undefined,
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })}
+      </div>
+    </div>
+  );
+}
+
+function TemplateD({
+  comp,
+  w,
+  h,
+  imgSrc,
+  coverImg,
+  multiPlacements,
+}: {
+  comp: Composition;
+  w: number;
+  h: number;
+  imgSrc: string;
+  coverImg: React.ReactNode;
+  multiPlacements: ReturnType<typeof computeMultiLayout>;
+}) {
+  const dRows = useMemo(
+    () => [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""],
+    [comp.titles],
+  );
+  const dAxes = useMemo(
+    () => computeAxes(dRows.flatMap((r) => Array.from(r)), comp.titleMode, comp.titleSeed),
+    [dRows, comp.titleMode, comp.titleSeed],
+  );
+  const bottomOffset = Array.from(dRows[0]).length;
+
+  const caption = (text: string) => (
+    <div
+      style={{
+        flex: 1,
+        textAlign: "left",
+        whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+        fontFamily: "'ABC Arizona Plus Variable'",
+        fontSize: 36,
+        lineHeight: 1.1,
+        color: comp.textColor,
+        fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 100",
+      }}
+    >
+      {text}
+    </div>
+  );
+
+  return (
+    <div style={{ position: "absolute", inset: 0 }}>
+      {comp.variant === "full" && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{coverImg}</div>
+      )}
+      {comp.variant === "multi" && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          {multiPlacements.map((p) => (
+            <img
+              key={p.id}
+              src={comp.images.find((im) => im.id === p.id)?.src}
+              alt=""
+              style={{
+                position: "absolute",
+                left: p.x,
+                top: p.y,
+                width: p.width,
+                height: p.height,
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          padding: 40,
+          display: "flex",
+          flexDirection: "column",
+          gap: 40,
+        }}
+      >
+        <TitleLine
+          text={dRows[0]}
+          axes={dAxes}
+          startOffset={0}
+          titleSizePx={comp.titleSizePx}
+          color={comp.titleColor}
+        />
+
+        <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+          {comp.variant === "split" && (
+            <div style={{ position: "absolute", inset: 0 }}>
+              <img
+                src={imgSrc}
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  display: "block",
+                }}
+              />
+            </div>
+          )}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              gap: 40,
+              alignItems: "center",
+            }}
+          >
+            {caption(comp.captions.text1)}
+            {caption(comp.captions.text2)}
+          </div>
+        </div>
+
+        <TitleLine
+          text={dRows[1]}
+          axes={dAxes}
+          startOffset={bottomOffset}
+          titleSizePx={comp.titleSizePx}
+          color={comp.titleColor}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function Canvas({
   comp,
