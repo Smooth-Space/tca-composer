@@ -393,38 +393,27 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
 
       <Section title="Colors">
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Background</Label>
-            <input
-              type="color"
-              value={comp.background}
-              onChange={(e) => update({ background: e.target.value })}
-              className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Title</Label>
-            <input
-              type="color"
-              value={comp.titleColor}
-              onChange={(e) => update({ titleColor: e.target.value })}
-              className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
-            />
-          </div>
+          <ColorField
+            label="Background"
+            value={comp.background}
+            onChange={(v) => update({ background: v })}
+          />
+          <ColorField
+            label="Title"
+            value={comp.titleColor}
+            onChange={(v) => update({ titleColor: v })}
+          />
           {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
-            <div key={slot.key} className="space-y-1.5">
-              <Label className="text-xs">{slot.label} color</Label>
-              <input
-                type="color"
-                value={comp.captionColors[slot.key as CaptionKey]}
-                onChange={(e) =>
-                  update({
-                    captionColors: { ...comp.captionColors, [slot.key]: e.target.value },
-                  })
-                }
-                className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
-              />
-            </div>
+            <ColorField
+              key={slot.key}
+              label={`${slot.label} color`}
+              value={comp.captionColors[slot.key as CaptionKey]}
+              onChange={(v) =>
+                update({
+                  captionColors: { ...comp.captionColors, [slot.key]: v },
+                })
+              }
+            />
           ))}
         </div>
       </Section>
@@ -433,43 +422,19 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Mode</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      disabled={comp.titleMode === "mixed"}
-                      onClick={() => update({ titleSeed: newSeed() })}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {comp.titleMode === "mixed" ? "No randomness in Mixed mode" : "Reroll type"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <RerollButton
+              disabled={comp.titleMode === "mixed"}
+              onClick={() => update({ titleSeed: newSeed() })}
+              tooltip={comp.titleMode === "mixed" ? "No randomness in Mixed mode" : "Reroll type"}
+            />
           </div>
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-            {MODES.map((m) => (
-              <button
-                key={m}
-                onClick={() => update({ titleMode: m, titleSeed: newSeed() })}
-                className={cn(
-                  "rounded-md py-1.5 text-sm font-medium capitalize transition-colors",
-                  comp.titleMode === m
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            options={MODES}
+            value={comp.titleMode}
+            onChange={(m) => update({ titleMode: m, titleSeed: newSeed() })}
+            columns={3}
+            capitalize
+          />
         </div>
 
         {comp.template === "D" ? (
