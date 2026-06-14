@@ -215,7 +215,7 @@ export function MultiSphere({
       tlRef.current = null;
       groupRef.current = null;
       cameraRef.current = null;
-      geom.dispose();
+      geoms.forEach((g) => g.dispose());
       textures.forEach((t) => t.dispose());
       tiles.forEach((t) => {
         const m = t.material as THREE.Material;
