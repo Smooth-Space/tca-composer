@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { get, set, del } from "idb-keyval";
-import { toJpeg } from "html-to-image";
+import { toJpeg, toPng } from "html-to-image";
 import { ControlPanel } from "@/components/ControlPanel";
 import { Canvas } from "@/components/Canvas";
+import { exportLoopMp4 } from "@/lib/mp4Export";
+import type { MultiSphereHandle } from "@/components/MultiSphere";
 import { defaultComposition, type Composition, type Format } from "@/lib/composition";
 import { newSeed } from "@/lib/engine";
 
@@ -54,7 +56,10 @@ function Index() {
 function Composer() {
   const [comp, setComp] = useState<Composition>(defaultComposition);
   const compositionRef = useRef<HTMLDivElement>(null);
+  const sphereRef = useRef<MultiSphereHandle>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportingMp4, setExportingMp4] = useState(false);
+  const [mp4Progress, setMp4Progress] = useState(0);
 
   // Restore once on mount
   useEffect(() => {
@@ -163,6 +168,65 @@ function Composer() {
     }
   }
 
+  async function handleExportMp4() {
+    const node = compositionRef.current;
+    const sphere = sphereRef.current;
+    if (!node || !sphere) return;
+    const canvas = sphere.getCanvas();
+    const durationSec = sphere.durationSec();
+    if (!canvas || durationSec <= 0) return;
+    if (!("VideoEncoder" in window)) {
+      alert("MP4 export needs a Chromium browser (Chrome or Edge).");
+      return;
+    }
+
+    setExportingMp4(true);
+    setMp4Progress(0);
+    try {
+      await document.fonts.ready;
+      const [w, h] = NATIVE[comp.format];
+
+      // Title + captions → transparent PNG (exclude the globe via data-globe, drop the bg).
+      const overlayUrl = await toPng(node, {
+        width: w,
+        height: h,
+        canvasWidth: w,
+        canvasHeight: h,
+        pixelRatio: 2,
+        backgroundColor: undefined,
+        style: {
+          transform: "none",
+          transformOrigin: "top left",
+          margin: "0",
+          background: "transparent",
+        },
+        filter: (el) => !(el instanceof HTMLElement && el.dataset.globe === "true"),
+      });
+      const overlayImg = new Image();
+      overlayImg.src = overlayUrl;
+      await overlayImg.decode();
+
+      sphere.setExporting(true); // pause live rAF; exporter drives frames
+      await exportLoopMp4({
+        w,
+        h,
+        fps: 30,
+        durationSec,
+        seekAndRender: (t) => sphere.seekAndRender(t),
+        globeCanvas: canvas,
+        overlayImg,
+        background: comp.background,
+        onProgress: setMp4Progress,
+        filename: `tca-${comp.format.replace(":", "x")}-${Date.now()}.mp4`,
+      });
+    } catch (err) {
+      console.error("MP4 export failed", err);
+    } finally {
+      sphereRef.current?.setExporting(false);
+      setExportingMp4(false);
+    }
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <ControlPanel
@@ -171,9 +235,12 @@ function Composer() {
         onExport={handleExport}
         exporting={exporting}
         onReset={handleReset}
+        onExportMp4={handleExportMp4}
+        exportingMp4={exportingMp4}
+        mp4Progress={mp4Progress}
       />
       <main className="flex-1">
-        <Canvas comp={comp} compositionRef={compositionRef} />
+        <Canvas comp={comp} compositionRef={compositionRef} sphereRef={sphereRef} />
       </main>
     </div>
   );
