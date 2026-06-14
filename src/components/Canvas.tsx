@@ -1,4 +1,4 @@
-import type { Composition } from "@/lib/composition";
+import { PLACEHOLDER_SRC, type Composition } from "@/lib/composition";
 import { useEffect, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
 
@@ -12,6 +12,7 @@ export function Canvas({ comp }: { comp: Composition }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
+  const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -28,18 +29,147 @@ export function Canvas({ comp }: { comp: Composition }) {
     return () => ro.disconnect();
   }, [w, h]);
 
+  const title = (
+    <TitleBlock
+      titles={comp.titles}
+      titleMode={comp.titleMode}
+      titleSeed={comp.titleSeed}
+      titleSizePx={comp.titleSizePx}
+      color={comp.textColor}
+    />
+  );
+
+  const infoRow = (
+    <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
+      {[comp.info.text1, comp.info.text2].map((text, i) => (
+        <div
+          key={i}
+          style={{
+            flex: 1,
+            textAlign: "left",
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+            fontFamily: "'ABC Arizona Plus Variable'",
+            fontSize: 36,
+            lineHeight: 1.1,
+            color: comp.textColor,
+            fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 100",
+          }}
+        >
+          {text}
+        </div>
+      ))}
+    </div>
+  );
+
+  const coverImg = (
+    <img
+      src={imgSrc}
+      alt=""
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition: "center",
+        display: "block",
+      }}
+    />
+  );
+
+  const renderInner = () => {
+    if (comp.variant === "full") {
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <div style={{ position: "absolute", inset: 0 }}>{coverImg}</div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              padding: 40,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div className="flex flex-1 flex-col justify-center">{title}</div>
+            {infoRow}
+          </div>
+        </div>
+      );
+    }
+
+    if (comp.variant === "split") {
+      const imageTop = comp.splitOrder === "image-first";
+      const imageHalf = (
+        <div
+          style={
+            {
+              position: "absolute",
+              left: 0,
+              right: 0,
+              height: h / 2,
+              [imageTop ? "top" : "bottom"]: 0,
+            } as React.CSSProperties
+          }
+        >
+          {coverImg}
+        </div>
+      );
+      const titleHalf = (
+        <div
+          style={
+            {
+              position: "absolute",
+              left: 0,
+              right: 0,
+              height: h / 2,
+              [imageTop ? "bottom" : "top"]: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: imageTop ? "40px 40px 130px 40px" : "40px",
+              boxSizing: "border-box",
+            } as React.CSSProperties
+          }
+        >
+          {title}
+        </div>
+      );
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          {imageHalf}
+          {titleHalf}
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 40 }}>
+            {infoRow}
+          </div>
+        </div>
+      );
+    }
+
+    // none
+    return (
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          padding: 40,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div className="flex flex-1 flex-col justify-center">{title}</div>
+        {infoRow}
+      </div>
+    );
+  };
+
   return (
     <div
       ref={containerRef}
       className="flex h-full w-full items-center justify-center overflow-hidden bg-muted"
     >
-      <div
-        style={{
-          width: w * scale,
-          height: h * scale,
-        }}
-        className="shadow-2xl"
-      >
+      <div style={{ width: w * scale, height: h * scale }} className="shadow-2xl">
         <div
           style={{
             width: w,
@@ -47,40 +177,11 @@ export function Canvas({ comp }: { comp: Composition }) {
             transform: `scale(${scale})`,
             transformOrigin: "top left",
             background: comp.background,
-            padding: 40,
+            position: "relative",
+            overflow: "hidden",
           }}
-          className="flex flex-col justify-between"
         >
-          {/* Title block */}
-          <div className="flex flex-1 flex-col justify-center">
-            <TitleBlock
-              titles={comp.titles}
-              titleMode={comp.titleMode}
-              titleSeed={comp.titleSeed}
-              titleSizePx={comp.titleSizePx}
-              color={comp.textColor}
-            />
-          </div>
-
-          {/* Info row */}
-          <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
-            {[comp.info.text1, comp.info.text2].map((text, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  textAlign: "left",
-                  fontFamily: "'ABC Arizona Plus Variable'",
-                  fontSize: 36,
-                  lineHeight: 1.1,
-                  color: comp.textColor,
-                  fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 100",
-                }}
-              >
-                {text}
-              </div>
-            ))}
-          </div>
+          {renderInner()}
         </div>
       </div>
     </div>
