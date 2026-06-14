@@ -5,8 +5,19 @@ import type { ImageItem } from "@/lib/composition";
 import { makeRng } from "@/lib/engine";
 
 const SPHERE_RADIUS = 1;
-const TILE_SIZE = 0.42;
-const HERO_FRACTION = 0.46; // front tile ≈ static-multi hero (0.46 × max(w,h))
+const TILE_SIZE = 0.45 * SPHERE_RADIUS; // tile edge ≈ 0.45 × R
+const FOV = 45;
+const FRAME_FILL = 0.8; // globe projected diameter ≈ 0.8 × shorter frame dim at scale 1
+const MIN_DIST_FACTOR = 2.5; // camera never closer than 2.5 × R (stays outside)
+
+// Camera distance that frames the whole globe; globeScale dollies in/out but
+// the camera always stays comfortably outside the sphere.
+function cameraDistance(w: number, h: number, globeScale: number): number {
+  const focalPx = h / 2 / Math.tan((FOV * Math.PI) / 360);
+  const targetPx = FRAME_FILL * Math.min(w, h) * globeScale;
+  const d = (2 * SPHERE_RADIUS * focalPx) / targetPx;
+  return Math.max(d, MIN_DIST_FACTOR * SPHERE_RADIUS);
+}
 
 // Evenly distributed points on a unit sphere (Fibonacci sphere).
 function fibonacciSphere(n: number): THREE.Vector3[] {
@@ -41,7 +52,7 @@ export function MultiSphere({
   const mountRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
-  const baseScaleRef = useRef<number>(1);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
 
   // Build scene whenever inputs that affect geometry/textures change.
   useEffect(() => {
@@ -52,12 +63,11 @@ export function MultiSphere({
     const TILE_COUNT = images.length;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    // Fit the globe to the shorter dimension with comfortable margin.
-    const fitDist = (SPHERE_RADIUS + TILE_SIZE) / Math.tan((camera.fov * Math.PI) / 360);
-    const aspectPad = w < h ? 1 : h / w;
-    camera.position.set(0, 0, (fitDist / Math.min(1, aspectPad)) * 1.35);
+    const camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100);
+    // Frame the whole globe from outside; globeScale dollies the camera.
+    camera.position.set(0, 0, cameraDistance(w, h, globeScale));
     camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(1);
@@ -111,21 +121,6 @@ export function MultiSphere({
 
       group.add(tileGroup);
     });
-
-    // Calibrate: project a front-facing tile's bounding box to screen px at
-    // group scale 1, then derive baseScale so the front tile ≈ hero size.
-    {
-      const half = TILE_SIZE / 2;
-      // Front tile sits closest to the camera along +Z after billboarding;
-      // approximate with a tile centered at the sphere front.
-      const center = new THREE.Vector3(0, 0, SPHERE_RADIUS);
-      const a = center.clone().add(new THREE.Vector3(-half, 0, 0)).project(camera);
-      const b = center.clone().add(new THREE.Vector3(half, 0, 0)).project(camera);
-      const measuredPx = (Math.abs(b.x - a.x) / 2) * w; // NDC half-width → px width
-      const target = HERO_FRACTION * Math.max(w, h);
-      baseScaleRef.current = measuredPx > 0 ? target / measuredPx : 1;
-    }
-    group.scale.setScalar(baseScaleRef.current * globeScale);
 
     // Derive 3 poses from the seed; Y steps sum to 360deg for a seamless loop.
     const rng = makeRng(animSeed);
@@ -182,6 +177,7 @@ export function MultiSphere({
       tl.kill();
       tlRef.current = null;
       groupRef.current = null;
+      cameraRef.current = null;
       geom.dispose();
       textures.forEach((t) => t.dispose());
       tiles.forEach((t) => {
@@ -196,12 +192,13 @@ export function MultiSphere({
     };
   }, [images, w, h, imageOverlay, animSeed]);
 
-  // Re-apply globe scale without rebuilding the scene.
+  // Re-frame (dolly the camera) without rebuilding the scene.
   useEffect(() => {
-    const group = groupRef.current;
-    if (!group) return;
-    group.scale.setScalar(baseScaleRef.current * globeScale);
-  }, [globeScale]);
+    const camera = cameraRef.current;
+    if (!camera) return;
+    camera.position.z = cameraDistance(w, h, globeScale);
+    camera.lookAt(0, 0, 0);
+  }, [globeScale, w, h]);
 
   // Play/pause without rebuilding the scene.
   useEffect(() => {
