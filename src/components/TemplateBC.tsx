@@ -2,15 +2,20 @@ import { TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
 import type { Placement } from "@/lib/multiLayout";
 import { TemplateLayout } from "@/components/TemplateLayout";
 import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
+import { MultiSphere } from "@/components/MultiSphere";
 
 // Templates B and C: shared caption layout, image layer behind text.
 export function TemplateBC({
   comp,
+  w,
+  h,
   imgSrc,
   title,
   multiPlacements,
 }: {
   comp: Composition;
+  w: number;
+  h: number;
   imgSrc: string;
   title: React.ReactNode;
   multiPlacements: Placement[];
@@ -81,7 +86,18 @@ export function TemplateBC({
   } else if (comp.variant === "multi") {
     imageLayer = (
       <div style={{ position: "absolute", inset: 0 }}>
-        <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
+        {comp.animate ? (
+          <MultiSphere
+            images={comp.images}
+            w={w}
+            h={h}
+            imageOverlay={comp.imageOverlay}
+            animSeed={comp.animSeed}
+            playing={comp.animPlaying}
+          />
+        ) : (
+          <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
+        )}
       </div>
     );
   }
