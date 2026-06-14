@@ -30,6 +30,23 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+function AutoTextarea(props: React.ComponentProps<typeof Textarea>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const grow = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  return (
+    <Textarea
+      {...props}
+      ref={ref}
+      onInput={(e) => grow(e.currentTarget)}
+      onFocus={(e) => grow(e.currentTarget)}
+    />
+  );
+}
+
 export function ControlPanel({ comp, setComp }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
