@@ -282,15 +282,19 @@ export function ControlPanel({ comp, setComp }: Props) {
 
       <Section title="Text">
         <div className="space-y-2">
-          <Input
+          <Textarea
             value={comp.info.text1}
             onChange={(e) => update({ info: { ...comp.info, text1: e.target.value } })}
             placeholder="Text 1"
+            rows={2}
+            className="resize-none"
           />
-          <Input
+          <Textarea
             value={comp.info.text2}
             onChange={(e) => update({ info: { ...comp.info, text2: e.target.value } })}
             placeholder="Text 2"
+            rows={2}
+            className="resize-none"
           />
         </div>
       </Section>
