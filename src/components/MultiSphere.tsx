@@ -8,14 +8,16 @@ const SPHERE_RADIUS = 1;
 const TILE_SIZE = 0.45 * SPHERE_RADIUS; // tile edge ≈ 0.45 × R
 const FOV = 45;
 const FRAME_FILL = 0.8; // globe projected diameter ≈ 0.8 × shorter frame dim at scale 1
-const MIN_DIST_FACTOR = 2.5; // camera never closer than 2.5 × R (stays outside)
+const MIN_DIST_FACTOR = 2.2; // camera never closer than 2.2 × R (stays outside)
 
-// Camera distance that frames the whole globe; globeScale dollies in/out but
-// the camera always stays comfortably outside the sphere.
+// Camera distance that drives globeScale by dollying. globeScale = 1 frames the
+// whole globe; larger values move the camera closer (D = D_full / globeScale),
+// clamped so the camera always stays outside the sphere.
 function cameraDistance(w: number, h: number, globeScale: number): number {
   const focalPx = h / 2 / Math.tan((FOV * Math.PI) / 360);
-  const targetPx = FRAME_FILL * Math.min(w, h) * globeScale;
-  const d = (2 * SPHERE_RADIUS * focalPx) / targetPx;
+  const targetPx = FRAME_FILL * Math.min(w, h);
+  const dFull = (2 * SPHERE_RADIUS * focalPx) / targetPx;
+  const d = dFull / globeScale;
   return Math.max(d, MIN_DIST_FACTOR * SPHERE_RADIUS);
 }
 
