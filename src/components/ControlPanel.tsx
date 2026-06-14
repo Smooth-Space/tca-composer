@@ -21,6 +21,7 @@ interface Props {
   setComp: React.Dispatch<React.SetStateAction<Composition>>;
   onExport: () => void;
   exporting: boolean;
+  onReset: () => void;
 }
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
@@ -78,7 +79,7 @@ function AutoTextarea(props: React.ComponentProps<typeof Textarea>) {
   );
 }
 
-export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
+export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
