@@ -95,15 +95,15 @@ function TemplateD({
   const bottomOffset = Array.from(dRows[0]).length;
 
   const multiPlacements = useMemo(
-    () => computeMultiLayout(comp.images, w, h, 2, comp.titleSizePx, comp.multiSeed),
+    () => computeMultiLayout(comp.images, w, h, 2, comp.titleSizePx, comp.multiSeed, 0),
     [comp.images, w, h, comp.titleSizePx, comp.multiSeed],
   );
 
-  const caption = (text: string) => (
+  const caption = (text: string, align: "left" | "right" = "left") => (
     <div
       style={{
         flex: 1,
-        textAlign: "left",
+        textAlign: align,
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
         fontFamily: "'ABC Arizona Plus Variable'",
@@ -187,8 +187,8 @@ function TemplateD({
               alignItems: "center",
             }}
           >
-            {caption(comp.captions.text1)}
-            {caption(comp.captions.text2)}
+            {caption(comp.captions.text1, "left")}
+            {caption(comp.captions.text2, "right")}
           </div>
         </div>
 
