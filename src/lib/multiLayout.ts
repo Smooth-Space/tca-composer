@@ -1,14 +1,14 @@
-export interface ImgAspect { id: string; naturalWidth: number; naturalHeight: number; src?: string; }
+export interface ImgAspect { id: string; naturalWidth: number; naturalHeight: number; }
 export interface Placement { id: string; x: number; y: number; width: number; height: number; }
 
 const P = {
-  primaryLongEdge: 0.50,    // hero size (fraction of max(W,H)) — bigger, stronger hierarchy
-  secondaryLongEdge: 0.27,  // supporting images
-  sizeJitter: 0.09,         // wider → more size variety between rerolls
-  edgeBleed: 0.18,          // how far a box may run off-canvas (fraction of its own size)
-  minGapFrac: 0.025,        // min gap between images (fraction of W) — no overlap
+  primaryLongEdge: 0.46,    // hero size (fraction of max(W,H))
+  secondaryLongEdge: 0.28,  // supporting images
+  sizeJitter: 0.06,
+  edgeBleed: 0.15,          // max fraction of a box off-canvas
+  minGapFrac: 0.02,         // min gap between images — no overlap
   posJitter: 0.10,          // vertical jitter within a zone
-  titleClearFrac: 0.16,     // central clear band height (fraction of H). 0 = no safe area.
+  maxBandFrac: 0.38,        // central clearance is random in [0, maxBandFrac*H] each reroll
 };
 
 function makeRng(seed: number) {
@@ -25,7 +25,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 function sizeFor(im: ImgAspect, frac: number, longRef: number) {
   const box = frac * longRef;
-  const ar = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1;
+  const ar = (im.naturalWidth && im.naturalHeight) ? im.naturalWidth / im.naturalHeight : 1;
   return ar >= 1 ? { w: box, h: box / ar } : { w: box * ar, h: box };
 }
 function szFrac(base: number, rng: () => number) {
@@ -59,54 +59,49 @@ function separate(ps: Placement[], W: number, iterations = 6) {
 export function computeMultiLayout(
   images: ImgAspect[],
   W: number, H: number,
-  titleRows: number, titleSizePx: number,
+  titleRows: number, titleSizePx: number,   // kept for signature compatibility (unused now)
   seed: number,
-  clearOverride?: number,   // when provided (incl. 0), replaces P.titleClearFrac
+  clearOverride?: number,                    // fraction of H; if set, fixes the band (Template D passes 0)
 ): Placement[] {
-  const imgs = images.filter((im) => im.src === undefined || im.src !== "").slice(0, 3);
+  const imgs = images.slice(0, 3);
   if (imgs.length === 0) return [];
   const rng = makeRng(seed);
   const longRef = Math.max(W, H);
 
-  const clearFrac = clearOverride !== undefined ? clearOverride : P.titleClearFrac;
-  const bandH = clearFrac * H;
+  // Central clearance: fixed if overridden, otherwise RANDOM per reroll -> variable title overlap
+  const bandH = (clearOverride !== undefined ? clearOverride : rng() * P.maxBandFrac) * H;
   const bandTop = (H - bandH) / 2;
   const bandBottom = bandTop + bandH;
 
   const hero = Math.floor(rng() * imgs.length);
   const others = imgs.map((_, i) => i).filter(i => i !== hero);
-
-  const heavyRight = rng() < 0.5;          // hero's horizontal side
-  const heroTop = rng() < 0.5;             // hero's vertical side (which corner)
-  const stackSecondaries = rng() < 0.5;    // both small on one side (asym) vs split L/R
+  const heroTop = rng() < 0.5;     // hero's zone
+  const heroLeft = rng() < 0.5;    // hero's anchor edge
 
   const out: Placement[] = [];
 
-  // HERO — anchored into a corner, bleeding off the two edges of that corner
+  // HERO — alone in its zone, anchored to a left/right edge, vertically varied
   {
     const { w, h } = sizeFor(imgs[hero], szFrac(P.primaryLongEdge, rng), longRef);
-    const cx0 = heavyRight ? W - w * (0.5 - P.edgeBleed) : w * (0.5 - P.edgeBleed);
-    const cy0 = heroTop ? h * (0.5 - P.edgeBleed) : H - h * (0.5 - P.edgeBleed);
+    const zTop = heroTop ? 0 : bandBottom;
+    const zBot = heroTop ? bandTop : H;
+    const cx0 = heroLeft ? w * (0.5 - P.edgeBleed) : W - w * (0.5 - P.edgeBleed);
+    const cy0 = lerp(zTop, zBot, 0.5) + (rng() * 2 - 1) * P.posJitter * (zBot - zTop);
     const { cx, cy } = clampCenter(cx0, cy0, w, h, W, H);
     out.push({ id: imgs[hero].id, x: cx - w / 2, y: cy - h / 2, width: w, height: h });
   }
 
-  // SECONDARIES — opposite vertical zone from the hero, staggered (not a level mirror)
+  // SECONDARIES — opposite zone, ALWAYS split left/right, at STAGGERED heights
   {
     const zTop = heroTop ? bandBottom : 0;
     const zBot = heroTop ? H : bandTop;
+    const leftFirst = rng() < 0.5;
+    const cols = leftFirst ? [0.20, 0.80] : [0.80, 0.20];
+    const hts = leftFirst ? [0.32, 0.66] : [0.66, 0.32]; // staggered, paired to the side
     others.forEach((idx, k) => {
       const { w, h } = sizeFor(imgs[idx], szFrac(P.secondaryLongEdge, rng), longRef);
-      let cxFrac: number;
-      if (stackSecondaries) {
-        const side = heavyRight ? 0.24 : 0.76;          // lean opposite the hero's heavy side
-        cxFrac = side + (k === 0 ? -0.06 : 0.10);
-      } else {
-        cxFrac = k === 0 ? 0.20 : 0.80;                 // split left / right
-      }
-      const cx0 = cxFrac * W + (rng() * 2 - 1) * 0.05 * W;
-      const vt = k === 0 ? 0.30 : 0.68;                 // staggered heights
-      const cy0 = lerp(zTop, zBot, vt) + (rng() * 2 - 1) * P.posJitter * (zBot - zTop);
+      const cx0 = cols[k] * W + (rng() * 2 - 1) * 0.04 * W;
+      const cy0 = lerp(zTop, zBot, hts[k]) + (rng() * 2 - 1) * P.posJitter * (zBot - zTop);
       const { cx, cy } = clampCenter(cx0, cy0, w, h, W, H);
       out.push({ id: imgs[idx].id, x: cx - w / 2, y: cy - h / 2, width: w, height: h });
     });
