@@ -1,4 +1,5 @@
 import type { CaptionSlot, CaptionKey } from "@/lib/composition";
+import { Caption } from "@/components/Caption";
 
 type Captions = Record<string, string>;
 type CaptionColors = Record<CaptionKey, string>;
@@ -15,20 +16,11 @@ function CaptionCell({
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       {slot && (
-        <div
-          style={{
-            whiteSpace: "pre-wrap",
-            overflowWrap: "anywhere",
-            textAlign: slot.align,
-            fontFamily: "'ABC Arizona Plus Variable'",
-            fontVariationSettings: `"wght" 400, "SRFF" 0, "wdth" 100`,
-            fontSize: 36,
-            lineHeight: 1.1,
-            color: captionColors[slot.key],
-          }}
-        >
-          {captions[slot.key]}
-        </div>
+        <Caption
+          text={captions[slot.key]}
+          color={captionColors[slot.key]}
+          align={slot.align}
+        />
       )}
     </div>
   );
