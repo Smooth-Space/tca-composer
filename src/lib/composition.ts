@@ -2,13 +2,13 @@ export type Format = "1:1" | "4:5" | "9:16";
 export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi" | "inset";
 export type SplitOrder = "image-first" | "title-first";
-export type Template = "A" | "B" | "C";
+export type Template = "A" | "B" | "C" | "D";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
 
 export interface CaptionSlot {
   key: CaptionKey;
-  anchor: "top" | "bottom";
+  anchor: "top" | "bottom" | "middle";
   column: "left" | "right";
   align: "left" | "right";
   label: string;
@@ -29,12 +29,17 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
     { key: "text3", anchor: "bottom", column: "left", align: "left", label: "Text 3 (bottom-left)" },
     { key: "text4", anchor: "bottom", column: "right", align: "right", label: "Text 4 (bottom-right)" },
   ],
+  D: [
+    { key: "text1", anchor: "middle", column: "left", align: "left", label: "Text 1" },
+    { key: "text2", anchor: "middle", column: "right", align: "left", label: "Text 2" },
+  ],
 };
 
 export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   A: ["none", "split", "full", "multi"],
   B: ["none", "inset", "full", "multi"],
   C: ["none", "split", "full", "multi"],
+  D: ["none", "split", "full", "multi"],
 };
 
 export const PLACEHOLDER_SRC = "/placeholder.jpg";

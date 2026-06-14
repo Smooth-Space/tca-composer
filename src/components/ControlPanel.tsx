@@ -20,7 +20,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const TEMPLATES: Template[] = ["A", "B", "C"];
+const TEMPLATES: Template[] = ["A", "B", "C", "D"];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -108,16 +108,30 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
       <h1 className="text-lg font-semibold">Composer</h1>
 
       <Section title="Template">
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+        <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
           {TEMPLATES.map((t) => (
             <button
               key={t}
               onClick={() =>
-                setComp((c) => ({
-                  ...c,
-                  template: t,
-                  variant: TEMPLATE_VARIANTS[t].includes(c.variant) ? c.variant : "none",
-                }))
+                setComp((c) => {
+                  let titles = c.titles;
+                  if (t === "D" && titles.length < 2) {
+                    const defaults = ["Title one", "Title two"];
+                    titles = [...titles];
+                    while (titles.length < 2) {
+                      titles.push({
+                        id: crypto.randomUUID(),
+                        text: defaults[titles.length] ?? "New title",
+                      });
+                    }
+                  }
+                  return {
+                    ...c,
+                    template: t,
+                    titles,
+                    variant: TEMPLATE_VARIANTS[t].includes(c.variant) ? c.variant : "none",
+                  };
+                })
               }
               className={cn(
                 "rounded-md py-1.5 text-sm font-medium transition-colors",
@@ -348,6 +362,32 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
           </TooltipProvider>
         </div>
 
+        {comp.template === "D" ? (
+          <div className="space-y-2">
+            {[0, 1].map((idx) => {
+              const t = comp.titles[idx];
+              const label = idx === 0 ? "Title 1 (top)" : "Title 2 (bottom)";
+              return (
+                <div key={idx} className="space-y-1">
+                  <Label className="text-xs">{label}</Label>
+                  <Input
+                    value={t?.text ?? ""}
+                    onChange={(e) =>
+                      setComp((c) => {
+                        const titles = [...c.titles];
+                        while (titles.length < 2) {
+                          titles.push({ id: crypto.randomUUID(), text: "" });
+                        }
+                        titles[idx] = { ...titles[idx], text: e.target.value };
+                        return { ...c, titles };
+                      })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
         <div className="space-y-2">
           {comp.titles.map((t) => (
             <div key={t.id} className="flex items-center gap-2">
@@ -390,6 +430,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
             <Plus className="mr-1 h-4 w-4" /> Add title row
           </Button>
         </div>
+        )}
 
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
