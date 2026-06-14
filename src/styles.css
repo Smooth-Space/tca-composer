@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: 'ABC Arizona Plus Variable';
+  src: url('/fonts/ABCArizonaPlusVariable.woff2') format('woff2-variations');
+  font-weight: 250 625;
+  font-stretch: 85% 100%;
+  font-display: swap;
+}
+
 /*
  * Design system definition.
  *
