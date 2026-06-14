@@ -1,6 +1,7 @@
 import { PLACEHOLDER_SRC, type Composition } from "@/lib/composition";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
+import { computeMultiLayout } from "@/lib/multiLayout";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
   "1:1": { w: 1080, h: 1080 },
@@ -13,6 +14,19 @@ export function Canvas({ comp }: { comp: Composition }) {
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
   const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
+
+  const multiPlacements = useMemo(
+    () =>
+      computeMultiLayout(
+        comp.images,
+        w,
+        h,
+        comp.titles.length,
+        comp.titleSizePx,
+        comp.multiSeed,
+      ),
+    [comp.images, w, h, comp.titles.length, comp.titleSizePx, comp.multiSeed],
+  );
 
   useEffect(() => {
     const el = containerRef.current;
