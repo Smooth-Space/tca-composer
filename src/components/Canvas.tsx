@@ -85,6 +85,8 @@ export function Canvas({
     return (
       <TemplateBC
         comp={comp}
+        w={w}
+        h={h}
         imgSrc={imgSrc}
         title={title}
         multiPlacements={multiPlacements}
