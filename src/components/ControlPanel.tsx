@@ -1,12 +1,17 @@
-import type { Composition, Format, Mode, Template, SplitOrder } from "@/lib/composition";
+import type { Composition, Format, Mode, Template, SplitOrder, CaptionKey } from "@/lib/composition";
 import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS } from "@/lib/composition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Plus, X, Shuffle } from "lucide-react";
+import { Plus, X, Shuffle, RefreshCw, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { newSeed } from "@/lib/engine";
 import { cn } from "@/lib/utils";
 import { useRef } from "react";
@@ -24,12 +29,17 @@ const TEMPLATES: Template[] = ["A", "B", "C", "D"];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {title}
-      </h2>
-      {children}
-    </div>
+    <Collapsible defaultOpen className="rounded-lg border border-border bg-card">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="space-y-3 px-4 pb-4">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -54,6 +64,9 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
+
+  const usesImage =
+    comp.variant === "split" || comp.variant === "full" || comp.variant === "inset";
 
   const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -104,8 +117,27 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
   };
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-background p-5">
+    <aside className="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-background p-5">
       <h1 className="text-lg font-semibold">Composer</h1>
+
+      <Section title="Format">
+        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+          {FORMATS.map((f) => (
+            <button
+              key={f}
+              onClick={() => update({ format: f })}
+              className={cn(
+                "rounded-md py-1.5 text-sm font-medium transition-colors",
+                comp.format === f
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </Section>
 
       <Section title="Template">
         <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
@@ -144,153 +176,151 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
             </button>
           ))}
         </div>
-      </Section>
 
-      <Section title="Variant">
-        <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
-          {TEMPLATE_VARIANTS[comp.template].map((v) => (
-            <button
-              key={v}
-              onClick={() => update({ variant: v })}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium capitalize transition-colors",
-                comp.variant === v
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Format">
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-          {FORMATS.map((f) => (
-            <button
-              key={f}
-              onClick={() => update({ format: f })}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium transition-colors",
-                comp.format === f
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      {(comp.variant === "split" ||
-        comp.variant === "full" ||
-        comp.variant === "inset") && (
-        <Section title="Image">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            onChange={onUpload}
-            className="hidden"
-          />
-          <div className="flex items-center gap-3">
-            <img
-              src={comp.images[0]?.src ?? "/placeholder.jpg"}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
-            />
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-                Upload / Replace
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={!comp.images[0]}
-                onClick={() => update({ images: [] })}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Variant</Label>
+          <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
+            {TEMPLATE_VARIANTS[comp.template].map((v) => (
+              <button
+                key={v}
+                onClick={() => update({ variant: v })}
+                className={cn(
+                  "rounded-md py-1.5 text-sm font-medium capitalize transition-colors",
+                  comp.variant === v
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
               >
-                Remove
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {usesImage && (
+          <div className="space-y-3 pt-1">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={onUpload}
+              className="hidden"
+            />
+            <div className="flex items-center gap-3">
+              <img
+                src={comp.images[0]?.src ?? "/placeholder.jpg"}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
+              />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                  Upload / Replace
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={!comp.images[0]}
+                  onClick={() => update({ images: [] })}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+            {comp.variant === "split" && (
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+                {(["image-first", "title-first"] as SplitOrder[]).map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => update({ splitOrder: o })}
+                    className={cn(
+                      "rounded-md py-1 text-xs font-medium transition-colors",
+                      comp.splitOrder === o
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {o === "image-first" ? "Image first" : "Title first"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {comp.variant === "multi" && (
+          <div className="space-y-3 pt-1">
+            <input
+              ref={multiFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={onUploadMulti}
+              className="hidden"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={comp.images.length >= 6}
+                onClick={() => multiFileRef.current?.click()}
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add images
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => update({ multiSeed: newSeed() })}>
+                <Shuffle className="mr-1 h-4 w-4" /> Reroll layout
               </Button>
             </div>
+            {comp.images.length > 0 && (
+              <div className="space-y-2">
+                {comp.images.map((im, i) => (
+                  <div key={im.id} className="flex items-center gap-2">
+                    <img
+                      src={im.src}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-md border border-border object-cover"
+                    />
+                    <span className="flex-1 text-xs text-muted-foreground">
+                      {i < 3 ? `Shown ${i + 1}` : "Stored (not shown)"}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() =>
+                        update({ images: comp.images.filter((x) => x.id !== im.id) })
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {comp.variant === "split" && (
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-              {(["image-first", "title-first"] as SplitOrder[]).map((o) => (
-                <button
-                  key={o}
-                  onClick={() => update({ splitOrder: o })}
-                  className={cn(
-                    "rounded-md py-1 text-xs font-medium transition-colors",
-                    comp.splitOrder === o
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {o === "image-first" ? "Image first" : "Title first"}
-                </button>
-              ))}
-            </div>
-          )}
-        </Section>
-      )}
+        )}
 
-      {comp.variant === "multi" && (
-        <Section title="Images">
-          <input
-            ref={multiFileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onUploadMulti}
-            className="hidden"
-          />
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              disabled={comp.images.length >= 6}
-              onClick={() => multiFileRef.current?.click()}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add images
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => update({ multiSeed: newSeed() })}>
-              <Shuffle className="mr-1 h-4 w-4" /> Reroll layout
-            </Button>
-          </div>
-          {comp.images.length > 0 && (
-            <div className="space-y-2">
-              {comp.images.map((im, i) => (
-                <div key={im.id} className="flex items-center gap-2">
-                  <img
-                    src={im.src}
-                    alt=""
-                    className="h-10 w-10 shrink-0 rounded-md border border-border object-cover"
-                  />
-                  <span className="flex-1 text-xs text-muted-foreground">
-                    {i < 3 ? `Shown ${i + 1}` : "Stored (not shown)"}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() =>
-                      update({ images: comp.images.filter((x) => x.id !== im.id) })
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+        {(usesImage || comp.variant === "multi") && (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Image overlay</Label>
+              <span className="text-xs text-muted-foreground">
+                {Math.round(comp.imageOverlay * 100)}%
+              </span>
             </div>
-          )}
-        </Section>
-      )}
+            <Slider
+              min={0}
+              max={100}
+              step={1}
+              value={[Math.round(comp.imageOverlay * 100)]}
+              onValueChange={([v]) => update({ imageOverlay: v / 100 })}
+            />
+          </div>
+        )}
+      </Section>
 
       <Section title="Colors">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Background</Label>
             <input
@@ -309,21 +339,49 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
               className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Text</Label>
-            <input
-              type="color"
-              value={comp.textColor}
-              onChange={(e) => update({ textColor: e.target.value })}
-              className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
-            />
-          </div>
+          {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
+            <div key={slot.key} className="space-y-1.5">
+              <Label className="text-xs">{slot.label} color</Label>
+              <input
+                type="color"
+                value={comp.captionColors[slot.key as CaptionKey]}
+                onChange={(e) =>
+                  update({
+                    captionColors: { ...comp.captionColors, [slot.key]: e.target.value },
+                  })
+                }
+                className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
+              />
+            </div>
+          ))}
         </div>
       </Section>
 
       <Section title="Titles">
         <div className="space-y-2">
-          <Label className="text-xs">Mode</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Mode</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="block">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={comp.titleMode === "mixed"}
+                      onClick={() => update({ titleSeed: newSeed() })}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {comp.titleMode === "mixed" ? "No randomness in Mixed mode" : "Reroll type"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
             {MODES.map((m) => (
               <button
@@ -340,35 +398,18 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
               </button>
             ))}
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="block">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    disabled={comp.titleMode === "mixed"}
-                    onClick={() => update({ titleSeed: newSeed() })}
-                  >
-                    <Shuffle className="mr-1 h-4 w-4" /> Reroll type
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {comp.titleMode === "mixed" && (
-                <TooltipContent>No randomness in Mixed mode</TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
         </div>
 
         {comp.template === "D" ? (
-          <div className="space-y-2">
+          <div className="space-y-5 pt-5">
             {[0, 1].map((idx) => {
               const t = comp.titles[idx];
               const label = idx === 0 ? "Title 1 (top)" : "Title 2 (bottom)";
               return (
-                <div key={idx} className="space-y-1">
+                <div
+                  key={idx}
+                  className={cn("space-y-1", idx > 0 && "border-t border-border pt-5")}
+                >
                   <Label className="text-xs">{label}</Label>
                   <Input
                     value={t?.text ?? ""}
@@ -388,51 +429,57 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
             })}
           </div>
         ) : (
-        <div className="space-y-2">
-          {comp.titles.map((t) => (
-            <div key={t.id} className="flex items-center gap-2">
-              <Input
-                value={t.text}
-                onChange={(e) =>
-                  update({
-                    titles: comp.titles.map((x) =>
-                      x.id === t.id ? { ...x, text: e.target.value } : x,
-                    ),
-                  })
-                }
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                onClick={() =>
-                  update({ titles: comp.titles.filter((x) => x.id !== t.id) })
-                }
-                disabled={comp.titles.length <= 1}
+          <div className="space-y-5 pt-5">
+            {comp.titles.map((t, idx) => (
+              <div
+                key={t.id}
+                className={cn(
+                  "flex items-center gap-2",
+                  idx > 0 && "border-t border-border pt-5",
+                )}
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() =>
-              update({
-                titles: [
-                  ...comp.titles,
-                  { id: crypto.randomUUID(), text: "New title" },
-                ],
-              })
-            }
-          >
-            <Plus className="mr-1 h-4 w-4" /> Add title row
-          </Button>
-        </div>
+                <Input
+                  value={t.text}
+                  onChange={(e) =>
+                    update({
+                      titles: comp.titles.map((x) =>
+                        x.id === t.id ? { ...x, text: e.target.value } : x,
+                      ),
+                    })
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() =>
+                    update({ titles: comp.titles.filter((x) => x.id !== t.id) })
+                  }
+                  disabled={comp.titles.length <= 1}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() =>
+                update({
+                  titles: [
+                    ...comp.titles,
+                    { id: crypto.randomUUID(), text: "New title" },
+                  ],
+                })
+              }
+            >
+              <Plus className="mr-1 h-4 w-4" /> Add title row
+            </Button>
+          </div>
         )}
 
-        <div className="space-y-2 pt-1">
+        <div className="space-y-2 pt-3">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Size</Label>
             <span className="text-xs text-muted-foreground">{comp.titleSizePx}px</span>

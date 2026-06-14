@@ -1,15 +1,16 @@
-import type { CaptionSlot } from "@/lib/composition";
+import type { CaptionSlot, CaptionKey } from "@/lib/composition";
 
 type Captions = Record<string, string>;
+type CaptionColors = Record<CaptionKey, string>;
 
 function CaptionCell({
   slot,
   captions,
-  color,
+  captionColors,
 }: {
   slot?: CaptionSlot;
   captions: Captions;
-  color: string;
+  captionColors: CaptionColors;
 }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
@@ -23,7 +24,7 @@ function CaptionCell({
             fontVariationSettings: `"wght" 400, "SRFF" 0, "wdth" 100`,
             fontSize: 36,
             lineHeight: 1.1,
-            color,
+            color: captionColors[slot.key],
           }}
         >
           {captions[slot.key]}
@@ -36,12 +37,12 @@ function CaptionCell({
 function CaptionRow({
   slots,
   captions,
-  color,
+  captionColors,
   anchor,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
-  color: string;
+  captionColors: CaptionColors;
   anchor: "top" | "bottom";
 }) {
   const rowSlots = slots.filter((s) => s.anchor === anchor);
@@ -55,8 +56,8 @@ function CaptionRow({
         alignItems: anchor === "top" ? "flex-start" : "flex-end",
       }}
     >
-      <CaptionCell slot={left} captions={captions} color={color} />
-      <CaptionCell slot={right} captions={captions} color={color} />
+      <CaptionCell slot={left} captions={captions} captionColors={captionColors} />
+      <CaptionCell slot={right} captions={captions} captionColors={captionColors} />
     </div>
   );
 }
@@ -64,13 +65,13 @@ function CaptionRow({
 export function TemplateLayout({
   slots,
   captions,
-  textColor,
+  captionColors,
   gap = 0,
   children,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
-  textColor: string;
+  captionColors: CaptionColors;
   gap?: number;
   children: React.ReactNode;
 }) {
@@ -85,9 +86,9 @@ export function TemplateLayout({
         gap,
       }}
     >
-      <CaptionRow slots={slots} captions={captions} color={textColor} anchor="top" />
+      <CaptionRow slots={slots} captions={captions} captionColors={captionColors} anchor="top" />
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
-      <CaptionRow slots={slots} captions={captions} color={textColor} anchor="bottom" />
+      <CaptionRow slots={slots} captions={captions} captionColors={captionColors} anchor="bottom" />
     </div>
   );
 }

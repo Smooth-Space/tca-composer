@@ -62,7 +62,6 @@ export interface Composition {
   variant: Variant;
   background: string;
   titleColor: string;
-  textColor: string;
   titles: Title[];
   titleSizePx: number;
   titleMode: Mode;
@@ -70,7 +69,9 @@ export interface Composition {
   images: ImageItem[];
   splitOrder: SplitOrder;
   multiSeed: number;
+  imageOverlay: number;
   captions: { text1: string; text2: string; text3: string; text4: string };
+  captionColors: { text1: string; text2: string; text3: string; text4: string };
 }
 
 export const defaultComposition: Composition = {
@@ -79,7 +80,6 @@ export const defaultComposition: Composition = {
   variant: "none",
   background: "#FFFFFF",
   titleColor: "#000000",
-  textColor: "#000000",
   titles: [{ id: "t1", text: "Title one" }],
   titleSizePx: 120,
   titleMode: "mixed",
@@ -87,5 +87,7 @@ export const defaultComposition: Composition = {
   images: [],
   splitOrder: "image-first",
   multiSeed: (Math.random() * 0xffffffff) >>> 0,
+  imageOverlay: 0.2,
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
+  captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
 };
