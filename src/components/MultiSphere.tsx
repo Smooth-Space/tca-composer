@@ -8,7 +8,7 @@ const SPHERE_RADIUS = 1;
 const TILE_SIZE = 0.45 * SPHERE_RADIUS; // tile edge ≈ 0.45 × R
 const FOV = 45;
 const FRAME_FILL = 0.8; // globe projected diameter ≈ 0.8 × shorter frame dim at scale 1
-const MIN_DIST_FACTOR = 2.2; // camera never closer than 2.2 × R (stays outside)
+const MIN_DIST_FACTOR = 1.2; // camera never closer than 1.2 × R (stays outside)
 
 // Camera distance that drives globeScale by dollying. globeScale = 1 frames the
 // whole globe; larger values move the camera closer (D = D_full / globeScale),
