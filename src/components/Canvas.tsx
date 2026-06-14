@@ -344,7 +344,7 @@ export function Canvas({
             style={{
               position: "absolute",
               inset: 0,
-              padding: 40,
+              ...padStyle,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -377,7 +377,7 @@ export function Canvas({
               position: "absolute",
               inset: 0,
               zIndex: 1,
-              padding: 40,
+              ...padStyle,
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -420,7 +420,10 @@ export function Canvas({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: imageTop ? "40px 40px 130px 40px" : "40px",
+              paddingTop: inset.top,
+              paddingBottom: imageTop ? inset.bottom + 90 : inset.bottom,
+              paddingLeft: inset.left,
+              paddingRight: inset.right,
               boxSizing: "border-box",
             } as React.CSSProperties
           }
@@ -432,7 +435,7 @@ export function Canvas({
         <div style={{ position: "absolute", inset: 0 }}>
           {imageHalf}
           {titleHalf}
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 40 }}>
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, ...padStyle }}>
             {infoRow}
           </div>
         </div>
@@ -445,7 +448,7 @@ export function Canvas({
         style={{
           position: "absolute",
           inset: 0,
-          padding: 40,
+          ...padStyle,
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
