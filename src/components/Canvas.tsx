@@ -452,7 +452,7 @@ export function Canvas({
       <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
     );
 
-    // B-split: image fills the full-width band between Text 1 (top) and Text 2 (bottom),
+    // C-split: image fills the full-width band between Text 1 (top) and Text 2 (bottom),
     // with 40px gaps; the centered title is overlaid on top of the image (no scrim).
     if (comp.template === "C" && comp.variant === "split") {
       return (
