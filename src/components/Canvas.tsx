@@ -389,6 +389,7 @@ export function Canvas({
           }
         >
           {coverImg}
+          {overlay({ inset: 0 })}
         </div>
       );
       const titleHalf = (
