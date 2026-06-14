@@ -102,6 +102,7 @@ export function TitleBlock({
   return (
     <div
       style={{
+        width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
         textAlign: "center",
         fontFamily: TITLE_FONT,
