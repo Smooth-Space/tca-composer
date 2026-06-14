@@ -406,8 +406,8 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
                   </span>
                 </div>
                 <Slider
-                  min={0.5}
-                  max={1.5}
+                  min={1.0}
+                  max={2.0}
                   step={0.05}
                   value={[comp.globeScale]}
                   onValueChange={([v]) => update({ globeScale: v })}
