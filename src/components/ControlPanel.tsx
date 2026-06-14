@@ -152,13 +152,22 @@ export function ControlPanel({ comp, setComp }: Props) {
       )}
 
       <Section title="Colors">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Background</Label>
             <input
               type="color"
               value={comp.background}
               onChange={(e) => update({ background: e.target.value })}
+              className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Title</Label>
+            <input
+              type="color"
+              value={comp.titleColor}
+              onChange={(e) => update({ titleColor: e.target.value })}
               className="h-9 w-full cursor-pointer rounded-md border border-input bg-background"
             />
           </div>
