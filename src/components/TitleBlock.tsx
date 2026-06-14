@@ -16,6 +16,20 @@ interface TitleBlockProps {
 
 const FIT_REF_SIZE = 200;
 
+// Evenly-spread, seed-shuffled offsets so lines clearly reach toward both margins.
+function shiftOffsets(n: number, seed: number): number[] {
+  if (n <= 1) return [0.5];
+  const rng = makeRng(seed);
+  const base = Array.from({ length: n }, (_, i) => i / (n - 1)); // evenly spread 0..1
+  for (let i = n - 1; i > 0; i--) {
+    // seeded shuffle
+    const j = Math.floor(rng() * (i + 1));
+    [base[i], base[j]] = [base[j], base[i]];
+  }
+  const spacing = 1 / (n - 1);
+  return base.map((v) => Math.min(1, Math.max(0, v + (rng() * 2 - 1) * spacing * 0.25))); // light jitter
+}
+
 export function TitleBlock({
   titles,
   titleMode,
@@ -49,31 +63,31 @@ export function TitleBlock({
   const fitEnabled = titleSizeMode === "fit" && rows.length === 1;
   const shiftEnabled = titleShift && rows.length >= 2;
 
-  const offsets = useMemo(() => {
-    if (!shiftEnabled) return rows.map(() => 0.5);
-    const rng = makeRng(titleShiftSeed);
-    return rows.map(() => rng());
-  }, [shiftEnabled, titleShiftSeed, rows]);
+  const offsets = useMemo(
+    () => shiftOffsets(rows.length, titleShiftSeed),
+    [rows.length, titleShiftSeed],
+  );
 
-  // ---- Fit measuring ----
-  const measureRef = useRef<HTMLDivElement>(null);
+  // ---- Fit measuring (ratio of two measurements in the same scaled space) ----
+  const measRef = useRef<HTMLDivElement>(null); // hidden reference line at REF_SIZE
+  const contentRef = useRef<HTMLDivElement>(null); // content-width container (canvas − margins)
   const [fittedSize, setFittedSize] = useState(titleSizePx);
 
   useLayoutEffect(() => {
     if (!fitEnabled) return;
-    let cancelled = false;
+    let active = true;
     const measure = () => {
-      const el = measureRef.current;
-      if (!el || cancelled) return;
-      const w = el.getBoundingClientRect().width;
-      if (w > 0) setFittedSize(FIT_REF_SIZE * (contentWidthPx / w));
+      if (!active || !measRef.current || !contentRef.current) return;
+      const lineW = measRef.current.getBoundingClientRect().width; // display px
+      const contentW = contentRef.current.getBoundingClientRect().width; // same space
+      if (lineW > 0 && contentW > 0) setFittedSize(FIT_REF_SIZE * (contentW / lineW)); // scale-free
     };
     measure();
     if (typeof document !== "undefined" && document.fonts?.ready) {
       document.fonts.ready.then(measure);
     }
     return () => {
-      cancelled = true;
+      active = false;
     };
   }, [fitEnabled, rows, titleMode, titleSeed, contentWidthPx]);
 
@@ -110,22 +124,38 @@ export function TitleBlock({
       }}
     >
       {fitEnabled && (
-        <div
-          ref={measureRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: -99999,
-            top: 0,
-            visibility: "hidden",
-            whiteSpace: "nowrap",
-            fontSize: FIT_REF_SIZE,
-            letterSpacing: "-0.02em",
-            fontFamily: "'ABC Arizona Plus Variable'",
-          }}
-        >
-          {renderSpans(rows[0], 0)}
-        </div>
+        <>
+          {/* content-width reference (canvas inner width); measured in same scaled space */}
+          <div
+            ref={contentRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: -99999,
+              top: 0,
+              height: 0,
+              visibility: "hidden",
+              width: contentWidthPx,
+            }}
+          />
+          {/* hidden reference line at REF_SIZE, same chars/axes/letter-spacing */}
+          <div
+            ref={measRef}
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: -99999,
+              top: 0,
+              visibility: "hidden",
+              whiteSpace: "nowrap",
+              fontSize: FIT_REF_SIZE,
+              letterSpacing: "-0.02em",
+              fontFamily: "'ABC Arizona Plus Variable'",
+            }}
+          >
+            {renderSpans(rows[0], 0)}
+          </div>
+        </>
       )}
       {rows.map((row, r) => {
         const lineInner = (
