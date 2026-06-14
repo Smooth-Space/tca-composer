@@ -1,4 +1,5 @@
-import type { Composition, Format, Mode, Variant, SplitOrder } from "@/lib/composition";
+import type { Composition, Format, Mode, Template, SplitOrder } from "@/lib/composition";
+import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS } from "@/lib/composition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +20,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const VARIANTS: Variant[] = ["none", "split", "full", "multi"];
+const TEMPLATES: Template[] = ["A", "B", "C"];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -106,6 +107,31 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
     <aside className="flex w-80 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-background p-5">
       <h1 className="text-lg font-semibold">Composer</h1>
 
+      <Section title="Template">
+        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t}
+              onClick={() =>
+                setComp((c) => ({
+                  ...c,
+                  template: t,
+                  variant: TEMPLATE_VARIANTS[t].includes(c.variant) ? c.variant : "none",
+                }))
+              }
+              className={cn(
+                "rounded-md py-1.5 text-sm font-medium transition-colors",
+                comp.template === t
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </Section>
+
       <Section title="Format">
         <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
           {FORMATS.map((f) => (
@@ -127,7 +153,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
 
       <Section title="Variant">
         <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
-          {VARIANTS.map((v) => (
+          {TEMPLATE_VARIANTS[comp.template].map((v) => (
             <button
               key={v}
               onClick={() => update({ variant: v })}
@@ -144,7 +170,9 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
         </div>
       </Section>
 
-      {(comp.variant === "split" || comp.variant === "full") && (
+      {(comp.variant === "split" ||
+        comp.variant === "full" ||
+        comp.variant === "inset") && (
         <Section title="Image">
           <input
             ref={fileRef}
@@ -380,20 +408,20 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
 
       <Section title="Text">
         <div className="space-y-2">
-          <AutoTextarea
-            value={comp.info.text1}
-            onChange={(e) => update({ info: { ...comp.info, text1: e.target.value } })}
-            placeholder="Text 1"
-            rows={2}
-            className="resize-none"
-          />
-          <AutoTextarea
-            value={comp.info.text2}
-            onChange={(e) => update({ info: { ...comp.info, text2: e.target.value } })}
-            placeholder="Text 2"
-            rows={2}
-            className="resize-none"
-          />
+          {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
+            <div key={slot.key} className="space-y-1">
+              <Label className="text-xs">{slot.label}</Label>
+              <AutoTextarea
+                value={comp.captions[slot.key]}
+                onChange={(e) =>
+                  update({ captions: { ...comp.captions, [slot.key]: e.target.value } })
+                }
+                placeholder={slot.label}
+                rows={2}
+                className="resize-none"
+              />
+            </div>
+          ))}
         </div>
       </Section>
 

@@ -18,8 +18,9 @@ const P = {
   edgeBleed: 0.15, // max fraction of a box allowed off-canvas
   minGapFrac: 0.02, // min gap between boxes (fraction of W)
   posJitter: 0.12, // vertical jitter within a region (fraction of region height)
-  bandMinFrac: 0.3, // central keep-clear band height, min (fraction of H)
-  bandMaxFrac: 0.55,
+  bandMinFrac: 0.2, // central keep-clear band height, min (fraction of H)
+  bandMaxFrac: 0.45,
+  bandMargin: 0.02,
 };
 
 function makeRng(seed: number) {
@@ -92,7 +93,7 @@ export function computeMultiLayout(
 
   // central keep-clear band (scales with the title)
   const bandH = clamp(
-    titleRows * titleSizePx * 0.9 + 0.06 * H,
+    titleRows * titleSizePx * 0.9 + P.bandMargin * H,
     P.bandMinFrac * H,
     P.bandMaxFrac * H,
   );

@@ -1,6 +1,7 @@
-import { PLACEHOLDER_SRC, type Composition } from "@/lib/composition";
+import { PLACEHOLDER_SRC, TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
+import { TemplateLayout } from "@/components/TemplateLayout";
 import { computeMultiLayout } from "@/lib/multiLayout";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
@@ -61,7 +62,7 @@ export function Canvas({
 
   const infoRow = (
     <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
-      {[comp.info.text1, comp.info.text2].map((text, i) => (
+      {[comp.captions.text1, comp.captions.text2].map((text, i) => (
         <div
           key={i}
           style={{
@@ -97,6 +98,9 @@ export function Canvas({
   );
 
   const renderInner = () => {
+    if (comp.template !== "A") {
+      return renderTemplate();
+    }
     if (comp.variant === "full") {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
@@ -219,6 +223,68 @@ export function Canvas({
       >
         <div className="flex flex-1 flex-col justify-center">{title}</div>
         {infoRow}
+      </div>
+    );
+  };
+
+  // Templates B and C: shared caption layout, image layer behind text.
+  const renderTemplate = () => {
+    const slots = TEMPLATE_CAPTIONS[comp.template];
+    const centeredTitle = (
+      <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
+    );
+
+    let imageLayer: React.ReactNode = null;
+    if (comp.variant === "full") {
+      imageLayer = <div style={{ position: "absolute", inset: 0 }}>{coverImg}</div>;
+    } else if (comp.variant === "inset") {
+      const side = w - 280;
+      imageLayer = (
+        <div
+          style={{
+            position: "absolute",
+            left: (w - side) / 2,
+            top: (h - side) / 2,
+            width: side,
+            height: side,
+          }}
+        >
+          {coverImg}
+        </div>
+      );
+    } else if (comp.variant === "multi") {
+      imageLayer = (
+        <div style={{ position: "absolute", inset: 0 }}>
+          {multiPlacements.map((p) => (
+            <img
+              key={p.id}
+              src={comp.images.find((im) => im.id === p.id)?.src}
+              alt=""
+              style={{
+                position: "absolute",
+                left: p.x,
+                top: p.y,
+                width: p.width,
+                height: p.height,
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ position: "absolute", inset: 0 }}>
+        {imageLayer && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
+        )}
+        <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor}>
+            {centeredTitle}
+          </TemplateLayout>
+        </div>
       </div>
     );
   };
