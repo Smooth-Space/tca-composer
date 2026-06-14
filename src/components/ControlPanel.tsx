@@ -218,7 +218,7 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
         },
       ),
     ).then((items) => {
-      setComp((c) => ({ ...c, images: [...c.images, ...items].slice(0, 6) }));
+      setComp((c) => ({ ...c, images: [...c.images, ...items] }));
     });
   };
 
@@ -338,7 +338,6 @@ export function ControlPanel({ comp, setComp, onExport, exporting, onReset }: Pr
               variant="outline"
               size="sm"
               className="w-full"
-              disabled={comp.images.length >= 6}
               onClick={() => multiFileRef.current?.click()}
             >
               <Plus className="mr-1 h-4 w-4" /> Add images
