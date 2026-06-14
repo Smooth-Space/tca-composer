@@ -64,7 +64,7 @@ export function Canvas({ comp }: { comp: Composition }) {
                   lineHeight: 0.9,
                   letterSpacing: "-0.02em",
                   color: comp.textColor,
-                  textTransform: comp.titleCase === "upper" ? "uppercase" : "none",
+                  textTransform: t.case === "upper" ? "uppercase" : "none",
                   fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 85",
                 }}
               >

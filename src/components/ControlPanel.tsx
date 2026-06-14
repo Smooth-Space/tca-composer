@@ -76,28 +76,52 @@ export function ControlPanel({ comp, setComp }: Props) {
       <Section title="Titles">
         <div className="space-y-2">
           {comp.titles.map((t) => (
-            <div key={t.id} className="flex items-center gap-2">
-              <Input
-                value={t.text}
-                onChange={(e) =>
-                  update({
-                    titles: comp.titles.map((x) =>
-                      x.id === t.id ? { ...x, text: e.target.value } : x,
-                    ),
-                  })
-                }
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                onClick={() =>
-                  update({ titles: comp.titles.filter((x) => x.id !== t.id) })
-                }
-                disabled={comp.titles.length <= 1}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+            <div key={t.id} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={t.text}
+                  onChange={(e) =>
+                    update({
+                      titles: comp.titles.map((x) =>
+                        x.id === t.id ? { ...x, text: e.target.value } : x,
+                      ),
+                    })
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() =>
+                    update({ titles: comp.titles.filter((x) => x.id !== t.id) })
+                  }
+                  disabled={comp.titles.length <= 1}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+                {(["upper", "sentence"] as TitleCase[]).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() =>
+                      update({
+                        titles: comp.titles.map((x) =>
+                          x.id === t.id ? { ...x, case: c } : x,
+                        ),
+                      })
+                    }
+                    className={cn(
+                      "rounded-md py-1 text-xs font-medium transition-colors",
+                      t.case === c
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {c === "upper" ? "UPPER" : "Sentence"}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
           <Button
@@ -108,7 +132,7 @@ export function ControlPanel({ comp, setComp }: Props) {
               update({
                 titles: [
                   ...comp.titles,
-                  { id: crypto.randomUUID(), text: "New title" },
+                  { id: crypto.randomUUID(), text: "New title", case: "upper" },
                 ],
               })
             }
@@ -129,23 +153,6 @@ export function ControlPanel({ comp, setComp }: Props) {
             value={[comp.titleSizePx]}
             onValueChange={([v]) => update({ titleSizePx: v })}
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-          {(["upper", "sentence"] as TitleCase[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => update({ titleCase: c })}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium transition-colors",
-                comp.titleCase === c
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {c === "upper" ? "UPPER" : "Sentence"}
-            </button>
-          ))}
         </div>
       </Section>
 
