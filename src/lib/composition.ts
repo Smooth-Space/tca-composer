@@ -19,6 +19,7 @@ export interface Composition {
   format: Format;
   variant: Variant;
   background: string;
+  titleColor: string;
   textColor: string;
   titles: Title[];
   titleSizePx: number;
