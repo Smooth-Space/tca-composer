@@ -1,4 +1,5 @@
-import type { Composition, Format, Mode, Variant, SplitOrder } from "@/lib/composition";
+import type { Composition, Format, Mode, Template, SplitOrder } from "@/lib/composition";
+import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS } from "@/lib/composition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +20,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const VARIANTS: Variant[] = ["none", "split", "full", "multi"];
+const TEMPLATES: Template[] = ["A", "B", "C"];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
