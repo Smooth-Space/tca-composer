@@ -146,25 +146,6 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
         </div>
       </Section>
 
-      <Section title="Format">
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-          {FORMATS.map((f) => (
-            <button
-              key={f}
-              onClick={() => update({ format: f })}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium transition-colors",
-                comp.format === f
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </Section>
-
       <Section title="Variant">
         <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
           {TEMPLATE_VARIANTS[comp.template].map((v) => (
@@ -179,6 +160,25 @@ export function ControlPanel({ comp, setComp, onExport, exporting }: Props) {
               )}
             >
               {v}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Format">
+        <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+          {FORMATS.map((f) => (
+            <button
+              key={f}
+              onClick={() => update({ format: f })}
+              className={cn(
+                "rounded-md py-1.5 text-sm font-medium transition-colors",
+                comp.format === f
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {f}
             </button>
           ))}
         </div>
