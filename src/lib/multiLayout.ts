@@ -63,7 +63,7 @@ export function computeMultiLayout(
   seed: number,
   clearOverride?: number,   // when provided (incl. 0), replaces P.titleClearFrac
 ): Placement[] {
-  const imgs = images.slice(0, 3);
+  const imgs = images.filter((im) => im.src === undefined || im.src !== "").slice(0, 3);
   if (imgs.length === 0) return [];
   const rng = makeRng(seed);
   const longRef = Math.max(W, H);
