@@ -1,3 +1,5 @@
+import lagunaGloriaAsset from "@/assets/laguna-gloria.jpg.asset.json";
+
 export type Format = "1:1" | "4:5" | "9:16";
 export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi" | "inset";
@@ -42,7 +44,7 @@ export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   D: ["none", "split", "full", "multi"],
 };
 
-export const PLACEHOLDER_SRC = "/placeholder.jpg";
+export const PLACEHOLDER_SRC = lagunaGloriaAsset.url;
 
 export interface Title {
   id: string;
