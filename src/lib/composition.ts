@@ -3,7 +3,7 @@ import { newSeed } from "@/lib/engine";
 
 export type Format = "1:1" | "4:5" | "9:16";
 export type Mode = "light" | "mixed" | "heavy";
-export type Variant = "none" | "split" | "full" | "multi" | "inset";
+export type Variant = "none" | "split" | "full" | "multi";
 export type SplitOrder = "image-first" | "title-first";
 export type Template = "A" | "B" | "C" | "D";
 
