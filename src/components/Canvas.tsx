@@ -234,17 +234,28 @@ export function Canvas({
       <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
     );
 
-    // C-split: middle is title (top half) + image (bottom half).
+    // C-split: middle is title + image in splitOrder, 40px gap.
     if (comp.variant === "split") {
+      const titleHalf = (
+        <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+          {centeredTitle}
+        </div>
+      );
+      const imageHalf = (
+        <div style={{ flex: 1, minHeight: 0 }}>{coverImg}</div>
+      );
       const middle = (
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{centeredTitle}</div>
-          <div style={{ flex: 1, minHeight: 0 }}>{coverImg}</div>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", gap: 40 }}>
+          {comp.splitOrder === "image-first" ? (
+            <>{imageHalf}{titleHalf}</>
+          ) : (
+            <>{titleHalf}{imageHalf}</>
+          )}
         </div>
       );
       return (
         <div style={{ position: "absolute", inset: 0 }}>
-          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor}>
+          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor} gap={40}>
             {middle}
           </TemplateLayout>
         </div>
@@ -298,7 +309,7 @@ export function Canvas({
           <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
         )}
         <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor}>
+          <TemplateLayout slots={slots} captions={comp.captions} textColor={comp.textColor} gap={comp.template === "C" ? 40 : 0}>
             {centeredTitle}
           </TemplateLayout>
         </div>
