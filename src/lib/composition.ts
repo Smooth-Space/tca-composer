@@ -8,7 +8,6 @@ export const PLACEHOLDER_SRC = "/placeholder.jpg";
 export interface Title {
   id: string;
   text: string;
-  case: TitleCase;
 }
 
 export interface ImageItem {
