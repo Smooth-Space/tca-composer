@@ -1,5 +1,6 @@
 import type { Composition } from "@/lib/composition";
 import { useEffect, useRef, useState } from "react";
+import { TitleBlock } from "@/components/TitleBlock";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
   "1:1": { w: 1080, h: 1080 },
@@ -52,25 +53,13 @@ export function Canvas({ comp }: { comp: Composition }) {
         >
           {/* Title block */}
           <div className="flex flex-1 flex-col justify-center">
-            {comp.titles.map((t) => (
-              <p
-                key={t.id}
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                  fontFamily: "'ABC Arizona Plus Variable'",
-                  fontSize: comp.titleSizePx,
-                  lineHeight: 0.9,
-                  letterSpacing: "-0.02em",
-                  color: comp.textColor,
-                  textTransform: t.case === "upper" ? "uppercase" : "none",
-                  fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 85",
-                }}
-              >
-                {t.text}
-              </p>
-            ))}
+            <TitleBlock
+              titles={comp.titles}
+              titleMode={comp.titleMode}
+              titleSeed={comp.titleSeed}
+              titleSizePx={comp.titleSizePx}
+              color={comp.textColor}
+            />
           </div>
 
           {/* Info row */}
