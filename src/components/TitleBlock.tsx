@@ -7,10 +7,10 @@ interface TitleBlockProps {
   titleMode: Mode;
   titleSeed: number;
   titleSizePx: number;
-  color: string;
+  titleColor: string;
 }
 
-export function TitleBlock({ titles, titleMode, titleSeed, titleSizePx, color }: TitleBlockProps) {
+export function TitleBlock({ titles, titleMode, titleSeed, titleSizePx, titleColor }: TitleBlockProps) {
   // Apply casing in JS (not CSS text-transform) so the character STREAM matches
   // exactly what is displayed — keeps axis indices in sync with the glyphs.
   const rows = useMemo(
