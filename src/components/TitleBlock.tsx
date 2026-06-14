@@ -74,7 +74,7 @@ export function TitleBlock({ titles, titleMode, titleSeed, titleSizePx, color }:
                         fontVariationSettings: `'wght' ${a.wght}, 'SRFF' ${a.SRFF}, 'wdth' ${a.wdth}`,
                       }}
                     >
-                      {ch === " " ? "\u00A0" : ch}
+                      {ch}
                     </span>
                   );
                 })}
