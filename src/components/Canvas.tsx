@@ -265,7 +265,10 @@ export function Canvas({
 
   const infoRow = (
     <div style={{ display: "flex", gap: 40, alignItems: "flex-end" }}>
-      {[comp.captions.text1, comp.captions.text2].map((text, i) => (
+      {([
+        [comp.captions.text1, comp.captionColors.text1],
+        [comp.captions.text2, comp.captionColors.text2],
+      ] as const).map(([text, color], i) => (
         <div
           key={i}
           style={{
@@ -276,7 +279,7 @@ export function Canvas({
             fontFamily: "'ABC Arizona Plus Variable'",
             fontSize: 36,
             lineHeight: 1.1,
-            color: comp.textColor,
+            color,
             fontVariationSettings: "'wght' 400, 'SRFF' 0, 'wdth' 100",
           }}
         >
@@ -285,6 +288,13 @@ export function Canvas({
       ))}
     </div>
   );
+
+  const overlay = (style: React.CSSProperties) =>
+    comp.imageOverlay > 0 ? (
+      <div
+        style={{ position: "absolute", background: "#000", opacity: comp.imageOverlay, ...style }}
+      />
+    ) : null;
 
   const coverImg = (
     <img
