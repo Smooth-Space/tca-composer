@@ -116,6 +116,10 @@ export function TitleBlock({
 
   return (
     <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectTitle?.(titles[0]?.id ?? null);
+      }}
       style={{
         width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
@@ -124,8 +128,14 @@ export function TitleBlock({
         fontSize: renderSize,
         letterSpacing: TITLE_LETTER_SPACING,
         color: titleColor,
+        cursor: "text",
+        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
+        outlineOffset: 4,
       }}
     >
+      {titles[0]?.text === "" && !hideSelection && (
+        <span style={{ opacity: 0.3 }}>Title</span>
+      )}
       {fitEnabled && (
         <>
           {/* content-width reference (canvas inner width); measured in same scaled space */}
