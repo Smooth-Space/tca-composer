@@ -2,9 +2,12 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { ImageItem } from "@/lib/composition";
 import type { AnimHandle } from "@/lib/anim";
 
-const HOLD_SEC = 1.6; // pause at center (tunable)
-const EASE_SEC = 0.9; // slide transition (tunable)
-const FIT_FRAC = 0.86; // image contained within this fraction of the band (tunable)
+const HOLD_SEC = 1.5; // pause with a card centered (tunable)
+const EASE_SEC = 1.0; // slide to the next card (tunable)
+const SLOT_FRAC = 0.6; // card-center spacing ÷ band width; <1 → neighbors peek, cropped by edges (tunable)
+const CARD_H_FRAC = 0.7; // card box height ÷ band height (tunable)
+const BOX_W_FRAC = 0.9; // card box width ÷ slot → small gap at rest, no overlap (tunable)
+const SPREAD = 0.35; // extra spacing at peak velocity → gaps widen on the move, narrow at rest (tunable)
 
 type Props = { images: ImageItem[]; imageOverlay: number; animSeed: number; playing: boolean };
 
@@ -78,34 +81,46 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
       const cycle = HOLD_SEC + EASE_SEC;
       const total = N * cycle; // full seamless loop
       const tt = ((t % total) + total) % total;
-      const k = Math.floor(tt / cycle); // current centered image
+      const k = Math.floor(tt / cycle);
       const local = tt - k * cycle;
-      const adv =
-        local < HOLD_SEC
-          ? k // holding image k at center
-          : k + easeInOut((local - HOLD_SEC) / EASE_SEC); // sliding k -> k+1
 
-      const S = W; // one band-width per slot (one centered at a time)
-      const span = N * S;
-      const Xoff = -adv * S;
+      let adv: number, vNorm: number;
+      if (local < HOLD_SEC) {
+        adv = k; // holding: card k centered, gaps at rest
+        vNorm = 0;
+      } else {
+        const e = (local - HOLD_SEC) / EASE_SEC;
+        adv = k + easeInOut(e); // sliding k -> k+1
+        vNorm = Math.sin(Math.PI * e); // speed profile: 0 at ends, 1 mid-slide
+      }
 
-      for (let i = 0; i < N; i++) {
-        let x = i * S + Xoff;
-        x = ((x % span) + span) % span; // wrap to nearest copy
-        if (x > span / 2) x -= span; // center the window on 0
+      const SLOT = SLOT_FRAC * W;
+      const factor = 1 + SPREAD * vNorm; // gaps expand around screen center while moving
+      const boxH = CARD_H_FRAC * H;
+
+      // nearest wrapped copy of each card, in slot units; draw far→near so the centered card is on top
+      const items = els
+        .map((_, i) => {
+          let o = (((i - adv) % N) + N) % N;
+          if (o > N / 2) o -= N;
+          return { i, o };
+        })
+        .sort((a, b) => Math.abs(b.o) - Math.abs(a.o));
+
+      for (const { i, o } of items) {
         const im = imgs[i];
         const ar =
           im?.naturalWidth && im?.naturalHeight ? im.naturalWidth / im.naturalHeight : 1;
-        let cw = FIT_FRAC * W,
-          ch = cw / ar; // contain within the band
-        if (ch > FIT_FRAC * H) {
-          ch = FIT_FRAC * H;
+        let cw = SLOT * BOX_W_FRAC,
+          ch = cw / ar; // contain native aspect in the card box
+        if (ch > boxH) {
+          ch = boxH;
           cw = ch * ar;
         }
-        const cx = W / 2 + x; // center x on screen
+        const cx = W / 2 + o * SLOT * factor; // peeking position, breathing with velocity
         const left = cx - cw / 2,
           top = (H - ch) / 2;
-        if (left + cw < 0 || left > W) continue; // off-screen -> skip
+        if (left + cw < 0 || left > W) continue; // fully off-screen → skip (edges crop the rest)
         const el = els[i];
         if (el.complete && el.naturalWidth > 0) ctx.drawImage(el, left, top, cw, ch);
         if (imageOverlay > 0) {
