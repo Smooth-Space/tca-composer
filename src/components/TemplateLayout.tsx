@@ -8,10 +8,16 @@ function CaptionCell({
   slot,
   captions,
   captionColors,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   slot?: CaptionSlot;
   captions: Captions;
   captionColors: CaptionColors;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
@@ -20,6 +26,10 @@ function CaptionCell({
           text={captions[slot.key]}
           color={captionColors[slot.key]}
           align={slot.align}
+          captionKey={slot.key}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
         />
       )}
     </div>
@@ -31,11 +41,17 @@ function CaptionRow({
   captions,
   captionColors,
   anchor,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
   captionColors: CaptionColors;
   anchor: "top" | "bottom";
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   const rowSlots = slots.filter((s) => s.anchor === anchor);
   const left = rowSlots.find((s) => s.column === "left");
@@ -48,8 +64,22 @@ function CaptionRow({
         alignItems: anchor === "top" ? "flex-start" : "flex-end",
       }}
     >
-      <CaptionCell slot={left} captions={captions} captionColors={captionColors} />
-      <CaptionCell slot={right} captions={captions} captionColors={captionColors} />
+      <CaptionCell
+        slot={left}
+        captions={captions}
+        captionColors={captionColors}
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
+      />
+      <CaptionCell
+        slot={right}
+        captions={captions}
+        captionColors={captionColors}
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
+      />
     </div>
   );
 }
@@ -60,12 +90,18 @@ export function TemplateLayout({
   captionColors,
   gap = 0,
   children,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
   captionColors: CaptionColors;
   gap?: number;
   children: React.ReactNode;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   return (
     <div
@@ -78,9 +114,25 @@ export function TemplateLayout({
         gap,
       }}
     >
-      <CaptionRow slots={slots} captions={captions} captionColors={captionColors} anchor="top" />
+      <CaptionRow
+        slots={slots}
+        captions={captions}
+        captionColors={captionColors}
+        anchor="top"
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
+      />
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
-      <CaptionRow slots={slots} captions={captions} captionColors={captionColors} anchor="bottom" />
+      <CaptionRow
+        slots={slots}
+        captions={captions}
+        captionColors={captionColors}
+        anchor="bottom"
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
+      />
     </div>
   );
 }
