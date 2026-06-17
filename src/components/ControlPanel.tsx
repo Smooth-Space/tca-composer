@@ -387,7 +387,7 @@ export function ControlPanel({
                 ))}
               </div>
             )}
-            {comp.template !== "C" && (
+            {(comp.template === "A" || comp.template === "B") && (
               <SegmentedControl
                 options={["image-first", "title-first"] as SplitOrder[]}
                 value={comp.splitOrder}

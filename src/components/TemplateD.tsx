@@ -110,8 +110,8 @@ export function TemplateD({
               alignItems: "center",
             }}
           >
-            <Caption text={comp.captions.text1} color={comp.captionColors.text1} align="left" style={{ flex: 1 }} />
-            <Caption text={comp.captions.text2} color={comp.captionColors.text2} align="right" style={{ flex: 1 }} />
+            <Caption text={comp.captions.text1} color={comp.captionColors.text1} align="left" style={{ flex: 1, paddingLeft: comp.variant === "split" ? 40 : 0 }} />
+            <Caption text={comp.captions.text2} color={comp.captionColors.text2} align="right" style={{ flex: 1, paddingRight: comp.variant === "split" ? 40 : 0 }} />
           </div>
         </div>
 
