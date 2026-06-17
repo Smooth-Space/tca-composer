@@ -310,7 +310,7 @@ export function ControlPanel({
           />
         </div>
 
-        {usesImage && (
+        {comp.variant === "full" && (
           <div className="space-y-3 pt-1">
             <input
               ref={fileRef}
@@ -339,7 +339,55 @@ export function ControlPanel({
                 </Button>
               </div>
             </div>
-            {comp.variant === "split" && comp.template !== "C" && (
+          </div>
+        )}
+
+        {comp.variant === "split" && (
+          <div className="space-y-3 pt-1">
+            <input
+              ref={splitFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={onUploadSplit}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={comp.images.length >= 5}
+              onClick={() => splitFileRef.current?.click()}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Add images ({comp.images.length}/5)
+            </Button>
+            {comp.images.length > 0 && (
+              <div className="space-y-2">
+                {comp.images.map((im, i) => (
+                  <div key={im.id} className="flex items-center gap-2">
+                    <img
+                      src={im.src}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-md border border-border object-cover"
+                    />
+                    <span className="flex-1 text-xs text-muted-foreground">
+                      {i === 0 ? "First (static)" : `Image ${i + 1}`}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() =>
+                        update({ images: comp.images.filter((x) => x.id !== im.id) })
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {comp.template !== "C" && (
               <SegmentedControl
                 options={["image-first", "title-first"] as SplitOrder[]}
                 value={comp.splitOrder}
@@ -349,6 +397,35 @@ export function ControlPanel({
                 getLabel={(o) => (o === "image-first" ? "Image first" : "Title first")}
               />
             )}
+            <div className="flex items-center justify-between pt-1">
+              <Label className="text-xs">Animate</Label>
+              <div className="flex items-center gap-1">
+                {comp.animate && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => update({ animPlaying: !comp.animPlaying })}
+                    >
+                      {comp.animPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <RerollButton
+                      onClick={() => update({ animSeed: newSeed() })}
+                      tooltip="Reroll animation"
+                    />
+                  </>
+                )}
+                <Switch
+                  checked={comp.animate}
+                  onCheckedChange={(v) => update({ animate: v })}
+                />
+              </div>
+            </div>
           </div>
         )}
 
