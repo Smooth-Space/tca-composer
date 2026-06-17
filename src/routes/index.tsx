@@ -24,6 +24,18 @@ export const Route = createFileRoute("/")({
 const STORAGE_KEY = "tca-composition";
 const VERSION = 4;
 
+function nativeRectWithin(node: HTMLElement, ancestor: HTMLElement) {
+  let x = 0,
+    y = 0,
+    el: HTMLElement | null = node;
+  while (el && el !== ancestor) {
+    x += el.offsetLeft;
+    y += el.offsetTop;
+    el = el.offsetParent as HTMLElement | null;
+  }
+  return { x, y, w: node.clientWidth, h: node.clientHeight };
+}
+
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() {
