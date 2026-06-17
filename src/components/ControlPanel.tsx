@@ -191,11 +191,23 @@ export function ControlPanel({
   onExportMp4,
   exportingMp4,
   mp4Progress,
+  selectedTitleId,
+  onSelectTitle,
 }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
   const splitFileRef = useRef<HTMLInputElement>(null);
+  const titleRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
+
+  useEffect(() => {
+    if (!selectedTitleId) return;
+    const el = titleRefs.current.get(selectedTitleId);
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [selectedTitleId]);
 
   const usesImage = comp.variant === "split" || comp.variant === "full";
   const lineCount =
