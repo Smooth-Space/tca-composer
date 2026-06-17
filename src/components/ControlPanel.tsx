@@ -642,6 +642,11 @@ export function ControlPanel({
             <AutoTextarea
               value={comp.titles[0]?.text ?? ""}
               rows={1}
+              ref={(el) => {
+                const id = comp.titles[0]?.id;
+                if (el && id) titleRefs.current.set(id, el);
+              }}
+              onFocus={() => onSelectTitle?.(comp.titles[0]?.id ?? null)}
               onChange={(e) =>
                 setComp((c) => {
                   const first = c.titles[0] ?? { id: crypto.randomUUID(), text: "" };
