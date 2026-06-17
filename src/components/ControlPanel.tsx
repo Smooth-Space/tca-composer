@@ -597,8 +597,9 @@ export function ControlPanel({
                   className={cn("space-y-1", idx > 0 && "border-t border-border pt-5")}
                 >
                   <Label className="text-xs">{label}</Label>
-                  <Input
+                  <AutoTextarea
                     value={t?.text ?? ""}
+                    rows={1}
                     onChange={(e) =>
                       setComp((c) => {
                         const titles = [...c.titles];
@@ -616,58 +617,20 @@ export function ControlPanel({
           </div>
         ) : (
           <div className="space-y-5 pt-5">
-            {comp.titles.map((t, idx) => (
-              <div
-                key={t.id}
-                className={cn(
-                  "flex items-center gap-2",
-                  idx > 0 && "border-t border-border pt-5",
-                )}
-              >
-                <Input
-                  value={t.text}
-                  onChange={(e) =>
-                    update({
-                      titles: comp.titles.map((x) =>
-                        x.id === t.id ? { ...x, text: e.target.value } : x,
-                      ),
-                    })
-                  }
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() =>
-                    update({ titles: comp.titles.filter((x) => x.id !== t.id) })
-                  }
-                  disabled={comp.titles.length <= 1}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() =>
-                update({
-                  titles: [
-                    ...comp.titles,
-                    { id: crypto.randomUUID(), text: "New title" },
-                  ],
-                  // Fit only applies to a single line; revert when a 2nd line appears.
-                  titleSizeMode: "fixed",
+            <AutoTextarea
+              value={comp.titles[0]?.text ?? ""}
+              rows={1}
+              onChange={(e) =>
+                setComp((c) => {
+                  const first = c.titles[0] ?? { id: crypto.randomUUID(), text: "" };
+                  return { ...c, titles: [{ ...first, text: e.target.value }] };
                 })
               }
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add title row
-            </Button>
+            />
           </div>
         )}
 
-        {comp.template !== "D" && comp.titles.length >= 2 && (
+        {comp.template !== "D" && lineCount >= 2 && (
           <div className="flex items-center justify-between pt-3">
             <Label className="text-xs">Shift lines</Label>
             <div className="flex items-center gap-1">
