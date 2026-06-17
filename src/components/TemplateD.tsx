@@ -6,6 +6,7 @@ import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
 import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
 import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
+import { SplitConveyor } from "@/components/SplitConveyor";
 
 export function TemplateD({
   comp,
@@ -84,8 +85,20 @@ export function TemplateD({
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
           {comp.variant === "split" && (
             <div style={{ position: "absolute", inset: 0 }}>
-              <CoverImage src={imgSrc} />
-              <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+              {comp.animate ? (
+                <SplitConveyor
+                  ref={sphereRef}
+                  images={comp.images}
+                  imageOverlay={comp.imageOverlay}
+                  animSeed={comp.animSeed}
+                  playing={comp.animPlaying}
+                />
+              ) : (
+                <>
+                  <CoverImage src={imgSrc} />
+                  <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+                </>
+              )}
             </div>
           )}
           <div

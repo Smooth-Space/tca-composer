@@ -3,6 +3,7 @@ import type { Placement } from "@/lib/multiLayout";
 import { TemplateLayout } from "@/components/TemplateLayout";
 import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
 import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
+import { SplitConveyor } from "@/components/SplitConveyor";
 
 // Templates B and C: shared caption layout, image layer behind text.
 export function TemplateBC({
@@ -39,8 +40,20 @@ export function TemplateBC({
           gap={40}
         >
           <div style={{ position: "absolute", inset: 0 }}>
-            <CoverImage src={imgSrc} />
-            <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+            {comp.animate ? (
+              <SplitConveyor
+                ref={sphereRef}
+                images={comp.images}
+                imageOverlay={comp.imageOverlay}
+                animSeed={comp.animSeed}
+                playing={comp.animPlaying}
+              />
+            ) : (
+              <>
+                <CoverImage src={imgSrc} />
+                <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+              </>
+            )}
           </div>
           <div style={{ position: "absolute", inset: 0 }}>{centeredTitle}</div>
         </TemplateLayout>
@@ -55,8 +68,20 @@ export function TemplateBC({
     );
     const imageHalf = (
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
-        <CoverImage src={imgSrc} />
-        <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+        {comp.animate ? (
+          <SplitConveyor
+            ref={sphereRef}
+            images={comp.images}
+            imageOverlay={comp.imageOverlay}
+            animSeed={comp.animSeed}
+            playing={comp.animPlaying}
+          />
+        ) : (
+          <>
+            <CoverImage src={imgSrc} />
+            <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+          </>
+        )}
       </div>
     );
     const middle = (

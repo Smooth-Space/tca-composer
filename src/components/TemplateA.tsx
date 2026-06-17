@@ -4,6 +4,7 @@ import { Caption } from "@/components/Caption";
 import { TemplateLayout } from "@/components/TemplateLayout";
 import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
 import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
+import { SplitConveyor } from "@/components/SplitConveyor";
 
 export function TemplateA({
   comp,
@@ -41,8 +42,20 @@ export function TemplateA({
           } as React.CSSProperties
         }
       >
-        <CoverImage src={imgSrc} />
-        <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+        {comp.animate ? (
+          <SplitConveyor
+            ref={sphereRef}
+            images={comp.images}
+            imageOverlay={comp.imageOverlay}
+            animSeed={comp.animSeed}
+            playing={comp.animPlaying}
+          />
+        ) : (
+          <>
+            <CoverImage src={imgSrc} />
+            <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+          </>
+        )}
       </div>
     );
     const titleHalf = (
