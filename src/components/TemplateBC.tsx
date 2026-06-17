@@ -43,6 +43,7 @@ export function TemplateBC({
           slots={slots}
           captions={comp.captions}
           captionColors={comp.captionColors}
+          captionHidden={comp.captionHidden}
           gap={40}
           selectedTitleId={selectedTitleId}
           onSelectTitle={onSelectTitle}
@@ -108,6 +109,7 @@ export function TemplateBC({
           slots={slots}
           captions={comp.captions}
           captionColors={comp.captionColors}
+          captionHidden={comp.captionHidden}
           gap={40}
           selectedTitleId={selectedTitleId}
           onSelectTitle={onSelectTitle}
@@ -158,6 +160,7 @@ export function TemplateBC({
           slots={slots}
           captions={comp.captions}
           captionColors={comp.captionColors}
+          captionHidden={comp.captionHidden}
           gap={comp.template === "B" ? 40 : 0}
           selectedTitleId={selectedTitleId}
           onSelectTitle={onSelectTitle}
