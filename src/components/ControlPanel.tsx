@@ -67,22 +67,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function AutoTextarea(props: React.ComponentProps<typeof Textarea>) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const grow = (el: HTMLTextAreaElement | null) => {
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  return (
-    <Textarea
-      {...props}
-      ref={ref}
-      onInput={(e) => grow(e.currentTarget)}
-      onFocus={(e) => grow(e.currentTarget)}
-    />
-  );
-}
+const AutoTextarea = forwardRef<HTMLTextAreaElement, React.ComponentProps<typeof Textarea>>(
+  function AutoTextarea({ onFocus, ...props }, ref) {
+    const grow = (el: HTMLTextAreaElement | null) => {
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    return (
+      <Textarea
+        {...props}
+        ref={ref}
+        onInput={(e) => grow(e.currentTarget)}
+        onFocus={(e) => {
+          grow(e.currentTarget);
+          onFocus?.(e);
+        }}
+      />
+    );
+  },
+);
 
 const GRID_COLS: Record<number, string> = {
   2: "grid-cols-2",
