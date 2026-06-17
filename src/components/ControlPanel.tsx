@@ -723,6 +723,10 @@ export function ControlPanel({
                 placeholder={slot.label}
                 rows={2}
                 className="resize-none"
+                ref={(el) => {
+                  if (el) titleRefs.current.set(slot.key, el);
+                }}
+                onFocus={() => onSelectTitle?.(slot.key)}
               />
             </div>
           ))}

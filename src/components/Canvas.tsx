@@ -103,6 +103,9 @@ export function Canvas({
           title={title}
           multiPlacements={multiPlacements}
           sphereRef={sphereRef}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
         />
       );
     }
@@ -115,6 +118,9 @@ export function Canvas({
         title={title}
         multiPlacements={multiPlacements}
         sphereRef={sphereRef}
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
       />
     );
   };

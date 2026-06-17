@@ -14,6 +14,9 @@ export function TemplateBC({
   title,
   multiPlacements,
   sphereRef,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   comp: Composition;
   w: number;
@@ -22,6 +25,9 @@ export function TemplateBC({
   title: React.ReactNode;
   multiPlacements: Placement[];
   sphereRef?: React.Ref<MultiSphereHandle>;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   const slots = TEMPLATE_CAPTIONS[comp.template];
   const centeredTitle = (
@@ -38,6 +44,9 @@ export function TemplateBC({
           captions={comp.captions}
           captionColors={comp.captionColors}
           gap={40}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
         >
           <div style={{ position: "absolute", inset: 0 }}>
             {comp.animate ? (
@@ -95,7 +104,15 @@ export function TemplateBC({
     );
     return (
       <div style={{ position: "absolute", inset: 0 }}>
-        <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={40}>
+        <TemplateLayout
+          slots={slots}
+          captions={comp.captions}
+          captionColors={comp.captionColors}
+          gap={40}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        >
           {middle}
         </TemplateLayout>
       </div>
@@ -137,7 +154,15 @@ export function TemplateBC({
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
       )}
       <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-        <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors} gap={comp.template === "B" ? 40 : 0}>
+        <TemplateLayout
+          slots={slots}
+          captions={comp.captions}
+          captionColors={comp.captionColors}
+          gap={comp.template === "B" ? 40 : 0}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        >
           {centeredTitle}
         </TemplateLayout>
       </div>

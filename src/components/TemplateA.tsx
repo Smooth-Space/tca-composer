@@ -14,6 +14,9 @@ export function TemplateA({
   title,
   multiPlacements,
   sphereRef,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   comp: Composition;
   w: number;
@@ -22,6 +25,9 @@ export function TemplateA({
   title: React.ReactNode;
   multiPlacements: Placement[];
   sphereRef?: React.Ref<MultiSphereHandle>;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   const slots = TEMPLATE_CAPTIONS.A;
   const centeredTitle = (
@@ -97,12 +103,28 @@ export function TemplateA({
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             {left && (
-              <Caption text={comp.captions[left.key]} color={comp.captionColors[left.key]} align="left" />
+              <Caption
+                text={comp.captions[left.key]}
+                color={comp.captionColors[left.key]}
+                align="left"
+                captionKey={left.key}
+                selectedTitleId={selectedTitleId}
+                onSelectTitle={onSelectTitle}
+                hideSelection={hideSelection}
+              />
             )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {right && (
-              <Caption text={comp.captions[right.key]} color={comp.captionColors[right.key]} align="left" />
+              <Caption
+                text={comp.captions[right.key]}
+                color={comp.captionColors[right.key]}
+                align="left"
+                captionKey={right.key}
+                selectedTitleId={selectedTitleId}
+                onSelectTitle={onSelectTitle}
+                hideSelection={hideSelection}
+              />
             )}
           </div>
         </div>
@@ -154,7 +176,14 @@ export function TemplateA({
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
       )}
       <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-        <TemplateLayout slots={slots} captions={comp.captions} captionColors={comp.captionColors}>
+        <TemplateLayout
+          slots={slots}
+          captions={comp.captions}
+          captionColors={comp.captionColors}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        >
           {centeredTitle}
         </TemplateLayout>
       </div>
