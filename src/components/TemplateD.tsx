@@ -21,15 +21,31 @@ export function TemplateD({
   imgSrc: string;
   sphereRef?: React.Ref<MultiSphereHandle>;
 }) {
-  const dRows = useMemo(
+  const dTitles = useMemo(
     () => [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""],
     [comp.titles],
   );
   const dAxes = useMemo(
-    () => computeAxes(dRows.flatMap((r) => Array.from(r)), comp.titleMode, comp.titleSeed),
-    [dRows, comp.titleMode, comp.titleSeed],
+    () =>
+      computeAxes(
+        dTitles.flatMap((t) => Array.from(t.replace(/\n/g, ""))),
+        comp.titleMode,
+        comp.titleSeed,
+      ),
+    [dTitles, comp.titleMode, comp.titleSeed],
   );
-  const bottomOffset = Array.from(dRows[0]).length;
+  // Rows for each title, with global start offsets into the shared axis stream.
+  const dLines = useMemo(() => {
+    const out: { text: string; startOffset: number; pin: 0 | 1; key: string }[] = [];
+    let acc = 0;
+    dTitles.forEach((t, pin) => {
+      t.split("\n").forEach((text, i) => {
+        out.push({ text, startOffset: acc, pin: pin as 0 | 1, key: `${pin}-${i}` });
+        acc += Array.from(text).length;
+      });
+    });
+    return out;
+  }, [dTitles]);
 
   const multiPlacements = useMemo(
     () => computeMultiLayout(comp.images, w, h, 2, comp.titleSizePx, comp.multiSeed, 0),
@@ -74,13 +90,20 @@ export function TemplateD({
           gap: 40,
         }}
       >
-        <TitleLine
-          text={dRows[0]}
-          axes={dAxes}
-          startOffset={0}
-          titleSizePx={comp.titleSizePx}
-          color={comp.titleColor}
-        />
+        <div>
+          {dLines
+            .filter((l) => l.pin === 0)
+            .map((l) => (
+              <TitleLine
+                key={l.key}
+                text={l.text}
+                axes={dAxes}
+                startOffset={l.startOffset}
+                titleSizePx={comp.titleSizePx}
+                color={comp.titleColor}
+              />
+            ))}
+        </div>
 
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
           {comp.variant === "split" && (
@@ -115,13 +138,20 @@ export function TemplateD({
           </div>
         </div>
 
-        <TitleLine
-          text={dRows[1]}
-          axes={dAxes}
-          startOffset={bottomOffset}
-          titleSizePx={comp.titleSizePx}
-          color={comp.titleColor}
-        />
+        <div>
+          {dLines
+            .filter((l) => l.pin === 1)
+            .map((l) => (
+              <TitleLine
+                key={l.key}
+                text={l.text}
+                axes={dAxes}
+                startOffset={l.startOffset}
+                titleSizePx={comp.titleSizePx}
+                color={comp.titleColor}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );

@@ -43,13 +43,21 @@ export function TitleBlock({
   titleShiftSeed = 0,
   contentWidthPx = 1000,
 }: TitleBlockProps) {
-  const rows = useMemo(() => titles.map((t) => t.text), [titles]);
+  // Split each title on "\n" into rendered rows, keeping the parent title id.
+  const lines = useMemo(
+    () =>
+      titles.flatMap((t) =>
+        t.text.split("\n").map((text, i) => ({ text, titleId: t.id, key: `${t.id}-${i}` })),
+      ),
+    [titles],
+  );
+  const rows = useMemo(() => lines.map((l) => l.text), [lines]);
 
-  // One flat stream across ALL rows; axes computed once.
+  // One flat stream across ALL rows; axes computed once (newlines excluded).
   const axes = useMemo(() => {
-    const stream = rows.flatMap((r) => Array.from(r)); // spaces included, in order
+    const stream = titles.flatMap((t) => Array.from(t.text.replace(/\n/g, "")));
     return computeAxes(stream, titleMode, titleSeed);
-  }, [rows, titleMode, titleSeed]);
+  }, [titles, titleMode, titleSeed]);
 
   // Start index of each row within the flat stream (no mutable counter in JSX).
   const rowStart = useMemo(() => {
@@ -165,14 +173,14 @@ export function TitleBlock({
         );
         if (shiftEnabled) {
           return (
-            <div key={titles[r].id} style={{ display: "flex", width: "100%" }}>
+            <div key={lines[r].key} style={{ display: "flex", width: "100%" }}>
               <div style={{ flex: `${offsets[r]} 0 0px` }} />
               {lineInner}
               <div style={{ flex: `${1 - offsets[r]} 0 0px` }} />
             </div>
           );
         }
-        return <div key={titles[r].id}>{lineInner}</div>;
+        return <div key={lines[r].key}>{lineInner}</div>;
       })}
     </div>
   );

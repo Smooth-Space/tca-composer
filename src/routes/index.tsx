@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
 });
 
 const STORAGE_KEY = "tca-composition";
-const VERSION = 4;
+const VERSION = 5;
 
 function nativeRectWithin(node: HTMLElement, ancestor: HTMLElement) {
   let x = 0,
@@ -94,6 +94,18 @@ function Composer() {
             restored.titleSizeMode = "fixed";
           }
           if (typeof restored.animate !== "boolean") restored.animate = false;
+          if (
+            restored.template !== "D" &&
+            Array.isArray(restored.titles) &&
+            restored.titles.length > 1
+          ) {
+            restored.titles = [
+              {
+                id: restored.titles[0].id,
+                text: restored.titles.map((t) => t.text).join("\n"),
+              },
+            ];
+          }
           if (typeof restored.animPlaying !== "boolean") restored.animPlaying = true;
           if (typeof restored.animSeed !== "number" || !Number.isFinite(restored.animSeed)) {
             restored.animSeed = newSeed();
