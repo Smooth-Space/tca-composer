@@ -31,6 +31,7 @@ export async function exportLoopMp4({
   background,
   onProgress,
   filename,
+  rect,
 }: {
   w: number;
   h: number;
@@ -42,6 +43,7 @@ export async function exportLoopMp4({
   background: string;
   onProgress?: (p: number) => void;
   filename: string;
+  rect: { x: number; y: number; w: number; h: number };
 }) {
   if (!("VideoEncoder" in window))
     throw new Error("MP4 export needs a Chromium browser (Chrome/Edge).");
@@ -70,7 +72,7 @@ export async function exportLoopMp4({
     seekAndRender(t); // synchronous render of the globe at time t
     ctx.fillStyle = background;
     ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(globeCanvas, 0, 0, w, h); // globe (native res)
+    ctx.drawImage(globeCanvas, rect.x, rect.y, rect.w, rect.h); // animation layer at its rect
     if (overlayImg) ctx.drawImage(overlayImg, 0, 0, w, h); // title + captions
     const frame = new VideoFrame(cap, { timestamp: Math.round(t * 1_000_000) });
     encoder.encode(frame, { keyFrame: i % fps === 0 });
