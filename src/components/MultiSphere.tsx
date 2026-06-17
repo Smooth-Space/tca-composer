@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 import type { ImageItem } from "@/lib/composition";
+import type { AnimHandle } from "@/lib/anim";
 import { makeRng } from "@/lib/engine";
 
 const SPHERE_RADIUS = 1;
@@ -34,12 +35,7 @@ function fibonacciSphere(n: number): THREE.Vector3[] {
   return pts;
 }
 
-export type MultiSphereHandle = {
-  durationSec: () => number;
-  seekAndRender: (t: number) => void;
-  getCanvas: () => HTMLCanvasElement | null;
-  setExporting: (b: boolean) => void;
-};
+export type MultiSphereHandle = AnimHandle;
 
 type Props = {
   images: ImageItem[];
@@ -301,7 +297,7 @@ export const MultiSphere = forwardRef<MultiSphereHandle, Props>(function MultiSp
   return (
     <div
       ref={mountRef}
-      data-globe="true"
+      data-anim="true"
       style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
     />
   );

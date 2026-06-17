@@ -24,6 +24,18 @@ export const Route = createFileRoute("/")({
 const STORAGE_KEY = "tca-composition";
 const VERSION = 4;
 
+function nativeRectWithin(node: HTMLElement, ancestor: HTMLElement) {
+  let x = 0,
+    y = 0,
+    el: HTMLElement | null = node;
+  while (el && el !== ancestor) {
+    x += el.offsetLeft;
+    y += el.offsetTop;
+    el = el.offsetParent as HTMLElement | null;
+  }
+  return { x, y, w: node.clientWidth, h: node.clientHeight };
+}
+
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() {
@@ -200,13 +212,14 @@ function Composer() {
           margin: "0",
           background: "transparent",
         },
-        filter: (el) => !(el instanceof HTMLElement && el.dataset.globe === "true"),
+        filter: (el) => !(el instanceof HTMLElement && el.dataset.anim === "true"),
       });
       const overlayImg = new Image();
       overlayImg.src = overlayUrl;
       await overlayImg.decode();
 
       sphere.setExporting(true); // pause live rAF; exporter drives frames
+      const rect = nativeRectWithin(canvas, node);
       await exportLoopMp4({
         w,
         h,
@@ -218,6 +231,7 @@ function Composer() {
         background: comp.background,
         onProgress: setMp4Progress,
         filename: `tca-${comp.format.replace(":", "x")}-${Date.now()}.mp4`,
+        rect,
       });
     } catch (err) {
       console.error("MP4 export failed", err);

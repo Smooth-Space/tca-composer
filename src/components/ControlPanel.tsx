@@ -194,6 +194,7 @@ export function ControlPanel({
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
+  const splitFileRef = useRef<HTMLInputElement>(null);
 
   const usesImage = comp.variant === "split" || comp.variant === "full";
 
@@ -231,6 +232,21 @@ export function ControlPanel({
       ),
     ).then((items) => {
       setComp((c) => ({ ...c, images: [...c.images, ...items] }));
+    });
+  };
+
+  const onUploadSplit = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    e.target.value = "";
+    Promise.all(
+      files.map(async (file) => {
+        const url = await fileToDataUrl(file);
+        const { naturalWidth, naturalHeight } = await loadDimensions(url);
+        return { id: crypto.randomUUID(), src: url, naturalWidth, naturalHeight };
+      }),
+    ).then((items) => {
+      setComp((c) => ({ ...c, images: [...c.images, ...items].slice(0, 5) }));
     });
   };
 
@@ -294,7 +310,7 @@ export function ControlPanel({
           />
         </div>
 
-        {usesImage && (
+        {comp.variant === "full" && (
           <div className="space-y-3 pt-1">
             <input
               ref={fileRef}
@@ -323,7 +339,55 @@ export function ControlPanel({
                 </Button>
               </div>
             </div>
-            {comp.variant === "split" && comp.template !== "C" && (
+          </div>
+        )}
+
+        {comp.variant === "split" && (
+          <div className="space-y-3 pt-1">
+            <input
+              ref={splitFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={onUploadSplit}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={comp.images.length >= 5}
+              onClick={() => splitFileRef.current?.click()}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Add images ({comp.images.length}/5)
+            </Button>
+            {comp.images.length > 0 && (
+              <div className="space-y-2">
+                {comp.images.map((im, i) => (
+                  <div key={im.id} className="flex items-center gap-2">
+                    <img
+                      src={im.src}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-md border border-border object-cover"
+                    />
+                    <span className="flex-1 text-xs text-muted-foreground">
+                      {i === 0 ? "First (static)" : `Image ${i + 1}`}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() =>
+                        update({ images: comp.images.filter((x) => x.id !== im.id) })
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {comp.template !== "C" && (
               <SegmentedControl
                 options={["image-first", "title-first"] as SplitOrder[]}
                 value={comp.splitOrder}
@@ -333,6 +397,35 @@ export function ControlPanel({
                 getLabel={(o) => (o === "image-first" ? "Image first" : "Title first")}
               />
             )}
+            <div className="flex items-center justify-between pt-1">
+              <Label className="text-xs">Animate</Label>
+              <div className="flex items-center gap-1">
+                {comp.animate && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => update({ animPlaying: !comp.animPlaying })}
+                    >
+                      {comp.animPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <RerollButton
+                      onClick={() => update({ animSeed: newSeed() })}
+                      tooltip="Reroll animation"
+                    />
+                  </>
+                )}
+                <Switch
+                  checked={comp.animate}
+                  onCheckedChange={(v) => update({ animate: v })}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -651,7 +744,7 @@ export function ControlPanel({
         <Button className="w-full" onClick={onExport} disabled={exporting}>
           {exporting ? "Exporting…" : "Export JPG"}
         </Button>
-        {comp.variant === "multi" && comp.animate && (
+        {(comp.variant === "multi" || comp.variant === "split") && comp.animate && (
           <Button className="w-full" onClick={onExportMp4} disabled={exportingMp4}>
             {exportingMp4
               ? `Exporting MP4… ${Math.round((mp4Progress ?? 0) * 100)}%`
