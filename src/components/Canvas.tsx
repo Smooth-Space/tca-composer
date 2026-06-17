@@ -17,10 +17,16 @@ export function Canvas({
   comp,
   compositionRef,
   sphereRef,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
   sphereRef?: React.Ref<MultiSphereHandle>;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -66,12 +72,26 @@ export function Canvas({
       titleShift={comp.titleShift}
       titleShiftSeed={comp.titleShiftSeed}
       contentWidthPx={w - 80}
+      selectedTitleId={selectedTitleId}
+      onSelectTitle={onSelectTitle}
+      hideSelection={hideSelection}
     />
   );
 
   const renderInner = () => {
     if (comp.template === "D") {
-      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} sphereRef={sphereRef} />;
+      return (
+        <TemplateD
+          comp={comp}
+          w={w}
+          h={h}
+          imgSrc={imgSrc}
+          sphereRef={sphereRef}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        />
+      );
     }
     if (comp.template === "A") {
       return (
@@ -103,6 +123,7 @@ export function Canvas({
     <div
       ref={containerRef}
       className="flex h-full w-full items-center justify-center overflow-hidden bg-muted"
+      onClick={() => onSelectTitle?.(null)}
     >
       <div style={{ width: w * scale, height: h * scale }} className="shadow-2xl">
         <div

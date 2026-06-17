@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/collapsible";
 import { newSeed } from "@/lib/engine";
 import { cn } from "@/lib/utils";
-import { useRef } from "react";
+import { forwardRef, useEffect, useRef } from "react";
 
 interface Props {
   comp: Composition;
@@ -25,6 +25,8 @@ interface Props {
   onExportMp4?: () => void;
   exportingMp4?: boolean;
   mp4Progress?: number;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
 }
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
@@ -65,22 +67,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function AutoTextarea(props: React.ComponentProps<typeof Textarea>) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const grow = (el: HTMLTextAreaElement | null) => {
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  return (
-    <Textarea
-      {...props}
-      ref={ref}
-      onInput={(e) => grow(e.currentTarget)}
-      onFocus={(e) => grow(e.currentTarget)}
-    />
-  );
-}
+const AutoTextarea = forwardRef<HTMLTextAreaElement, React.ComponentProps<typeof Textarea>>(
+  function AutoTextarea({ onFocus, ...props }, ref) {
+    const grow = (el: HTMLTextAreaElement | null) => {
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    };
+    return (
+      <Textarea
+        {...props}
+        ref={ref}
+        onInput={(e) => grow(e.currentTarget)}
+        onFocus={(e) => {
+          grow(e.currentTarget);
+          onFocus?.(e);
+        }}
+      />
+    );
+  },
+);
 
 const GRID_COLS: Record<number, string> = {
   2: "grid-cols-2",
@@ -189,11 +195,23 @@ export function ControlPanel({
   onExportMp4,
   exportingMp4,
   mp4Progress,
+  selectedTitleId,
+  onSelectTitle,
 }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
   const multiFileRef = useRef<HTMLInputElement>(null);
   const splitFileRef = useRef<HTMLInputElement>(null);
+  const titleRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
+
+  useEffect(() => {
+    if (!selectedTitleId) return;
+    const el = titleRefs.current.get(selectedTitleId);
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [selectedTitleId]);
 
   const usesImage = comp.variant === "split" || comp.variant === "full";
   const lineCount =
@@ -599,6 +617,11 @@ export function ControlPanel({
                   <AutoTextarea
                     value={t?.text ?? ""}
                     rows={1}
+                    ref={(el) => {
+                      const id = comp.titles[idx]?.id;
+                      if (el && id) titleRefs.current.set(id, el);
+                    }}
+                    onFocus={() => onSelectTitle?.(comp.titles[idx]?.id ?? null)}
                     onChange={(e) =>
                       setComp((c) => {
                         const titles = [...c.titles];
@@ -619,6 +642,11 @@ export function ControlPanel({
             <AutoTextarea
               value={comp.titles[0]?.text ?? ""}
               rows={1}
+              ref={(el) => {
+                const id = comp.titles[0]?.id;
+                if (el && id) titleRefs.current.set(id, el);
+              }}
+              onFocus={() => onSelectTitle?.(comp.titles[0]?.id ?? null)}
               onChange={(e) =>
                 setComp((c) => {
                   const first = c.titles[0] ?? { id: crypto.randomUUID(), text: "" };

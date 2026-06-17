@@ -14,6 +14,9 @@ interface TitleBlockProps {
   titleShift?: boolean;
   titleShiftSeed?: number;
   contentWidthPx?: number;
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
 }
 
 const FIT_REF_SIZE = 200;
@@ -42,7 +45,11 @@ export function TitleBlock({
   titleShift = false,
   titleShiftSeed = 0,
   contentWidthPx = 1000,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
 }: TitleBlockProps) {
+  const isSelected = !!selectedTitleId && selectedTitleId === titles[0]?.id;
   // Split each title on "\n" into rendered rows, keeping the parent title id.
   const lines = useMemo(
     () =>
@@ -109,6 +116,10 @@ export function TitleBlock({
 
   return (
     <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectTitle?.(titles[0]?.id ?? null);
+      }}
       style={{
         width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
@@ -117,8 +128,14 @@ export function TitleBlock({
         fontSize: renderSize,
         letterSpacing: TITLE_LETTER_SPACING,
         color: titleColor,
+        cursor: "text",
+        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
+        outlineOffset: 4,
       }}
     >
+      {titles[0]?.text === "" && !hideSelection && (
+        <span style={{ opacity: 0.3 }}>Title</span>
+      )}
       {fitEnabled && (
         <>
           {/* content-width reference (canvas inner width); measured in same scaled space */}
