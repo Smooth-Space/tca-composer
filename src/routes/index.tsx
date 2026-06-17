@@ -266,9 +266,18 @@ function Composer() {
         onExportMp4={handleExportMp4}
         exportingMp4={exportingMp4}
         mp4Progress={mp4Progress}
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={setSelectedTitleId}
       />
       <main className="flex-1">
-        <Canvas comp={comp} compositionRef={compositionRef} sphereRef={sphereRef} />
+        <Canvas
+          comp={comp}
+          compositionRef={compositionRef}
+          sphereRef={sphereRef}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={setSelectedTitleId}
+          hideSelection={hideSelection}
+        />
       </main>
     </div>
   );
