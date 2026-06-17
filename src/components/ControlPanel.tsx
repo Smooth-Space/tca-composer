@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Plus, X, RefreshCw, ChevronDown, Play, Pause } from "lucide-react";
+import { Plus, X, RefreshCw, ChevronDown, Play, Pause, Eye, EyeOff } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Collapsible,
@@ -712,24 +712,62 @@ export function ControlPanel({
 
       <Section title="Text">
         <div className="space-y-2">
-          {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
-            <div key={slot.key} className="space-y-1">
-              <Label className="text-xs">{slot.label}</Label>
-              <AutoTextarea
-                value={comp.captions[slot.key]}
-                onChange={(e) =>
-                  update({ captions: { ...comp.captions, [slot.key]: e.target.value } })
-                }
-                placeholder={slot.label}
-                rows={2}
-                className="resize-none"
-                ref={(el) => {
-                  if (el) titleRefs.current.set(slot.key, el);
-                }}
-                onFocus={() => onSelectTitle?.(slot.key)}
-              />
-            </div>
-          ))}
+          {TEMPLATE_CAPTIONS[comp.template].map((slot) => {
+            const isEmpty = (comp.captions[slot.key] ?? "") === "";
+            const hidden = comp.captionHidden[slot.key];
+            return (
+              <div key={slot.key} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">{slot.label}</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="block">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            disabled={!isEmpty}
+                            onClick={() =>
+                              update({
+                                captionHidden: { ...comp.captionHidden, [slot.key]: !hidden },
+                              })
+                            }
+                          >
+                            {hidden ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {!isEmpty
+                          ? "Clear the text to hide this field"
+                          : hidden
+                            ? "Show field"
+                            : "Hide field"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <AutoTextarea
+                  value={comp.captions[slot.key]}
+                  onChange={(e) =>
+                    update({ captions: { ...comp.captions, [slot.key]: e.target.value } })
+                  }
+                  placeholder={slot.label}
+                  rows={2}
+                  className={cn("resize-none", hidden && "opacity-50")}
+                  ref={(el) => {
+                    if (el) titleRefs.current.set(slot.key, el);
+                  }}
+                  onFocus={() => onSelectTitle?.(slot.key)}
+                />
+              </div>
+            );
+          })}
         </div>
       </Section>
 
