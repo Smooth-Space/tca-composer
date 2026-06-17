@@ -1,12 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { ImageItem } from "@/lib/composition";
 import type { AnimHandle } from "@/lib/anim";
-import { makeRng } from "@/lib/engine";
 
-const LOOP_SEC = 8; // seamless loop length (tunable; calm, globe-family tempo)
-const CARD_H_FRAC = 0.72; // card height ÷ band height (tunable)
-const TIGHTEN = 2.2; // >1 tightens spacing toward the right (tunable)
-const LATENCY = 0.06; // subtle inner lag amount (tunable)
+const HOLD_SEC = 1.6; // pause at center (tunable)
+const EASE_SEC = 0.9; // slide transition (tunable)
+const FIT_FRAC = 0.86; // image contained within this fraction of the band (tunable)
 
 type Props = { images: ImageItem[]; imageOverlay: number; animSeed: number; playing: boolean };
 
@@ -25,14 +23,14 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
   useImperativeHandle(
     ref,
     () => ({
-      durationSec: () => LOOP_SEC,
+      durationSec: () => (HOLD_SEC + EASE_SEC) * Math.max(images.length, 1),
       seekAndRender: (t) => drawRef.current(t),
       getCanvas: () => canvasRef.current,
       setExporting: (b) => {
         exportingRef.current = b;
       },
     }),
-    [],
+    [images.length],
   );
 
   useEffect(() => {
@@ -47,10 +45,8 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
     const ctx = canvas.getContext("2d")!;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    // Seeded image order (reroll changes arrangement); load + decode for crisp draws.
-    const rng = makeRng(animSeed);
-    const order0 = images.map((_, i) => i).sort(() => rng() - 0.5);
-    const imgs = order0.map((i) => images[i]);
+    // Image order = upload order; load + decode for crisp draws.
+    const imgs = images.slice();
     const els = imgs.map((im) => {
       const e = new Image();
       e.src = im.src;
@@ -69,7 +65,8 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
     ro.observe(mount);
     resize();
 
-    const easeTighten = (p: number) => 1 - Math.pow(1 - p, TIGHTEN); // dense/tight on the right
+    const easeInOut = (e: number) =>
+      e < 0.5 ? 4 * e * e * e : 1 - Math.pow(-2 * e + 2, 3) / 2; // power3.inOut
 
     drawRef.current = (t: number) => {
       const W = canvas.width,
@@ -77,27 +74,44 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
       ctx.clearRect(0, 0, W, H);
       const N = els.length;
       if (N === 0) return;
-      const u = (((t / LOOP_SEC) % 1) + 1) % 1;
-      const cardH = CARD_H_FRAC * H;
-      const yTop = (H - cardH) / 2;
-      const idx = els
-        .map((_, i) => i)
-        .sort((a, b) => ((a / N + u) % 1) - ((b / N + u) % 1)); // ascending p → right cards on top
-      for (const i of idx) {
-        const el = els[i];
+
+      const cycle = HOLD_SEC + EASE_SEC;
+      const total = N * cycle; // full seamless loop
+      const tt = ((t % total) + total) % total;
+      const k = Math.floor(tt / cycle); // current centered image
+      const local = tt - k * cycle;
+      const adv =
+        local < HOLD_SEC
+          ? k // holding image k at center
+          : k + easeInOut((local - HOLD_SEC) / EASE_SEC); // sliding k -> k+1
+
+      const S = W; // one band-width per slot (one centered at a time)
+      const span = N * S;
+      const Xoff = -adv * S;
+
+      for (let i = 0; i < N; i++) {
+        let x = i * S + Xoff;
+        x = ((x % span) + span) % span; // wrap to nearest copy
+        if (x > span / 2) x -= span; // center the window on 0
         const im = imgs[i];
         const ar =
           im?.naturalWidth && im?.naturalHeight ? im.naturalWidth / im.naturalHeight : 1;
-        const cardW = cardH * ar;
-        const p = (i / N + u) % 1;
-        const xC = -cardW + (W + 2 * cardW) * easeTighten(p); // center, off-left → off-right
-        const lag = Math.sin(2 * Math.PI * p) * LATENCY * cardW; // subtle periodic latency
-        const x = xC - lag - cardW / 2;
-        if (el.complete && el.naturalWidth > 0) ctx.drawImage(el, x, yTop, cardW, cardH);
+        let cw = FIT_FRAC * W,
+          ch = cw / ar; // contain within the band
+        if (ch > FIT_FRAC * H) {
+          ch = FIT_FRAC * H;
+          cw = ch * ar;
+        }
+        const cx = W / 2 + x; // center x on screen
+        const left = cx - cw / 2,
+          top = (H - ch) / 2;
+        if (left + cw < 0 || left > W) continue; // off-screen -> skip
+        const el = els[i];
+        if (el.complete && el.naturalWidth > 0) ctx.drawImage(el, left, top, cw, ch);
         if (imageOverlay > 0) {
           ctx.globalAlpha = imageOverlay;
           ctx.fillStyle = "#000";
-          ctx.fillRect(x, yTop, cardW, cardH);
+          ctx.fillRect(left, top, cw, ch);
           ctx.globalAlpha = 1;
         }
       }
@@ -109,7 +123,7 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
       const dt = (now - last) / 1000;
       last = now;
       if (!exportingRef.current && playingRef.current) {
-        tRef.current = (tRef.current + dt) % LOOP_SEC;
+        tRef.current = tRef.current + dt;
         drawRef.current(tRef.current);
       }
       raf = requestAnimationFrame(loop);
@@ -123,7 +137,7 @@ export const SplitConveyor = forwardRef<AnimHandle, Props>(function SplitConveyo
       canvasRef.current = null;
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     };
-  }, [images, imageOverlay, animSeed]);
+  }, [images, imageOverlay]);
 
   return <div ref={mountRef} data-anim="true" style={{ position: "absolute", inset: 0 }} />;
 });
