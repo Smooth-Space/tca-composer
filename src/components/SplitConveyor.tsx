@@ -3,7 +3,7 @@ import type { ImageItem } from "@/lib/composition";
 import type { AnimHandle } from "@/lib/anim";
 
 const CYC_SEC = 1.6; // time per card; loop = N × CYC_SEC (tunable)
-const GAP_PX = 8; // resting gap between cards, composition px (keep)
+const GAP_PX = 0; // flush — cards touch edge to edge
 const AMP = 0.85; // featuring emphasis: 0 = constant flow, →1 = near-stop at each center (tunable)
 const TAU = Math.PI * 2;
 
