@@ -7,7 +7,12 @@ import { Canvas } from "@/components/Canvas";
 import { exportLoopMp4 } from "@/lib/mp4Export";
 import { exportFreeformSVG } from "@/lib/freeformSvg";
 import type { MultiSphereHandle } from "@/components/MultiSphere";
-import { defaultComposition, type Composition, type Format } from "@/lib/composition";
+import {
+  defaultComposition,
+  normalizeComposition,
+  type Composition,
+  type Format,
+} from "@/lib/composition";
 import { newSeed } from "@/lib/engine";
 
 export const Route = createFileRoute("/")({
@@ -92,55 +97,8 @@ function Composer() {
         const saved = (await get(STORAGE_KEY)) as
           | { version: number; data: Partial<Composition> }
           | undefined;
-        if (!cancelled && saved && saved.version === VERSION && saved.data) {
-          const restored = { ...defaultComposition, ...saved.data } as Composition;
-          if (
-            typeof restored.titleShiftSeed !== "number" ||
-            !Number.isFinite(restored.titleShiftSeed)
-          ) {
-            restored.titleShiftSeed = newSeed();
-          }
-          if (typeof restored.titleShift !== "boolean") restored.titleShift = false;
-          restored.titleAmplitude =
-            typeof restored.titleAmplitude === "number" ? restored.titleAmplitude : null;
-          restored.titlePhase =
-            typeof restored.titlePhase === "number" ? restored.titlePhase : null;
-          if (restored.titleSizeMode !== "fixed" && restored.titleSizeMode !== "fit") {
-            restored.titleSizeMode = "fixed";
-          }
-          if (typeof restored.animate !== "boolean") restored.animate = false;
-          if (
-            restored.template !== "D" &&
-            Array.isArray(restored.titles) &&
-            restored.titles.length > 1
-          ) {
-            restored.titles = [
-              {
-                id: restored.titles[0].id,
-                text: restored.titles.map((t) => t.text).join("\n"),
-              },
-            ];
-          }
-          if (typeof restored.animPlaying !== "boolean") restored.animPlaying = true;
-          if (typeof restored.animSeed !== "number" || !Number.isFinite(restored.animSeed)) {
-            restored.animSeed = newSeed();
-          }
-          if (
-            typeof restored.globeScale !== "number" ||
-            !Number.isFinite(restored.globeScale)
-          ) {
-            restored.globeScale = 1.0;
-          } else {
-            restored.globeScale = Math.min(2.0, Math.max(1.0, restored.globeScale));
-          }
-          delete (restored as unknown as Record<string, unknown>).titleShiftOffsets;
-          restored.captionHidden = {
-            text1: restored.captionHidden?.text1 === true,
-            text2: restored.captionHidden?.text2 === true,
-            text3: restored.captionHidden?.text3 === true,
-            text4: restored.captionHidden?.text4 === true,
-          };
-          setComp(restored);
+        if (!cancelled && saved && saved.data) {
+          setComp(normalizeComposition(saved.data));
         }
       } catch {
         // ignore — keep defaults, never crash on bad/old saved state
