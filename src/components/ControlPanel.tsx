@@ -750,8 +750,8 @@ export function ControlPanel({
               const hidden = comp.captionHidden[slot.key];
               return (
                 <div key={slot.key} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">{slot.label}</Label>
+                  <div className="flex items-start justify-between">
+                    <FieldLabel label={slot.label} descriptor={slot.descriptor} />
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -801,6 +801,36 @@ export function ControlPanel({
                 </div>
               );
             })}
+          </div>
+        </Section>
+      )}
+
+      {!isFreeform && (
+        <Section title="Colors">
+          <div className="space-y-3">
+            <ColorField
+              label="Background"
+              value={comp.background}
+              onChange={(v) => update({ background: v })}
+            />
+            <ColorField
+              label="Title"
+              value={comp.titleColor}
+              onChange={(v) => update({ titleColor: v })}
+            />
+            {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
+              <ColorField
+                key={slot.key}
+                label={slot.label}
+                descriptor={slot.descriptor}
+                value={comp.captionColors[slot.key as CaptionKey]}
+                onChange={(v) =>
+                  update({
+                    captionColors: { ...comp.captionColors, [slot.key]: v },
+                  })
+                }
+              />
+            ))}
           </div>
         </Section>
       )}
