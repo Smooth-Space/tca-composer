@@ -1,11 +1,61 @@
 import { useMemo } from "react";
 import type { Composition } from "@/lib/composition";
-import { computeAxes } from "@/lib/engine";
+import { computeAxes, type Axes } from "@/lib/engine";
 import { computeMultiLayout } from "@/lib/multiLayout";
 import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
 import { type MultiSphereHandle } from "@/components/MultiSphere";
 import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
+
+function PinnedTitle({
+  pin,
+  comp,
+  dLines,
+  dAxes,
+  selectedTitleId,
+  onSelectTitle,
+  hideSelection,
+}: {
+  pin: 0 | 1;
+  comp: Composition;
+  dLines: { text: string; startOffset: number; pin: 0 | 1; key: string }[];
+  dAxes: Axes[];
+  selectedTitleId?: string | null;
+  onSelectTitle?: (id: string | null) => void;
+  hideSelection?: boolean;
+}) {
+  const pinId = comp.titles[pin]?.id ?? null;
+  const isSelected = !!selectedTitleId && selectedTitleId === pinId;
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectTitle?.(pinId);
+      }}
+      style={{
+        cursor: "text",
+        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
+        outlineOffset: 4,
+      }}
+    >
+      {comp.titles[pin]?.text === "" && !hideSelection && (
+        <span style={{ opacity: 0.3, color: comp.titleColor }}>Title</span>
+      )}
+      {dLines
+        .filter((l) => l.pin === pin)
+        .map((l) => (
+          <TitleLine
+            key={l.key}
+            text={l.text}
+            axes={dAxes}
+            startOffset={l.startOffset}
+            titleSizePx={comp.titleSizePx}
+            color={comp.titleColor}
+          />
+        ))}
+    </div>
+  );
+}
 
 export function TemplateD({
   comp,
@@ -75,40 +125,15 @@ export function TemplateD({
           gap: 40,
         }}
       >
-        {[0 as const].map((pin) => {
-          const pinId = comp.titles[pin]?.id ?? null;
-          const isSelected = !!selectedTitleId && selectedTitleId === pinId;
-          return (
-            <div
-              key="pin-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectTitle?.(pinId);
-              }}
-              style={{
-                cursor: "text",
-                outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-                outlineOffset: 4,
-              }}
-            >
-              {comp.titles[pin]?.text === "" && !hideSelection && (
-                <span style={{ opacity: 0.3, color: comp.titleColor }}>Title</span>
-              )}
-              {dLines
-                .filter((l) => l.pin === pin)
-                .map((l) => (
-                  <TitleLine
-                    key={l.key}
-                    text={l.text}
-                    axes={dAxes}
-                    startOffset={l.startOffset}
-                    titleSizePx={comp.titleSizePx}
-                    color={comp.titleColor}
-                  />
-                ))}
-            </div>
-          );
-        })}
+        <PinnedTitle
+          pin={0}
+          comp={comp}
+          dLines={dLines}
+          dAxes={dAxes}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        />
 
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
           {comp.variant === "split" && (
@@ -150,40 +175,15 @@ export function TemplateD({
           </div>
         </div>
 
-        {[1 as const].map((pin) => {
-          const pinId = comp.titles[pin]?.id ?? null;
-          const isSelected = !!selectedTitleId && selectedTitleId === pinId;
-          return (
-            <div
-              key="pin-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectTitle?.(pinId);
-              }}
-              style={{
-                cursor: "text",
-                outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-                outlineOffset: 4,
-              }}
-            >
-              {comp.titles[pin]?.text === "" && !hideSelection && (
-                <span style={{ opacity: 0.3, color: comp.titleColor }}>Title</span>
-              )}
-              {dLines
-                .filter((l) => l.pin === pin)
-                .map((l) => (
-                  <TitleLine
-                    key={l.key}
-                    text={l.text}
-                    axes={dAxes}
-                    startOffset={l.startOffset}
-                    titleSizePx={comp.titleSizePx}
-                    color={comp.titleColor}
-                  />
-                ))}
-            </div>
-          );
-        })}
+        <PinnedTitle
+          pin={1}
+          comp={comp}
+          dLines={dLines}
+          dAxes={dAxes}
+          selectedTitleId={selectedTitleId}
+          onSelectTitle={onSelectTitle}
+          hideSelection={hideSelection}
+        />
       </div>
     </div>
   );
