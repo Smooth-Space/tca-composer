@@ -203,7 +203,6 @@ function Composer() {
   }
 
   async function handleExportMp4() {
-    // placeholder anchor
     const node = compositionRef.current;
     const sphere = sphereRef.current;
     if (!node || !sphere) return;
