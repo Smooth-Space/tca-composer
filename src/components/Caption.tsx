@@ -5,6 +5,7 @@ import {
   CAPTION_VARIATION,
 } from "@/lib/typo";
 import type { CaptionKey } from "@/lib/composition";
+import { useSelectable } from "@/components/SelectionContext";
 
 // A single caption. Shared by TemplateLayout (B/C), Canvas infoRow (A) and Template D.
 export function Caption({
@@ -13,9 +14,6 @@ export function Caption({
   align,
   style,
   captionKey,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
   hidden,
 }: {
   text: string;
@@ -23,24 +21,14 @@ export function Caption({
   align: "left" | "right";
   style?: React.CSSProperties;
   captionKey?: CaptionKey;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
   hidden?: boolean;
 }) {
+  const { hideSelection, handleClick, selectableStyle } = useSelectable(captionKey ?? null);
   if (hidden && text === "") return null;
-  const isSelected = !!captionKey && selectedTitleId === captionKey;
   const isEmpty = text === "";
   return (
     <div
-      onClick={
-        captionKey && onSelectTitle
-          ? (e) => {
-              e.stopPropagation();
-              onSelectTitle(captionKey);
-            }
-          : undefined
-      }
+      onClick={captionKey ? handleClick : undefined}
       style={{
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",
@@ -50,9 +38,7 @@ export function Caption({
         fontSize: CAPTION_SIZE_PX,
         lineHeight: CAPTION_LINE_HEIGHT,
         color,
-        cursor: captionKey ? "text" : undefined,
-        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-        outlineOffset: 4,
+        ...(captionKey ? selectableStyle : null),
         ...style,
       }}
     >
