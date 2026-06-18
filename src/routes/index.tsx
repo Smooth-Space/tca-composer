@@ -283,6 +283,7 @@ function Composer() {
         onExportMp4={handleExportMp4}
         exportingMp4={exportingMp4}
         mp4Progress={mp4Progress}
+        onExportSvg={handleExportSvg}
         selectedTitleId={selectedTitleId}
         onSelectTitle={setSelectedTitleId}
       />
@@ -294,6 +295,9 @@ function Composer() {
           selectedTitleId={selectedTitleId}
           onSelectTitle={setSelectedTitleId}
           hideSelection={hideSelection}
+          onAreaWidth={(w) => {
+            areaWidthRef.current = w;
+          }}
         />
       </main>
     </div>
