@@ -508,14 +508,6 @@ export function ControlPanel({
                   onChange={onUploadMulti}
                   className="hidden"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => multiFileRef.current?.click()}
-                >
-                  <Plus className="mr-1 h-4 w-4" /> Add images
-                </Button>
                 {comp.images.length > 0 && (
                   <div className="space-y-2">
                     {comp.images.map((im, i) => (
@@ -542,6 +534,14 @@ export function ControlPanel({
                     ))}
                   </div>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => multiFileRef.current?.click()}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Add images
+                </Button>
                 <div className="flex items-center justify-between pt-1">
                   <Label className="text-xs">Animate</Label>
                   <div className="flex items-center gap-1">
