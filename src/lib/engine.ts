@@ -73,15 +73,27 @@ function axisValue(spec: AxisSpec, d: number) {
   return spec.kind === "const" ? spec.value : lerp(spec.start, spec.end, d);
 }
 
+export function resolveWave(mode: Mode, seed: number): { amplitude: number; phase: number } {
+  const cfg = MODES[mode];
+  const rng = makeRng(seed);
+  return resolveRandoms(cfg, rng);
+}
+
 /**
  * chars = EVERY character across ALL title rows, in order (spaces included).
  * The distribution runs start->end across the whole stream, so position t is
  * each character's index over the total character count — never per-row.
  */
-export function computeAxes(chars: string[], mode: Mode, seed: number): Axes[] {
+export function computeAxes(
+  chars: string[],
+  mode: Mode,
+  seed: number,
+  override?: { amplitude?: number | null; phase?: number | null },
+): Axes[] {
   const cfg = MODES[mode];
-  const rng = makeRng(seed);
-  const { amplitude, phase } = resolveRandoms(cfg, rng);
+  const base = resolveWave(mode, seed);
+  const amplitude = override?.amplitude ?? base.amplitude;
+  const phase = override?.phase ?? base.phase;
   const N = chars.length;
   return chars.map((_, i) => {
     const t = N > 1 ? i / (N - 1) : 0;
