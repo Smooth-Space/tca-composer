@@ -13,9 +13,7 @@ export function TemplateBC({
   title,
   multiPlacements,
   sphereRef,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
+
 }: {
   comp: Composition;
   w: number;
@@ -24,9 +22,6 @@ export function TemplateBC({
   title: React.ReactNode;
   multiPlacements: Placement[];
   sphereRef?: React.Ref<MultiSphereHandle>;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }) {
   const slots = TEMPLATE_CAPTIONS[comp.template];
   const centeredTitle = (
@@ -44,9 +39,6 @@ export function TemplateBC({
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
           gap={40}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         >
           <div style={{ position: "absolute", inset: 0 }}>
             <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
@@ -84,9 +76,6 @@ export function TemplateBC({
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
           gap={40}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         >
           {middle}
         </TemplateLayout>
@@ -106,9 +95,6 @@ export function TemplateBC({
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
           gap={comp.template === "B" ? 40 : 0}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         >
           {centeredTitle}
         </TemplateLayout>
