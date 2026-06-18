@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { computeAxes, makeRng, type Mode } from "@/lib/engine";
 import type { Title } from "@/lib/composition";
 import { TitleSpans } from "@/components/TitleLine";
-import { TITLE_FONT, TITLE_LETTER_SPACING, TITLE_LINE_HEIGHT } from "@/lib/typo";
+import { TITLE_FONT, TITLE_LETTER_SPACING, TITLE_LINE_HEIGHT, shiftOffsets } from "@/lib/typo";
 
 interface TitleBlockProps {
   titles: Title[];
