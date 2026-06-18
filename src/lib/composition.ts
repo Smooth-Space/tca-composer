@@ -92,9 +92,9 @@ export interface Composition {
   animPlaying: boolean;
   globeScale: number;
   imageOverlay: number;
-  captions: { text1: string; text2: string; text3: string; text4: string };
-  captionColors: { text1: string; text2: string; text3: string; text4: string };
-  captionHidden: { text1: boolean; text2: boolean; text3: boolean; text4: boolean };
+  captions: Captions;
+  captionColors: CaptionColors;
+  captionHidden: CaptionFlags;
 }
 
 export const defaultComposition: Composition = {
