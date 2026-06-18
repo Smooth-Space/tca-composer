@@ -143,6 +143,11 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
     }
   }
 
+  // Tight bounding box across all glyphs (px space) — hug on all four sides.
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
   for (const g of all) {
     const gx0 = g.x + g.bbox.minX * g.scale;
     const gx1 = g.x + g.bbox.maxX * g.scale;
