@@ -37,8 +37,9 @@ export function TemplateD({
         dTitles.flatMap((t) => Array.from(t.replace(/\n/g, ""))),
         comp.titleMode,
         comp.titleSeed,
+        { amplitude: comp.titleAmplitude, phase: comp.titlePhase },
       ),
-    [dTitles, comp.titleMode, comp.titleSeed],
+    [dTitles, comp.titleMode, comp.titleSeed, comp.titleAmplitude, comp.titlePhase],
   );
   // Rows for each title, with global start offsets into the shared axis stream.
   const dLines = useMemo(() => {
