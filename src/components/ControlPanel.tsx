@@ -715,6 +715,7 @@ export function ControlPanel({
         </div>
       </Section>
 
+      {!isFreeform && (
       <Section title="Text">
         <div className="space-y-2">
           {TEMPLATE_CAPTIONS[comp.template].map((slot) => {
@@ -775,6 +776,7 @@ export function ControlPanel({
           })}
         </div>
       </Section>
+      )}
 
       <Section title="Export">
         <Button className="w-full" onClick={onExport} disabled={exporting}>
