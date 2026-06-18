@@ -6,32 +6,26 @@ import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
 import { type MultiSphereHandle } from "@/components/MultiSphere";
 import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
+import { useSelectable } from "@/components/SelectionContext";
 
 function PinnedTitle({
   pin,
   comp,
   dLines,
   dAxes,
-
 }: {
   pin: 0 | 1;
   comp: Composition;
   dLines: { text: string; startOffset: number; pin: 0 | 1; key: string }[];
   dAxes: Axes[];
 }) {
-  const pinId = comp.titles[pin]?.id ?? null;
-  const isSelected = !!selectedTitleId && selectedTitleId === pinId;
+  const { handleClick, hideSelection, selectableStyle } = useSelectable(
+    comp.titles[pin]?.id ?? null,
+  );
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelectTitle?.(pinId);
-      }}
-      style={{
-        cursor: "text",
-        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-        outlineOffset: 4,
-      }}
+      onClick={handleClick}
+      style={selectableStyle}
     >
       {comp.titles[pin]?.text === "" && !hideSelection && (
         <span style={{ opacity: 0.3, color: comp.titleColor }}>Title</span>
