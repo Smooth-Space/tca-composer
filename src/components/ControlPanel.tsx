@@ -818,3 +818,122 @@ export function ControlPanel({
     </aside>
   );
 }
+
+function DistributionViz({
+  mode,
+  amplitude,
+  phase,
+}: {
+  mode: Mode;
+  amplitude: number;
+  phase: number;
+}) {
+  const W = 240,
+    H = 72,
+    pad = 6,
+    N = 64;
+  const linear = mode === "mixed";
+  const pts = Array.from({ length: N + 1 }, (_, i) => {
+    const t = i / N;
+    const d = linear ? t : (Math.sin(2 * Math.PI * (amplitude * t + phase)) + 1) / 2;
+    const x = pad + t * (W - 2 * pad);
+    const y = H - pad - d * (H - 2 * pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg
+      width="100%"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      className="rounded-md border bg-muted/30 text-foreground"
+    >
+      <line x1={pad} y1={H / 2} x2={W - pad} y2={H / 2} stroke="currentColor" strokeOpacity={0.15} />
+      <polyline
+        points={pts}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+}
+
+function AdvancedWave({
+  comp,
+  update,
+}: {
+  comp: Composition;
+  update: (patch: Partial<Composition>) => void;
+}) {
+  const wave = resolveWave(comp.titleMode, comp.titleSeed);
+  const amp = comp.titleAmplitude ?? wave.amplitude;
+  const ph = comp.titlePhase ?? wave.phase;
+  const isLinear = comp.titleMode === "mixed";
+  return (
+    <Collapsible className="pt-3">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between text-xs text-muted-foreground">
+        Advanced
+        <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-4 pt-3">
+        <TooltipProvider>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Amplitude</Label>
+              <span className="text-xs text-muted-foreground">{amp.toFixed(1)}×</span>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block">
+                  <Slider
+                    min={0}
+                    max={4}
+                    step={0.1}
+                    value={[amp]}
+                    disabled={isLinear}
+                    onValueChange={([v]) => update({ titleAmplitude: v })}
+                  />
+                </span>
+              </TooltipTrigger>
+              {isLinear && (
+                <TooltipContent>Amplitude applies to Light/Heavy (Mixed is linear)</TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Phase</Label>
+              <span className="text-xs text-muted-foreground">{ph.toFixed(2)}</span>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block">
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[ph]}
+                    disabled={isLinear}
+                    onValueChange={([v]) => update({ titlePhase: v })}
+                  />
+                </span>
+              </TooltipTrigger>
+              {isLinear && (
+                <TooltipContent>Phase applies to Light/Heavy (Mixed is linear)</TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+        <DistributionViz mode={comp.titleMode} amplitude={amp} phase={ph} />
+        <button
+          type="button"
+          className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+          onClick={() => update({ titleAmplitude: null, titlePhase: null, titleSeed: newSeed() })}
+        >
+          Reset to random
+        </button>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
