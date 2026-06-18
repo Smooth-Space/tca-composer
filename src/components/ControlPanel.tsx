@@ -173,9 +173,9 @@ function RerollButton({
 
 function FieldLabel({ label, descriptor }: { label: string; descriptor?: string }) {
   return (
-    <div className="space-y-0.5">
+    <div className="flex items-baseline gap-1.5">
       <Label className="text-xs">{label}</Label>
-      {descriptor && <div className="text-xs text-muted-foreground">{descriptor}</div>}
+      {descriptor && <span className="text-xs text-muted-foreground">{descriptor}</span>}
     </div>
   );
 }
