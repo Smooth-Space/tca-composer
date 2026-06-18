@@ -143,9 +143,9 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
     }
   }
 
-  // Tight bounding box across all glyphs (px space).
-  let minX = 0,
-    maxX = areaWidth,
+  // Tight bounding box across all glyphs (px space) — hug on all four sides.
+  let minX = Infinity,
+    maxX = -Infinity,
     minY = Infinity,
     maxY = -Infinity;
   for (const g of all) {
@@ -161,6 +161,8 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
   if (!Number.isFinite(minY)) {
     minY = 0;
     maxY = comp.titleSizePx;
+    minX = 0;
+    maxX = areaWidth;
   }
 
   const vbX = minX;
