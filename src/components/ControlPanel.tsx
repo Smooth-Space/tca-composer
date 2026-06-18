@@ -612,35 +612,6 @@ export function ControlPanel({
         )}
       </Section>
 
-      {!isFreeform && (
-        <Section title="Colors">
-          <div className="grid grid-cols-2 gap-3">
-            <ColorField
-              label="Background"
-              value={comp.background}
-              onChange={(v) => update({ background: v })}
-            />
-            <ColorField
-              label="Title"
-              value={comp.titleColor}
-              onChange={(v) => update({ titleColor: v })}
-            />
-            {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
-              <ColorField
-                key={slot.key}
-                label={`${slot.label} color`}
-                value={comp.captionColors[slot.key as CaptionKey]}
-                onChange={(v) =>
-                  update({
-                    captionColors: { ...comp.captionColors, [slot.key]: v },
-                  })
-                }
-              />
-            ))}
-          </div>
-        </Section>
-      )}
-
       <Section title="Titles">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
