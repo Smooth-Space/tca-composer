@@ -203,6 +203,7 @@ function Composer() {
   }
 
   async function handleExportMp4() {
+    // placeholder anchor
     const node = compositionRef.current;
     const sphere = sphereRef.current;
     if (!node || !sphere) return;
@@ -260,6 +261,15 @@ function Composer() {
     } finally {
       sphereRef.current?.setExporting(false);
       setExportingMp4(false);
+    }
+  }
+
+  async function handleExportSvg() {
+    try {
+      await document.fonts.ready;
+      await exportFreeformSVG(comp, areaWidthRef.current);
+    } catch (err) {
+      console.error("SVG export failed", err);
     }
   }
 
