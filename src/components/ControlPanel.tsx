@@ -31,7 +31,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const TEMPLATES: Template[] = ["A", "B", "C", "D"];
+const TEMPLATES: Template[] = ["A", "B", "C", "D", "freeform"];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
@@ -92,6 +92,7 @@ const GRID_COLS: Record<number, string> = {
   2: "grid-cols-2",
   3: "grid-cols-3",
   4: "grid-cols-4",
+  5: "grid-cols-5",
 };
 
 function SegmentedControl<T extends string>({
