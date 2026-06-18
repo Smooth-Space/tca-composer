@@ -1,22 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import type { Composition } from "@/lib/composition";
 import { TitleBlock } from "@/components/TitleBlock";
+import { useSelection } from "@/components/SelectionContext";
 
 export function FreeformCanvas({
   comp,
   compositionRef,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
   onAreaWidth,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
   onAreaWidth?: (w: number) => void;
 }) {
+  const { onSelectTitle } = useSelection();
   const containerRef = useRef<HTMLDivElement>(null);
   const [areaWidth, setAreaWidth] = useState(1080);
   const [areaHeight, setAreaHeight] = useState(1080);
@@ -44,7 +40,7 @@ export function FreeformCanvas({
     <div
       ref={containerRef}
       className="flex h-full w-full items-center justify-center overflow-hidden bg-muted"
-      onClick={() => onSelectTitle?.(null)}
+      onClick={() => onSelectTitle(null)}
     >
       {/* Full-height artboard: width = area width, height = area height, type centered, never clipped. */}
       <div
@@ -73,9 +69,6 @@ export function FreeformCanvas({
           titleShift={comp.titleShift}
           titleShiftSeed={comp.titleShiftSeed}
           contentWidthPx={areaWidth}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         />
         </div>
       </div>
