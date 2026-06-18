@@ -1,9 +1,8 @@
 import { TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
 import type { Placement } from "@/lib/multiLayout";
 import { TemplateLayout } from "@/components/TemplateLayout";
-import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
-import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
-import { SplitConveyor } from "@/components/SplitConveyor";
+import { type MultiSphereHandle } from "@/components/MultiSphere";
+import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
 
 // Templates B and C: shared caption layout, image layer behind text.
 export function TemplateBC({
@@ -50,20 +49,7 @@ export function TemplateBC({
           hideSelection={hideSelection}
         >
           <div style={{ position: "absolute", inset: 0 }}>
-            {comp.animate ? (
-              <SplitConveyor
-                ref={sphereRef}
-                images={comp.images}
-                imageOverlay={comp.imageOverlay}
-                animSeed={comp.animSeed}
-                playing={comp.animPlaying}
-              />
-            ) : (
-              <>
-                <CoverImage src={imgSrc} />
-                <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-              </>
-            )}
+            <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
           </div>
           <div style={{ position: "absolute", inset: 0 }}>{centeredTitle}</div>
         </TemplateLayout>
@@ -78,20 +64,7 @@ export function TemplateBC({
     );
     const imageHalf = (
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
-        {comp.animate ? (
-          <SplitConveyor
-            ref={sphereRef}
-            images={comp.images}
-            imageOverlay={comp.imageOverlay}
-            animSeed={comp.animSeed}
-            playing={comp.animPlaying}
-          />
-        ) : (
-          <>
-            <CoverImage src={imgSrc} />
-            <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-          </>
-        )}
+        <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
       </div>
     );
     const middle = (
@@ -121,40 +94,11 @@ export function TemplateBC({
     );
   }
 
-  let imageLayer: React.ReactNode = null;
-  if (comp.variant === "full") {
-    imageLayer = (
-      <div style={{ position: "absolute", inset: 0 }}>
-        <CoverImage src={imgSrc} />
-        <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-      </div>
-    );
-  } else if (comp.variant === "multi") {
-    imageLayer = (
-      <div style={{ position: "absolute", inset: 0 }}>
-        {comp.animate ? (
-          <MultiSphere
-            ref={sphereRef}
-            images={comp.images}
-            w={w}
-            h={h}
-            imageOverlay={comp.imageOverlay}
-            animSeed={comp.animSeed}
-            playing={comp.animPlaying}
-            globeScale={comp.globeScale}
-          />
-        ) : (
-          <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      {imageLayer && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
-      )}
+      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+        <BackgroundLayer comp={comp} w={w} h={h} imgSrc={imgSrc} multiPlacements={multiPlacements} sphereRef={sphereRef} />
+      </div>
       <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
         <TemplateLayout
           slots={slots}

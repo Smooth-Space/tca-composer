@@ -2,9 +2,8 @@ import { TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
 import type { Placement } from "@/lib/multiLayout";
 import { Caption } from "@/components/Caption";
 import { TemplateLayout } from "@/components/TemplateLayout";
-import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
-import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
-import { SplitConveyor } from "@/components/SplitConveyor";
+import { type MultiSphereHandle } from "@/components/MultiSphere";
+import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
 
 export function TemplateA({
   comp,
@@ -48,20 +47,7 @@ export function TemplateA({
           } as React.CSSProperties
         }
       >
-        {comp.animate ? (
-          <SplitConveyor
-            ref={sphereRef}
-            images={comp.images}
-            imageOverlay={comp.imageOverlay}
-            animSeed={comp.animSeed}
-            playing={comp.animPlaying}
-          />
-        ) : (
-          <>
-            <CoverImage src={imgSrc} />
-            <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-          </>
-        )}
+        <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
       </div>
     );
     const titleHalf = (
@@ -143,40 +129,11 @@ export function TemplateA({
   }
 
   // none / full / multi: four corner captions with title centered between rows.
-  let imageLayer: React.ReactNode = null;
-  if (comp.variant === "full") {
-    imageLayer = (
-      <div style={{ position: "absolute", inset: 0 }}>
-        <CoverImage src={imgSrc} />
-        <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-      </div>
-    );
-  } else if (comp.variant === "multi") {
-    imageLayer = (
-      <div style={{ position: "absolute", inset: 0 }}>
-        {comp.animate ? (
-          <MultiSphere
-            ref={sphereRef}
-            images={comp.images}
-            w={w}
-            h={h}
-            imageOverlay={comp.imageOverlay}
-            animSeed={comp.animSeed}
-            playing={comp.animPlaying}
-            globeScale={comp.globeScale}
-          />
-        ) : (
-          <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      {imageLayer && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>{imageLayer}</div>
-      )}
+      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+        <BackgroundLayer comp={comp} w={w} h={h} imgSrc={imgSrc} multiPlacements={multiPlacements} sphereRef={sphereRef} />
+      </div>
       <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
         <TemplateLayout
           slots={slots}

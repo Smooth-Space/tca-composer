@@ -4,9 +4,8 @@ import { computeAxes } from "@/lib/engine";
 import { computeMultiLayout } from "@/lib/multiLayout";
 import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
-import { CoverImage, MultiImages, Overlay } from "@/components/ImageLayers";
-import { MultiSphere, type MultiSphereHandle } from "@/components/MultiSphere";
-import { SplitConveyor } from "@/components/SplitConveyor";
+import { type MultiSphereHandle } from "@/components/MultiSphere";
+import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
 
 export function TemplateD({
   comp,
@@ -61,30 +60,9 @@ export function TemplateD({
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      {comp.variant === "full" && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <CoverImage src={imgSrc} />
-          <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-        </div>
-      )}
-      {comp.variant === "multi" && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          {comp.animate ? (
-            <MultiSphere
-              ref={sphereRef}
-              images={comp.images}
-              w={w}
-              h={h}
-              imageOverlay={comp.imageOverlay}
-              animSeed={comp.animSeed}
-              playing={comp.animPlaying}
-            globeScale={comp.globeScale}
-            />
-          ) : (
-            <MultiImages images={comp.images} placements={multiPlacements} imageOverlay={comp.imageOverlay} />
-          )}
-        </div>
-      )}
+      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+        <BackgroundLayer comp={comp} w={w} h={h} imgSrc={imgSrc} multiPlacements={multiPlacements} sphereRef={sphereRef} />
+      </div>
 
       <div
         style={{
@@ -135,20 +113,7 @@ export function TemplateD({
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
           {comp.variant === "split" && (
             <div style={{ position: "absolute", inset: 0 }}>
-              {comp.animate ? (
-                <SplitConveyor
-                  ref={sphereRef}
-                  images={comp.images}
-                  imageOverlay={comp.imageOverlay}
-                  animSeed={comp.animSeed}
-                  playing={comp.animPlaying}
-                />
-              ) : (
-                <>
-                  <CoverImage src={imgSrc} />
-                  <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
-                </>
-              )}
+              <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
             </div>
           )}
           <div
