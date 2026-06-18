@@ -1,4 +1,4 @@
-import fontkit from "fontkit";
+import { create } from "fontkit";
 import { computeAxes, makeRng } from "@/lib/engine";
 import type { Composition } from "@/lib/composition";
 
@@ -11,7 +11,7 @@ async function loadFont() {
   if (!fontPromise) {
     fontPromise = fetch(FONT_URL)
       .then((r) => r.arrayBuffer())
-      .then((buf) => fontkit.create(new Uint8Array(buf) as unknown as Buffer));
+      .then((buf) => create(new Uint8Array(buf) as unknown as Buffer));
   }
   return fontPromise;
 }
