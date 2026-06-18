@@ -65,6 +65,8 @@ export function FreeformCanvas({
           titles={comp.titles}
           titleMode={comp.titleMode}
           titleSeed={comp.titleSeed}
+          titleAmplitude={comp.titleAmplitude}
+          titlePhase={comp.titlePhase}
           titleSizePx={comp.titleSizePx}
           titleColor="#000000"
           titleSizeMode={comp.titleSizeMode}
