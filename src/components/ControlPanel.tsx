@@ -4,6 +4,7 @@ import type {
   Mode,
   Template,
   SplitOrder,
+  SplitStyle,
   CaptionKey,
 } from "@/lib/composition";
 import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS, PLACEHOLDER_SRC } from "@/lib/composition";
@@ -36,7 +37,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const TEMPLATES: Template[] = ["A", "B", "C", "D", "freeform"];
+const TEMPLATES: Template[] = ["A", "B", "D", "freeform"];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
@@ -299,7 +300,7 @@ export function ControlPanel({
         <SegmentedControl
           options={TEMPLATES}
           value={comp.template}
-          columns={5}
+          columns={4}
           getLabel={(t) => (t === "freeform" ? "Free" : t)}
           onChange={(t) =>
             setComp((c) => {
@@ -419,7 +420,18 @@ export function ControlPanel({
                     ))}
                   </div>
                 )}
-                {(comp.template === "A" || comp.template === "B") && (
+                {comp.template === "A" && (
+                  <SegmentedControl
+                    options={["half", "span"] as SplitStyle[]}
+                    value={comp.splitStyle}
+                    onChange={(s) => update({ splitStyle: s })}
+                    columns={2}
+                    size="sm"
+                    getLabel={(s) => (s === "half" ? "Half" : "Span")}
+                  />
+                )}
+                {(comp.template === "B" ||
+                  (comp.template === "A" && comp.splitStyle === "half")) && (
                   <SegmentedControl
                     options={["image-first", "title-first"] as SplitOrder[]}
                     value={comp.splitOrder}

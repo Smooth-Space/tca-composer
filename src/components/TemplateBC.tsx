@@ -27,27 +27,6 @@ export function TemplateBC({
     <div className="flex h-full w-full flex-col items-center justify-center">{title}</div>
   );
 
-  // C-split: image fills the full-width band between Text 1 (top) and Text 2 (bottom),
-  // with 40px gaps; the centered title is overlaid on top of the image (no scrim).
-  if (comp.template === "C" && comp.variant === "split") {
-    return (
-      <div style={{ position: "absolute", inset: 0 }}>
-        <TemplateLayout
-          slots={slots}
-          captions={comp.captions}
-          captionColors={comp.captionColors}
-          captionHidden={comp.captionHidden}
-          gap={40}
-        >
-          <div style={{ position: "absolute", inset: 0 }}>
-            <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
-          </div>
-          <div style={{ position: "absolute", inset: 0 }}>{centeredTitle}</div>
-        </TemplateLayout>
-      </div>
-    );
-  }
-
   // split: middle is title + image in splitOrder, 40px gap.
   if (comp.variant === "split") {
     const titleHalf = (
