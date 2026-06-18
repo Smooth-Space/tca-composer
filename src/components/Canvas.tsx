@@ -5,6 +5,7 @@ import { computeMultiLayout } from "@/lib/multiLayout";
 import { TemplateA } from "@/components/TemplateA";
 import { TemplateBC } from "@/components/TemplateBC";
 import { TemplateD } from "@/components/TemplateD";
+import { FreeformCanvas } from "@/components/FreeformCanvas";
 import type { MultiSphereHandle } from "@/components/MultiSphere";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
@@ -32,6 +33,18 @@ export function Canvas({
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
   const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
+
+  if (comp.template === "freeform") {
+    return (
+      <FreeformCanvas
+        comp={comp}
+        compositionRef={compositionRef}
+        selectedTitleId={selectedTitleId}
+        onSelectTitle={onSelectTitle}
+        hideSelection={hideSelection}
+      />
+    );
+  }
 
   const multiPlacements = useMemo(
     () =>
