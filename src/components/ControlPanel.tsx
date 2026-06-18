@@ -25,6 +25,7 @@ interface Props {
   onExportMp4?: () => void;
   exportingMp4?: boolean;
   mp4Progress?: number;
+  onExportSvg?: () => void;
   selectedTitleId?: string | null;
   onSelectTitle?: (id: string | null) => void;
 }
@@ -196,6 +197,7 @@ export function ControlPanel({
   onExportMp4,
   exportingMp4,
   mp4Progress,
+  onExportSvg,
   selectedTitleId,
   onSelectTitle,
 }: Props) {
@@ -780,7 +782,7 @@ export function ControlPanel({
 
       <Section title="Export">
         {isFreeform ? (
-          <Button className="w-full" onClick={() => console.log("svg export →")}>
+          <Button className="w-full" onClick={onExportSvg}>
             Export SVG
           </Button>
         ) : (

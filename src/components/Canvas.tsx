@@ -21,6 +21,7 @@ export function Canvas({
   selectedTitleId,
   onSelectTitle,
   hideSelection,
+  onAreaWidth,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
@@ -28,6 +29,7 @@ export function Canvas({
   selectedTitleId?: string | null;
   onSelectTitle?: (id: string | null) => void;
   hideSelection?: boolean;
+  onAreaWidth?: (w: number) => void;
 }) {
   if (comp.template === "freeform") {
     return (
@@ -37,6 +39,7 @@ export function Canvas({
         selectedTitleId={selectedTitleId}
         onSelectTitle={onSelectTitle}
         hideSelection={hideSelection}
+        onAreaWidth={onAreaWidth}
       />
     );
   }
