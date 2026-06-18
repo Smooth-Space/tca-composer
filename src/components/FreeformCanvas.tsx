@@ -19,6 +19,7 @@ export function FreeformCanvas({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [areaWidth, setAreaWidth] = useState(1080);
+  const [areaHeight, setAreaHeight] = useState(1080);
 
   // Measure the available canvas-area content-box width (responsive, unbound).
   useEffect(() => {
@@ -26,10 +27,12 @@ export function FreeformCanvas({
     if (!el) return;
     const update = () => {
       const w = el.clientWidth;
+      const h = el.clientHeight;
       if (w > 0) {
         setAreaWidth(w);
         onAreaWidth?.(w);
       }
+      if (h > 0) setAreaHeight(h);
     };
     update();
     const ro = new ResizeObserver(update);
@@ -43,16 +46,21 @@ export function FreeformCanvas({
       className="flex h-full w-full items-center justify-center overflow-hidden bg-muted"
       onClick={() => onSelectTitle?.(null)}
     >
-      {/* Unbound artboard: width = area width, height = content, no margins, never clipped. */}
+      {/* Full-height artboard: width = area width, height = area height, type centered, never clipped. */}
       <div
         ref={compositionRef}
         style={{
           width: areaWidth,
+          height: areaHeight,
           background: "#FFFFFF",
           position: "relative",
           overflow: "visible",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
         }}
       >
+        <div style={{ width: areaWidth }}>
         <TitleBlock
           titles={comp.titles}
           titleMode={comp.titleMode}
@@ -67,6 +75,7 @@ export function FreeformCanvas({
           onSelectTitle={onSelectTitle}
           hideSelection={hideSelection}
         />
+        </div>
       </div>
     </div>
   );
