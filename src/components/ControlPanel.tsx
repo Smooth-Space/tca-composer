@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { newSeed, resolveWave } from "@/lib/engine";
 import { cn } from "@/lib/utils";
-import { forwardRef, useEffect, useRef } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 
 interface Props {
   comp: Composition;
@@ -67,7 +67,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="space-y-3 px-4 pb-4">{children}</div>
+        <div className="space-y-4 px-4 pb-4">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );
