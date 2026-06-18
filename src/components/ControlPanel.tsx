@@ -312,6 +312,8 @@ export function ControlPanel({
           }
         />
 
+        {!isFreeform && (
+        <>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Variant</Label>
