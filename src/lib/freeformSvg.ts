@@ -1,5 +1,6 @@
 import { create } from "fontkit";
-import { computeAxes, makeRng } from "@/lib/engine";
+import { computeAxes } from "@/lib/engine";
+import { shiftOffsets } from "@/lib/typo";
 import type { Composition } from "@/lib/composition";
 
 const FONT_URL = "/fonts/ABCArizonaPlusVariable-Trial.ttf";
@@ -14,19 +15,6 @@ async function loadFont() {
       .then((buf) => create(new Uint8Array(buf) as unknown as Buffer));
   }
   return fontPromise;
-}
-
-// Mirror of TitleBlock.shiftOffsets so SVG layout matches the live preview.
-function shiftOffsets(n: number, seed: number): number[] {
-  if (n <= 1) return [0.5];
-  const rng = makeRng(seed);
-  const base = Array.from({ length: n }, (_, i) => i / (n - 1));
-  for (let i = n - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [base[i], base[j]] = [base[j], base[i]];
-  }
-  const spacing = 1 / (n - 1);
-  return base.map((v) => Math.min(1, Math.max(0, v + (rng() * 2 - 1) * spacing * 0.25)));
 }
 
 interface PlacedGlyph {
