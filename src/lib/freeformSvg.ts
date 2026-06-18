@@ -111,7 +111,10 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
   const text = comp.titles[0]?.text ?? "";
   const rows = text.split("\n");
   const flat = Array.from(text.replace(/\n/g, ""));
-  const axes = computeAxes(flat, comp.titleMode, comp.titleSeed);
+  const axes = computeAxes(flat, comp.titleMode, comp.titleSeed, {
+    amplitude: comp.titleAmplitude,
+    phase: comp.titlePhase,
+  });
 
   // Start index of each row within the flat (newline-free) stream.
   const rowStart: number[] = [];
