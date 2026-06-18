@@ -13,9 +13,6 @@ export function TemplateA({
   title,
   multiPlacements,
   sphereRef,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
 }: {
   comp: Composition;
   w: number;
@@ -24,9 +21,6 @@ export function TemplateA({
   title: React.ReactNode;
   multiPlacements: Placement[];
   sphereRef?: React.Ref<MultiSphereHandle>;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }) {
   const slots = TEMPLATE_CAPTIONS.A;
   const centeredTitle = (
@@ -94,9 +88,6 @@ export function TemplateA({
                 color={comp.captionColors[left.key]}
                 align="left"
                 captionKey={left.key}
-                selectedTitleId={selectedTitleId}
-                onSelectTitle={onSelectTitle}
-                hideSelection={hideSelection}
               hidden={comp.captionHidden[left.key]}
               />
             )}
@@ -108,9 +99,6 @@ export function TemplateA({
                 color={comp.captionColors[right.key]}
                 align="left"
                 captionKey={right.key}
-                selectedTitleId={selectedTitleId}
-                onSelectTitle={onSelectTitle}
-                hideSelection={hideSelection}
               hidden={comp.captionHidden[right.key]}
               />
             )}
@@ -140,9 +128,6 @@ export function TemplateA({
           captions={comp.captions}
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         >
           {centeredTitle}
         </TemplateLayout>

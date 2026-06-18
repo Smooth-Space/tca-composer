@@ -3,6 +3,7 @@ import { computeAxes, type Mode } from "@/lib/engine";
 import type { Title } from "@/lib/composition";
 import { TitleSpans } from "@/components/TitleLine";
 import { TITLE_FONT, TITLE_LETTER_SPACING, TITLE_LINE_HEIGHT, shiftOffsets } from "@/lib/typo";
+import { useSelectable } from "@/components/SelectionContext";
 
 interface TitleBlockProps {
   titles: Title[];
@@ -16,9 +17,6 @@ interface TitleBlockProps {
   titleShift?: boolean;
   titleShiftSeed?: number;
   contentWidthPx?: number;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }
 
 const FIT_REF_SIZE = 200;
@@ -35,11 +33,8 @@ export function TitleBlock({
   titleShift = false,
   titleShiftSeed = 0,
   contentWidthPx = 1000,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
 }: TitleBlockProps) {
-  const isSelected = !!selectedTitleId && selectedTitleId === titles[0]?.id;
+  const { handleClick, hideSelection, selectableStyle } = useSelectable(titles[0]?.id ?? null);
   // A/B/C use one multi-line title field (titles[0]) only.
   const t0 = titles[0];
   const lines = useMemo(
@@ -111,10 +106,7 @@ export function TitleBlock({
 
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelectTitle?.(titles[0]?.id ?? null);
-      }}
+      onClick={handleClick}
       style={{
         width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
@@ -123,9 +115,7 @@ export function TitleBlock({
         fontSize: renderSize,
         letterSpacing: TITLE_LETTER_SPACING,
         color: titleColor,
-        cursor: "text",
-        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-        outlineOffset: 4,
+        ...selectableStyle,
       }}
     >
       {titles[0]?.text === "" && !hideSelection && (

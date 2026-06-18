@@ -6,6 +6,7 @@ import { TemplateA } from "@/components/TemplateA";
 import { TemplateBC } from "@/components/TemplateBC";
 import { TemplateD } from "@/components/TemplateD";
 import { FreeformCanvas } from "@/components/FreeformCanvas";
+import { SelectionProvider, useSelection } from "@/components/SelectionContext";
 import type { MultiSphereHandle } from "@/components/MultiSphere";
 
 const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }> = {
@@ -31,27 +32,18 @@ export function Canvas({
   hideSelection?: boolean;
   onAreaWidth?: (w: number) => void;
 }) {
-  if (comp.template === "freeform") {
-    return (
-      <FreeformCanvas
-        comp={comp}
-        compositionRef={compositionRef}
-        selectedTitleId={selectedTitleId}
-        onSelectTitle={onSelectTitle}
-        hideSelection={hideSelection}
-        onAreaWidth={onAreaWidth}
-      />
-    );
-  }
   return (
-    <FixedCanvas
-      comp={comp}
-      compositionRef={compositionRef}
-      sphereRef={sphereRef}
-      selectedTitleId={selectedTitleId}
-      onSelectTitle={onSelectTitle}
-      hideSelection={hideSelection}
-    />
+    <SelectionProvider
+      selectedTitleId={selectedTitleId ?? null}
+      onSelectTitle={onSelectTitle ?? (() => {})}
+      hideSelection={!!hideSelection}
+    >
+      {comp.template === "freeform" ? (
+        <FreeformCanvas comp={comp} compositionRef={compositionRef} onAreaWidth={onAreaWidth} />
+      ) : (
+        <FixedCanvas comp={comp} compositionRef={compositionRef} sphereRef={sphereRef} />
+      )}
+    </SelectionProvider>
   );
 }
 
@@ -59,17 +51,12 @@ function FixedCanvas({
   comp,
   compositionRef,
   sphereRef,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
   sphereRef?: React.Ref<MultiSphereHandle>;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }) {
+  const { onSelectTitle } = useSelection();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
@@ -116,26 +103,12 @@ function FixedCanvas({
       titleShift={comp.titleShift}
       titleShiftSeed={comp.titleShiftSeed}
       contentWidthPx={w - 80}
-      selectedTitleId={selectedTitleId}
-      onSelectTitle={onSelectTitle}
-      hideSelection={hideSelection}
     />
   );
 
   const renderInner = () => {
     if (comp.template === "D") {
-      return (
-        <TemplateD
-          comp={comp}
-          w={w}
-          h={h}
-          imgSrc={imgSrc}
-          sphereRef={sphereRef}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
-        />
-      );
+      return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} sphereRef={sphereRef} />;
     }
     if (comp.template === "A") {
       return (
@@ -147,9 +120,6 @@ function FixedCanvas({
           title={title}
           multiPlacements={multiPlacements}
           sphereRef={sphereRef}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         />
       );
     }
@@ -162,9 +132,6 @@ function FixedCanvas({
         title={title}
         multiPlacements={multiPlacements}
         sphereRef={sphereRef}
-        selectedTitleId={selectedTitleId}
-        onSelectTitle={onSelectTitle}
-        hideSelection={hideSelection}
       />
     );
   };
@@ -173,7 +140,7 @@ function FixedCanvas({
     <div
       ref={containerRef}
       className="flex h-full w-full items-center justify-center overflow-hidden bg-muted"
-      onClick={() => onSelectTitle?.(null)}
+      onClick={() => onSelectTitle(null)}
     >
       <div style={{ width: w * scale, height: h * scale }} className="shadow-2xl">
         <div

@@ -6,37 +6,26 @@ import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
 import { type MultiSphereHandle } from "@/components/MultiSphere";
 import { BackgroundLayer, SplitImageRegion } from "@/components/ImageRegions";
+import { useSelectable } from "@/components/SelectionContext";
 
 function PinnedTitle({
   pin,
   comp,
   dLines,
   dAxes,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
 }: {
   pin: 0 | 1;
   comp: Composition;
   dLines: { text: string; startOffset: number; pin: 0 | 1; key: string }[];
   dAxes: Axes[];
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }) {
-  const pinId = comp.titles[pin]?.id ?? null;
-  const isSelected = !!selectedTitleId && selectedTitleId === pinId;
+  const { handleClick, hideSelection, selectableStyle } = useSelectable(
+    comp.titles[pin]?.id ?? null,
+  );
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelectTitle?.(pinId);
-      }}
-      style={{
-        cursor: "text",
-        outline: isSelected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-        outlineOffset: 4,
-      }}
+      onClick={handleClick}
+      style={selectableStyle}
     >
       {comp.titles[pin]?.text === "" && !hideSelection && (
         <span style={{ opacity: 0.3, color: comp.titleColor }}>Title</span>
@@ -63,18 +52,13 @@ export function TemplateD({
   h,
   imgSrc,
   sphereRef,
-  selectedTitleId,
-  onSelectTitle,
-  hideSelection,
+
 }: {
   comp: Composition;
   w: number;
   h: number;
   imgSrc: string;
   sphereRef?: React.Ref<MultiSphereHandle>;
-  selectedTitleId?: string | null;
-  onSelectTitle?: (id: string | null) => void;
-  hideSelection?: boolean;
 }) {
   const dTitles = useMemo(
     () => [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""],
@@ -130,9 +114,6 @@ export function TemplateD({
           comp={comp}
           dLines={dLines}
           dAxes={dAxes}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         />
 
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
@@ -155,9 +136,6 @@ export function TemplateD({
               color={comp.captionColors.text1}
               align="left"
               captionKey="text1"
-              selectedTitleId={selectedTitleId}
-              onSelectTitle={onSelectTitle}
-              hideSelection={hideSelection}
               hidden={comp.captionHidden.text1}
               style={{ flex: 1, paddingLeft: comp.variant === "split" ? 40 : 0 }}
             />
@@ -166,9 +144,6 @@ export function TemplateD({
               color={comp.captionColors.text2}
               align="right"
               captionKey="text2"
-              selectedTitleId={selectedTitleId}
-              onSelectTitle={onSelectTitle}
-              hideSelection={hideSelection}
               hidden={comp.captionHidden.text2}
               style={{ flex: 1, paddingRight: comp.variant === "split" ? 40 : 0 }}
             />
@@ -180,9 +155,6 @@ export function TemplateD({
           comp={comp}
           dLines={dLines}
           dAxes={dAxes}
-          selectedTitleId={selectedTitleId}
-          onSelectTitle={onSelectTitle}
-          hideSelection={hideSelection}
         />
       </div>
     </div>
