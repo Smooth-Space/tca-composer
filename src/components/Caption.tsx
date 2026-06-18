@@ -23,12 +23,15 @@ export function Caption({
   captionKey?: CaptionKey;
   hidden?: boolean;
 }) {
-  const { hideSelection, handleClick, selectableStyle } = useSelectable(captionKey ?? null);
+  const { hideSelection, handleClick, handleDoubleClick, selectableStyle } = useSelectable(
+    captionKey ?? null,
+  );
   if (hidden && text === "") return null;
   const isEmpty = text === "";
   return (
     <div
       onClick={captionKey ? handleClick : undefined}
+      onDoubleClick={captionKey ? handleDoubleClick : undefined}
       style={{
         whiteSpace: "pre-wrap",
         overflowWrap: "anywhere",

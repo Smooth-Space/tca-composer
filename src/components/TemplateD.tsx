@@ -19,12 +19,13 @@ function PinnedTitle({
   dLines: { text: string; startOffset: number; pin: 0 | 1; key: string }[];
   dAxes: Axes[];
 }) {
-  const { handleClick, hideSelection, selectableStyle } = useSelectable(
+  const { handleClick, handleDoubleClick, hideSelection, selectableStyle } = useSelectable(
     comp.titles[pin]?.id ?? null,
   );
   return (
     <div
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       style={selectableStyle}
     >
       {comp.titles[pin]?.text === "" && !hideSelection && (

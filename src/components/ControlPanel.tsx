@@ -28,6 +28,7 @@ interface Props {
   onExportSvg?: () => void;
   selectedTitleId?: string | null;
   onSelectTitle?: (id: string | null) => void;
+  focusReq?: { id: string | null; mode: "end" | "all"; nonce: number };
 }
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
@@ -200,6 +201,7 @@ export function ControlPanel({
   onExportSvg,
   selectedTitleId,
   onSelectTitle,
+  focusReq,
 }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
@@ -208,13 +210,18 @@ export function ControlPanel({
   const titleRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
 
   useEffect(() => {
-    if (!selectedTitleId) return;
-    const el = titleRefs.current.get(selectedTitleId);
-    if (el) {
-      el.focus();
-      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (!focusReq?.id) return;
+    const el = titleRefs.current.get(focusReq.id);
+    if (!el) return;
+    el.focus();
+    el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (focusReq.mode === "all") el.select();
+    else {
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
     }
-  }, [selectedTitleId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusReq?.nonce]);
 
   const usesImage = comp.variant === "split" || comp.variant === "full";
   const isFreeform = comp.template === "freeform";

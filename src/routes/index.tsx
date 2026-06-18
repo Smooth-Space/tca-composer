@@ -75,6 +75,13 @@ function Composer() {
   const [exportingMp4, setExportingMp4] = useState(false);
   const [mp4Progress, setMp4Progress] = useState(0);
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null);
+  const [focusReq, setFocusReq] = useState<{ id: string | null; mode: "end" | "all"; nonce: number }>(
+    { id: null, mode: "end", nonce: 0 },
+  );
+  const onRequestEdit = (id: string, mode: "end" | "all") => {
+    setSelectedTitleId(id);
+    setFocusReq((r) => ({ id, mode, nonce: r.nonce + 1 }));
+  };
   const hideSelection = exporting || exportingMp4;
 
   // Restore once on mount
@@ -290,6 +297,7 @@ function Composer() {
         onExportSvg={handleExportSvg}
         selectedTitleId={selectedTitleId}
         onSelectTitle={setSelectedTitleId}
+        focusReq={focusReq}
       />
       <main className="flex-1">
         <Canvas
@@ -298,6 +306,7 @@ function Composer() {
           sphereRef={sphereRef}
           selectedTitleId={selectedTitleId}
           onSelectTitle={setSelectedTitleId}
+          onRequestEdit={onRequestEdit}
           hideSelection={hideSelection}
           onAreaWidth={(w) => {
             areaWidthRef.current = w;

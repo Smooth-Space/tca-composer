@@ -21,6 +21,7 @@ export function Canvas({
   sphereRef,
   selectedTitleId,
   onSelectTitle,
+  onRequestEdit,
   hideSelection,
   onAreaWidth,
 }: {
@@ -29,6 +30,7 @@ export function Canvas({
   sphereRef?: React.Ref<MultiSphereHandle>;
   selectedTitleId?: string | null;
   onSelectTitle?: (id: string | null) => void;
+  onRequestEdit?: (id: string, mode: "end" | "all") => void;
   hideSelection?: boolean;
   onAreaWidth?: (w: number) => void;
 }) {
@@ -36,6 +38,7 @@ export function Canvas({
     <SelectionProvider
       selectedTitleId={selectedTitleId ?? null}
       onSelectTitle={onSelectTitle ?? (() => {})}
+      onRequestEdit={onRequestEdit ?? (() => {})}
       hideSelection={!!hideSelection}
     >
       {comp.template === "freeform" ? (

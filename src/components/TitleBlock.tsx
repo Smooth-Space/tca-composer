@@ -34,7 +34,9 @@ export function TitleBlock({
   titleShiftSeed = 0,
   contentWidthPx = 1000,
 }: TitleBlockProps) {
-  const { handleClick, hideSelection, selectableStyle } = useSelectable(titles[0]?.id ?? null);
+  const { handleClick, handleDoubleClick, hideSelection, selectableStyle } = useSelectable(
+    titles[0]?.id ?? null,
+  );
   // A/B/C use one multi-line title field (titles[0]) only.
   const t0 = titles[0];
   const lines = useMemo(
@@ -107,6 +109,7 @@ export function TitleBlock({
   return (
     <div
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       style={{
         width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
