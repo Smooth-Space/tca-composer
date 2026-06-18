@@ -143,11 +143,6 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
     }
   }
 
-  // Tight bounding box across all glyphs (px space).
-  let minX = 0,
-    maxX = areaWidth,
-    minY = Infinity,
-    maxY = -Infinity;
   for (const g of all) {
     const gx0 = g.x + g.bbox.minX * g.scale;
     const gx1 = g.x + g.bbox.maxX * g.scale;
@@ -161,6 +156,8 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
   if (!Number.isFinite(minY)) {
     minY = 0;
     maxY = comp.titleSizePx;
+    minX = 0;
+    maxX = areaWidth;
   }
 
   const vbX = minX;
