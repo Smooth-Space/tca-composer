@@ -12,7 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { newSeed } from "@/lib/engine";
+import { newSeed, resolveWave } from "@/lib/engine";
 import { cn } from "@/lib/utils";
 import { forwardRef, useEffect, useRef } from "react";
 
