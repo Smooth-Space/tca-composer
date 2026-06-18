@@ -28,6 +28,24 @@ export function TemplateA({
   );
 
   if (comp.variant === "split") {
+    if (comp.splitStyle === "span") {
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <TemplateLayout
+            slots={slots}
+            captions={comp.captions}
+            captionColors={comp.captionColors}
+            captionHidden={comp.captionHidden}
+            gap={40}
+          >
+            <div style={{ position: "absolute", inset: 0 }}>
+              <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
+            </div>
+            <div style={{ position: "absolute", inset: 0 }}>{centeredTitle}</div>
+          </TemplateLayout>
+        </div>
+      );
+    }
     const imageTop = comp.splitOrder === "image-first";
     const imageHalf = (
       <div
