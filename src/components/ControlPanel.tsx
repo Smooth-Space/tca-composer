@@ -420,7 +420,18 @@ export function ControlPanel({
                     ))}
                   </div>
                 )}
-                {(comp.template === "A" || comp.template === "B") && (
+                {comp.template === "A" && (
+                  <SegmentedControl
+                    options={["half", "span"] as SplitStyle[]}
+                    value={comp.splitStyle}
+                    onChange={(s) => update({ splitStyle: s })}
+                    columns={2}
+                    size="sm"
+                    getLabel={(s) => (s === "half" ? "Half" : "Span")}
+                  />
+                )}
+                {(comp.template === "B" ||
+                  (comp.template === "A" && comp.splitStyle === "half")) && (
                   <SegmentedControl
                     options={["image-first", "title-first"] as SplitOrder[]}
                     value={comp.splitOrder}
