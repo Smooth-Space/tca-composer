@@ -73,6 +73,7 @@ export function TemplateLayout({
   captionColors,
   captionHidden,
   gap = 0,
+  collapseEmptyRows = false,
   children,
 }: {
   slots: CaptionSlot[];
@@ -80,6 +81,7 @@ export function TemplateLayout({
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
   gap?: number;
+  collapseEmptyRows?: boolean;
   children: React.ReactNode;
 }) {
   const rowActive = (anchor: "top" | "bottom") =>
