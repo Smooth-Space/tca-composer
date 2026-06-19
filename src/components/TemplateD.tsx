@@ -45,18 +45,19 @@ function PinnedTitle({
           />
         </div>
       )}
-      {dLines
-        .filter((l) => l.pin === pin)
-        .map((l) => (
-          <TitleLine
-            key={l.key}
-            text={l.text}
-            axes={dAxes}
-            startOffset={l.startOffset}
-            titleSizePx={comp.titleSizePx}
-            color={comp.titleColor}
-          />
-        ))}
+      {!isEmpty &&
+        dLines
+          .filter((l) => l.pin === pin)
+          .map((l) => (
+            <TitleLine
+              key={l.key}
+              text={l.text}
+              axes={dAxes}
+              startOffset={l.startOffset}
+              titleSizePx={comp.titleSizePx}
+              color={comp.titleColor}
+            />
+          ))}
     </div>
   );
 }

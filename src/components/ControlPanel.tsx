@@ -60,6 +60,8 @@ function loadDimensions(src: string): Promise<{ naturalWidth: number; naturalHei
 function Wordmark({ className }: { className?: string }) {
   return (
     <svg
+      width="150"
+      height="19"
       viewBox="0 0 150 19"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -351,7 +353,7 @@ export function ControlPanel({
 
   return (
     <aside className="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-background p-5">
-      <Wordmark className="h-5 w-auto" />
+      <Wordmark className="block h-5 w-auto" />
 
       {!isFreeform && (
         <Section title="Format">
