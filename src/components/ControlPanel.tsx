@@ -344,7 +344,7 @@ export function ControlPanel({
 
   return (
     <aside className="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-background p-5">
-      <Wordmark className="block h-5 w-[158px]" />
+      <Wordmark />
 
       {!isFreeform && (
         <Section title="Format">
