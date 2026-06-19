@@ -82,6 +82,13 @@ export function TemplateLayout({
   gap?: number;
   children: React.ReactNode;
 }) {
+  const rowActive = (anchor: "top" | "bottom") =>
+    slots.some(
+      (s) =>
+        s.anchor === anchor &&
+        !captionHidden[s.key] &&
+        (captions[s.key] ?? "").trim() !== "",
+    );
   return (
     <div
       style={{
@@ -93,21 +100,25 @@ export function TemplateLayout({
         gap,
       }}
     >
-      <CaptionRow
-        slots={slots}
-        captions={captions}
-        captionColors={captionColors}
-        captionHidden={captionHidden}
-        anchor="top"
-      />
+      {(!collapseEmptyRows || rowActive("top")) && (
+        <CaptionRow
+          slots={slots}
+          captions={captions}
+          captionColors={captionColors}
+          captionHidden={captionHidden}
+          anchor="top"
+        />
+      )}
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
-      <CaptionRow
-        slots={slots}
-        captions={captions}
-        captionColors={captionColors}
-        captionHidden={captionHidden}
-        anchor="bottom"
-      />
+      {(!collapseEmptyRows || rowActive("bottom")) && (
+        <CaptionRow
+          slots={slots}
+          captions={captions}
+          captionColors={captionColors}
+          captionHidden={captionHidden}
+          anchor="bottom"
+        />
+      )}
     </div>
   );
 }
