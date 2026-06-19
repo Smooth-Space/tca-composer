@@ -68,6 +68,7 @@ export function TemplateBC({
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
           gap={40}
+          collapseEmptyRows
         >
           {middle}
         </TemplateLayout>

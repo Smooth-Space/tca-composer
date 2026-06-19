@@ -37,6 +37,7 @@ export function TemplateA({
             captionColors={comp.captionColors}
             captionHidden={comp.captionHidden}
             gap={40}
+            collapseEmptyRows
           >
             <div style={{ position: "absolute", inset: 0 }}>
               <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
