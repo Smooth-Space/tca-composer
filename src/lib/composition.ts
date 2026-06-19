@@ -79,6 +79,7 @@ export interface Composition {
   titlePhase: number | null;
   titleShift: boolean;
   titleShiftSeed: number;
+  titleShiftAmount: number;
   images: ImageItem[];
   splitOrder: SplitOrder;
   splitStyle: SplitStyle;
