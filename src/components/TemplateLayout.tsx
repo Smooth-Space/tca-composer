@@ -48,7 +48,7 @@ function CaptionRow({
       style={{
         display: "flex",
         gap: 40,
-        alignItems: anchor === "top" ? "flex-start" : "flex-end",
+        alignItems: "flex-start",
       }}
     >
       <CaptionCell
