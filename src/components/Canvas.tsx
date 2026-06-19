@@ -1,7 +1,7 @@
-import { PLACEHOLDER_SRC, type Composition } from "@/lib/composition";
+import { type Composition } from "@/lib/composition";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
-import { computeMultiLayout } from "@/lib/multiLayout";
+import { computeMultiLayout, MULTI_PLACEHOLDER_ASPECTS } from "@/lib/multiLayout";
 import { TemplateA } from "@/components/TemplateA";
 import { TemplateBC } from "@/components/TemplateBC";
 import { TemplateD } from "@/components/TemplateD";
@@ -64,11 +64,18 @@ function FixedCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const { w, h } = FORMAT_DIMENSIONS[comp.format];
-  const imgSrc = comp.images[0]?.src ?? PLACEHOLDER_SRC;
+  const imgSrc = comp.images[0]?.src ?? "";
 
   const multiPlacements = useMemo(
     () =>
-      computeMultiLayout(comp.images, w, h, comp.titles.length, comp.titleSizePx, comp.multiSeed),
+      computeMultiLayout(
+        comp.images.length ? comp.images : MULTI_PLACEHOLDER_ASPECTS,
+        w,
+        h,
+        comp.titles.length,
+        comp.titleSizePx,
+        comp.multiSeed,
+      ),
     [comp.images, w, h, comp.titles.length, comp.titleSizePx, comp.multiSeed],
   );
 
