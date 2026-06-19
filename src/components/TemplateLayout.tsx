@@ -1,4 +1,10 @@
-import type { CaptionSlot, Captions, CaptionColors, CaptionFlags } from "@/lib/composition";
+import {
+  isCaptionRowActive,
+  type CaptionSlot,
+  type Captions,
+  type CaptionColors,
+  type CaptionFlags,
+} from "@/lib/composition";
 import { Caption } from "@/components/Caption";
 
 function CaptionCell({
@@ -84,13 +90,6 @@ export function TemplateLayout({
   collapseEmptyRows?: boolean;
   children: React.ReactNode;
 }) {
-  const rowActive = (anchor: "top" | "bottom") =>
-    slots.some(
-      (s) =>
-        s.anchor === anchor &&
-        !captionHidden[s.key] &&
-        (captions[s.key] ?? "").trim() !== "",
-    );
   return (
     <div
       style={{
@@ -102,7 +101,7 @@ export function TemplateLayout({
         gap,
       }}
     >
-      {(!collapseEmptyRows || rowActive("top")) && (
+      {(!collapseEmptyRows || isCaptionRowActive(slots, captions, captionHidden, "top")) && (
         <CaptionRow
           slots={slots}
           captions={captions}
@@ -112,7 +111,7 @@ export function TemplateLayout({
         />
       )}
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
-      {(!collapseEmptyRows || rowActive("bottom")) && (
+      {(!collapseEmptyRows || isCaptionRowActive(slots, captions, captionHidden, "bottom")) && (
         <CaptionRow
           slots={slots}
           captions={captions}

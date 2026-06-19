@@ -50,6 +50,17 @@ export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   freeform: ["none"],
 };
 
+export function isCaptionRowActive(
+  slots: CaptionSlot[],
+  captions: Captions,
+  captionHidden: CaptionFlags,
+  anchor: "top" | "bottom",
+): boolean {
+  return slots.some(
+    (s) => s.anchor === anchor && !captionHidden[s.key] && (captions[s.key] ?? "").trim() !== "",
+  );
+}
+
 export const PLACEHOLDER_SRC = lagunaGloriaAsset.url;
 
 export interface Title {

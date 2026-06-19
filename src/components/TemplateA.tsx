@@ -1,4 +1,4 @@
-import { TEMPLATE_CAPTIONS, type Composition } from "@/lib/composition";
+import { TEMPLATE_CAPTIONS, isCaptionRowActive, type Composition } from "@/lib/composition";
 import type { Placement } from "@/lib/multiLayout";
 import { Caption } from "@/components/Caption";
 import { TemplateLayout } from "@/components/TemplateLayout";
@@ -48,6 +48,12 @@ export function TemplateA({
       );
     }
     const imageTop = comp.splitOrder === "image-first";
+    const titleAnchor: "top" | "bottom" = imageTop ? "bottom" : "top";
+    const titleRowActive = isCaptionRowActive(slots, comp.captions, comp.captionHidden, titleAnchor);
+    const outerPad = titleRowActive ? 130 : 40;
+    const titlePadding = imageTop
+      ? `40px 40px ${outerPad}px 40px`
+      : `${outerPad}px 40px 40px 40px`;
     const imageHalf = (
       <div
         style={
@@ -75,7 +81,7 @@ export function TemplateA({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: imageTop ? "40px 40px 130px 40px" : "130px 40px 40px 40px",
+            padding: titlePadding,
             boxSizing: "border-box",
           } as React.CSSProperties
         }
