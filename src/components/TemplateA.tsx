@@ -97,7 +97,7 @@ export function TemplateA({
               padding: 40,
               display: "flex",
               gap: 40,
-              alignItems: anchor === "top" ? "flex-start" : "flex-end",
+              alignItems: "flex-start",
             } as React.CSSProperties
           }
         >
