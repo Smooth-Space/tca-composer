@@ -13,6 +13,7 @@ const FORMAT_DIMENSIONS: Record<Composition["format"], { w: number; h: number }>
   "1:1": { w: 1080, h: 1080 },
   "4:5": { w: 1080, h: 1350 },
   "9:16": { w: 1080, h: 1920 },
+  "3:2": { w: 1080, h: 720 },
 };
 
 export function Canvas({

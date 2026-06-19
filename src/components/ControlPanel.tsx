@@ -35,8 +35,7 @@ interface Props {
   focusReq?: { id: string | null; mode: "end" | "all"; nonce: number };
 }
 
-const FORMATS: Format[] = ["1:1", "4:5", "9:16"];
-const FORMATS_LIST: Format[] = ["1:1", "4:5", "9:16", "3:2"];
+const FORMATS: Format[] = ["1:1", "4:5", "9:16", "3:2"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
 const TEMPLATES: Template[] = ["freeform", "A", "B", "D"];
 

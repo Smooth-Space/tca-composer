@@ -1,7 +1,7 @@
 import lagunaGloriaAsset from "@/assets/laguna-gloria.jpg.asset.json";
 import { newSeed } from "@/lib/engine";
 
-export type Format = "1:1" | "4:5" | "9:16";
+export type Format = "1:1" | "4:5" | "9:16" | "3:2";
 export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi";
 export type SplitOrder = "image-first" | "title-first";
