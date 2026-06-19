@@ -25,7 +25,7 @@ export function BackgroundLayer({
     return (
       <div style={{ position: "absolute", inset: 0 }}>
         <CoverImage src={imgSrc} />
-        <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+        {imgSrc && <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />}
       </div>
     );
   }
@@ -81,7 +81,7 @@ export function SplitImageRegion({
   return (
     <>
       <CoverImage src={imgSrc} />
-      <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />
+      {imgSrc && <Overlay opacity={comp.imageOverlay} style={{ inset: 0 }} />}
     </>
   );
 }

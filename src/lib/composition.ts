@@ -1,4 +1,3 @@
-import lagunaGloriaAsset from "@/assets/laguna-gloria.jpg.asset.json";
 import { newSeed } from "@/lib/engine";
 
 export type Format = "1:1" | "4:5" | "9:16" | "3:2";
@@ -61,7 +60,7 @@ export function isCaptionRowActive(
   );
 }
 
-export const PLACEHOLDER_SRC = lagunaGloriaAsset.url;
+export const PLACEHOLDER_COLOR = "#f9f9f9";
 
 export interface Title {
   id: string;

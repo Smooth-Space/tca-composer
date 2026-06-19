@@ -11,6 +11,12 @@ export interface Placement {
   height: number;
 }
 
+export const MULTI_PLACEHOLDER_ASPECTS: ImgAspect[] = [
+  { id: "ph-1", naturalWidth: 1, naturalHeight: 1 }, // 1:1
+  { id: "ph-2", naturalWidth: 2, naturalHeight: 3 }, // 2:3
+  { id: "ph-3", naturalWidth: 3, naturalHeight: 2 }, // 3:2
+];
+
 const P = {
   primaryLongEdge: 0.46, // hero size (fraction of max(W,H))
   secondaryLongEdge: 0.28, // supporting images
@@ -90,6 +96,10 @@ export function computeMultiLayout(
   const rng = makeRng(seed);
   const longRef = Math.max(W, H);
 
+  const n = imgs.length;
+  const primaryFrac = n === 1 ? 0.6 : n === 2 ? 0.52 : P.primaryLongEdge; // bigger when fewer
+  const secondaryFrac = n === 2 ? 0.36 : P.secondaryLongEdge;
+
   // Central clearance: fixed if overridden, otherwise RANDOM per reroll -> variable title overlap
   const bandH = (clearOverride !== undefined ? clearOverride : rng() * P.maxBandFrac) * H;
   const bandTop = (H - bandH) / 2;
@@ -104,7 +114,7 @@ export function computeMultiLayout(
 
   // HERO — alone in its zone, anchored to a left/right edge, vertically varied
   {
-    const { w, h } = sizeFor(imgs[hero], szFrac(P.primaryLongEdge, rng), longRef);
+    const { w, h } = sizeFor(imgs[hero], szFrac(primaryFrac, rng), longRef);
     const zTop = heroTop ? 0 : bandBottom;
     const zBot = heroTop ? bandTop : H;
     const cx0 = heroLeft ? w * (0.5 - P.edgeBleed) : W - w * (0.5 - P.edgeBleed);
@@ -121,7 +131,7 @@ export function computeMultiLayout(
     const cols = leftFirst ? [0.2, 0.8] : [0.8, 0.2];
     const hts = leftFirst ? [0.32, 0.66] : [0.66, 0.32]; // staggered, paired to the side
     others.forEach((idx, k) => {
-      const { w, h } = sizeFor(imgs[idx], szFrac(P.secondaryLongEdge, rng), longRef);
+      const { w, h } = sizeFor(imgs[idx], szFrac(secondaryFrac, rng), longRef);
       const cx0 = cols[k] * W + (rng() * 2 - 1) * 0.04 * W;
       const cy0 = lerp(zTop, zBot, hts[k]) + (rng() * 2 - 1) * P.posJitter * (zBot - zTop);
       const { cx, cy } = clampCenter(cx0, cy0, w, h, W, H);

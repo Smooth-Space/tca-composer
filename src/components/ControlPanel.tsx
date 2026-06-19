@@ -7,7 +7,7 @@ import type {
   SplitStyle,
   CaptionKey,
 } from "@/lib/composition";
-import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS, PLACEHOLDER_SRC } from "@/lib/composition";
+import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS, PLACEHOLDER_COLOR } from "@/lib/composition";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -416,11 +416,18 @@ export function ControlPanel({
                   className="hidden"
                 />
                 <div className="flex items-center gap-3">
-                  <img
-                    src={comp.images[0]?.src ?? PLACEHOLDER_SRC}
-                    alt=""
-                    className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
-                  />
+                  {comp.images[0]?.src ? (
+                    <img
+                      src={comp.images[0].src}
+                      alt=""
+                      className="h-14 w-14 shrink-0 rounded-md border border-border object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="h-14 w-14 shrink-0 rounded-md border border-border"
+                      style={{ background: PLACEHOLDER_COLOR }}
+                    />
+                  )}
                   <div className="flex flex-1 flex-col gap-1.5">
                     <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                       Upload / Replace

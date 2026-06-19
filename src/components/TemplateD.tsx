@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Composition } from "@/lib/composition";
 import { computeAxes, type Axes } from "@/lib/engine";
-import { computeMultiLayout } from "@/lib/multiLayout";
+import { computeMultiLayout, MULTI_PLACEHOLDER_ASPECTS } from "@/lib/multiLayout";
 import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
 import { type MultiSphereHandle } from "@/components/MultiSphere";
@@ -103,7 +103,16 @@ export function TemplateD({
   }, [dTitles]);
 
   const multiPlacements = useMemo(
-    () => computeMultiLayout(comp.images, w, h, 2, comp.titleSizePx, comp.multiSeed, 0),
+    () =>
+      computeMultiLayout(
+        comp.images.length ? comp.images : MULTI_PLACEHOLDER_ASPECTS,
+        w,
+        h,
+        2,
+        comp.titleSizePx,
+        comp.multiSeed,
+        0,
+      ),
     [comp.images, w, h, comp.titleSizePx, comp.multiSeed],
   );
 
