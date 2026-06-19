@@ -98,6 +98,7 @@ function FixedCanvas({
       titleSizeMode={comp.titleSizeMode}
       titleShift={comp.titleShift}
       titleShiftSeed={comp.titleShiftSeed}
+      titleShiftAmount={comp.titleShiftAmount}
       contentWidthPx={w - 80}
     />
   );

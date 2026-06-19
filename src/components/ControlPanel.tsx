@@ -708,6 +708,24 @@ export function ControlPanel({
           </div>
         )}
 
+        {comp.template !== "D" && lineCount >= 2 && comp.titleShift && (
+          <div className="space-y-1.5 pt-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Shift distance</Label>
+              <span className="text-xs text-muted-foreground">
+                {Math.round(comp.titleShiftAmount * 100)}%
+              </span>
+            </div>
+            <Slider
+              min={0}
+              max={1}
+              step={0.05}
+              value={[comp.titleShiftAmount]}
+              onValueChange={([v]) => update({ titleShiftAmount: v })}
+            />
+          </div>
+        )}
+
         <div className="space-y-2 pt-3">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Size</Label>

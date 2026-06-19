@@ -16,6 +16,7 @@ interface TitleBlockProps {
   titleSizeMode?: "fixed" | "fit";
   titleShift?: boolean;
   titleShiftSeed?: number;
+  titleShiftAmount?: number;
   contentWidthPx?: number;
 }
 
@@ -32,6 +33,7 @@ export function TitleBlock({
   titleSizeMode = "fixed",
   titleShift = false,
   titleShiftSeed = 0,
+  titleShiftAmount = 1,
   contentWidthPx = 1000,
 }: TitleBlockProps) {
   const { handleClick, handleDoubleClick, hideSelection, selectableStyle } = useSelectable(
@@ -73,8 +75,8 @@ export function TitleBlock({
   const shiftEnabled = titleShift && rows.length >= 2;
 
   const offsets = useMemo(
-    () => shiftOffsets(rows.length, titleShiftSeed),
-    [rows.length, titleShiftSeed],
+    () => shiftOffsets(rows.length, titleShiftSeed, titleShiftAmount),
+    [rows.length, titleShiftSeed, titleShiftAmount],
   );
 
   // ---- Fit measuring (ratio of two measurements in the same scaled space) ----
