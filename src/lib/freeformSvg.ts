@@ -110,7 +110,7 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
 
   const fitEnabled = comp.titleSizeMode === "fit" && rows.length === 1;
   const shiftEnabled = comp.titleShift && rows.length >= 2;
-  const offsets = shiftOffsets(rows.length, comp.titleShiftSeed);
+  const offsets = shiftOffsets(rows.length, comp.titleShiftSeed, comp.titleShiftAmount);
 
   const all: PlacedGlyph[] = [];
 

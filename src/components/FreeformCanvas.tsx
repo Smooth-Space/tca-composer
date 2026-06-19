@@ -68,6 +68,7 @@ export function FreeformCanvas({
             titleSizeMode={comp.titleSizeMode}
             titleShift={comp.titleShift}
             titleShiftSeed={comp.titleShiftSeed}
+            titleShiftAmount={comp.titleShiftAmount}
             contentWidthPx={areaWidth}
           />
         </div>
