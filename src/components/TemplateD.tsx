@@ -23,12 +23,27 @@ function PinnedTitle({
     comp.titles[pin]?.id ?? null,
   );
   const isEmpty = (comp.titles[pin]?.text ?? "").trim() === "";
+  const placeholderLabel = pin === 0 ? "Title 1" : "Title 2";
+  const placeholderAxes = useMemo(
+    () =>
+      computeAxes(Array.from(placeholderLabel), comp.titleMode, comp.titleSeed, {
+        amplitude: comp.titleAmplitude,
+        phase: comp.titlePhase,
+      }),
+    [placeholderLabel, comp.titleMode, comp.titleSeed, comp.titleAmplitude, comp.titlePhase],
+  );
   return (
     <div onClick={handleClick} onDoubleClick={handleDoubleClick} style={selectableStyle}>
       {isEmpty && !hideSelection && (
-        <span style={{ opacity: 0.3, color: comp.titleColor }}>
-          {pin === 0 ? "Title 1" : "Title 2"}
-        </span>
+        <div style={{ opacity: 0.3 }}>
+          <TitleLine
+            text={placeholderLabel}
+            axes={placeholderAxes}
+            startOffset={0}
+            titleSizePx={comp.titleSizePx}
+            color={comp.titleColor}
+          />
+        </div>
       )}
       {dLines
         .filter((l) => l.pin === pin)
