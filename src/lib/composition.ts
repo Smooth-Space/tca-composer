@@ -1,4 +1,5 @@
 import { newSeed } from "@/lib/engine";
+import { type TcaScale, isTcaScale, clampStep } from "@/lib/tcaColors";
 
 export type Format = "1:1" | "4:5" | "9:16" | "3:2";
 export type Mode = "light" | "mixed" | "heavy";
@@ -61,6 +62,27 @@ export function isCaptionRowActive(
 }
 
 export const PLACEHOLDER_COLOR = "#f9f9f9";
+
+export type PaletteFormula = "mono" | "mixed";
+export interface PaletteState {
+  formula: PaletteFormula;
+  hueA: TcaScale; // type hue (title/text); also the single hue in mono
+  hueB: TcaScale; // field hue (background) — used only in "mixed"
+  bgStep: number; // 1..12
+  titleStep: number; // 1..12 on hueA
+  textStep: number; // 1..12 on hueA
+  graphic: boolean; // allow sub-threshold (felt-not-read) steps
+}
+
+export const defaultPalette: PaletteState = {
+  formula: "mono",
+  hueA: "gray",
+  hueB: "gray",
+  bgStep: 1,
+  titleStep: 12,
+  textStep: 12,
+  graphic: false,
+};
 
 export interface Title {
   id: string;
