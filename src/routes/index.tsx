@@ -112,9 +112,31 @@ function Composer() {
   useEffect(() => {
     const t = setTimeout(() => {
       set(STORAGE_KEY, { version: VERSION, data: comp }).catch(() => {});
-    }, 400);
+    }, 150);
     return () => clearTimeout(t);
   }, [comp]);
+
+  // Keep latest comp in a ref so the flush handler always saves the freshest value
+  const compRef = useRef(comp);
+  useEffect(() => {
+    compRef.current = comp;
+  }, [comp]);
+
+  // Flush-save on hide / unload — safety net against reloads landing mid-debounce
+  useEffect(() => {
+    const flush = () => {
+      set(STORAGE_KEY, { version: VERSION, data: compRef.current }).catch(() => {});
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   function handleReset() {
     del(STORAGE_KEY).catch(() => {});
