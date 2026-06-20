@@ -1,11 +1,7 @@
 name = "tca-composer"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "dist/client"
+pages_build_output_dir = "dist"
 
 [vars]
 NODE_VERSION = "22"
-
-[[pages_functions_routes]]
-pattern = "/*"
-script = "dist/server/server.js"
