@@ -5,7 +5,6 @@ import {
   bestPassingStep,
   fieldHueOf,
   isStepSelectable,
-  resolvePalette,
   stepContrast,
   typeHueOf,
   TITLE_THRESHOLD,
