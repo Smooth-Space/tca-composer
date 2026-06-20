@@ -124,6 +124,7 @@ export interface Composition {
   captions: Captions;
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
+  palette: PaletteState;
 }
 
 export const defaultComposition: Composition = {
@@ -154,6 +155,7 @@ export const defaultComposition: Composition = {
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
   captionHidden: { text1: false, text2: false, text3: false, text4: false },
+  palette: { ...defaultPalette },
 };
 
 export function normalizeComposition(data: Partial<Composition> | undefined): Composition {
