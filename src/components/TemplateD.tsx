@@ -145,9 +145,12 @@ export function TemplateD({
           gap: 40,
         }}
       >
-        <PinnedTitle pin={0} comp={comp} dLines={dLines} dAxes={dAxes} />
+        {/* zIndex:1 within this stacking context keeps titles above captions (zIndex:0) */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <PinnedTitle pin={0} comp={comp} dLines={dLines} dAxes={dAxes} />
+        </div>
 
-        <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 0 }}>
           {comp.variant === "split" && (
             <div style={{ position: "absolute", inset: 0 }}>
               <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
@@ -191,7 +194,9 @@ export function TemplateD({
           </div>
         </div>
 
-        <PinnedTitle pin={1} comp={comp} dLines={dLines} dAxes={dAxes} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <PinnedTitle pin={1} comp={comp} dLines={dLines} dAxes={dAxes} />
+        </div>
       </div>
     </div>
   );

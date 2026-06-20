@@ -5,8 +5,8 @@ export type Format = "1:1" | "4:5" | "9:16" | "3:2";
 export type Mode = "light" | "mixed" | "heavy";
 export type Variant = "none" | "split" | "full" | "multi";
 export type SplitOrder = "image-first" | "title-first";
-export type Template = "A" | "B" | "D" | "freeform";
-export type SplitStyle = "half" | "span";
+export type Template = "A" | "D" | "freeform";
+export type SplitStyle = "half" | "half-inset" | "span";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
 export type Align = "left" | "center" | "right";
@@ -34,12 +34,6 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
     { key: "text3", anchor: "bottom", column: "left", align: "left", label: "Text 3", descriptor: "bottom-left" },
     { key: "text4", anchor: "bottom", column: "right", align: "left", label: "Text 4", descriptor: "bottom-right" },
   ],
-  B: [
-    { key: "text1", anchor: "top", column: "left", align: "left", label: "Text 1", descriptor: "top-left" },
-    { key: "text2", anchor: "top", column: "right", align: "right", label: "Text 2", descriptor: "top-right" },
-    { key: "text3", anchor: "bottom", column: "left", align: "left", label: "Text 3", descriptor: "bottom-left" },
-    { key: "text4", anchor: "bottom", column: "right", align: "right", label: "Text 4", descriptor: "bottom-right" },
-  ],
   D: [
     { key: "text1", anchor: "middle", column: "left", align: "left", label: "Text 1" },
     { key: "text2", anchor: "middle", column: "right", align: "right", label: "Text 2" },
@@ -49,7 +43,6 @@ export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
 
 export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   A: ["none", "split", "full", "multi"],
-  B: ["none", "split", "full", "multi"],
   D: ["none", "split", "full", "multi"],
   freeform: ["none"],
 };
@@ -197,7 +190,13 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
     c.template = "A";
     if (c.variant === "split") c.splitStyle = "span";
   }
-  if (c.splitStyle !== "half" && c.splitStyle !== "span") c.splitStyle = "half";
+  // migrate legacy template "B" → A (split becomes half-inset)
+  if ((c.template as string) === "B") {
+    c.template = "A";
+    if (c.variant === "split") c.splitStyle = "half-inset";
+  }
+  if (c.splitStyle !== "half" && c.splitStyle !== "half-inset" && c.splitStyle !== "span")
+    c.splitStyle = "half";
 
   // seeds — must be finite numbers
   if (typeof c.titleSeed !== "number" || !Number.isFinite(c.titleSeed)) c.titleSeed = newSeed();

@@ -59,7 +59,7 @@ interface Props {
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16", "3:2"];
 const MODES: Mode[] = ["light", "mixed", "heavy"];
-const TEMPLATES: Template[] = ["freeform", "A", "B", "D"];
+const TEMPLATES: Template[] = ["freeform", "A", "D"];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
@@ -490,9 +490,9 @@ export function ControlPanel({
         <SegmentedControl
           options={TEMPLATES}
           value={comp.template}
-          columns={4}
+          columns={3}
           getLabel={(t) =>
-            t === "freeform" ? "Free" : t === "A" ? "1" : t === "B" ? "2" : t === "D" ? "3" : t
+            t === "freeform" ? "Free" : t === "A" ? "1" : t === "D" ? "2" : t
           }
           onChange={(t) =>
             setComp((c) => {
@@ -518,7 +518,7 @@ export function ControlPanel({
           <>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Variant</Label>
+                <Label className="text-xs">Image</Label>
                 {comp.variant === "multi" && (
                   <RerollButton
                     onClick={() => update({ multiSeed: newSeed() })}
@@ -621,15 +621,16 @@ export function ControlPanel({
                 </Button>
                 {comp.template === "A" && (
                   <SegmentedControl
-                    options={["half", "span"] as SplitStyle[]}
+                    options={["half", "half-inset", "span"] as SplitStyle[]}
                     value={comp.splitStyle}
                     onChange={(s) => update({ splitStyle: s })}
-                    columns={2}
-                    getLabel={(s) => (s === "half" ? "Half" : "Span")}
+                    columns={3}
+                    getLabel={(s) =>
+                      s === "half" ? "Half" : s === "half-inset" ? "Half inset" : "Span"
+                    }
                   />
                 )}
-                {(comp.template === "B" ||
-                  (comp.template === "A" && comp.splitStyle === "half")) && (
+                {comp.template === "A" && comp.splitStyle !== "span" && (
                   <SegmentedControl
                     options={["image-first", "title-first"] as SplitOrder[]}
                     value={comp.splitOrder}

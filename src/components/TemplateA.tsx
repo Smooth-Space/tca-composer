@@ -33,6 +33,7 @@ export function TemplateA({
   );
 
   if (comp.variant === "split") {
+    // "span": full-width image fills the content area, title floats on top.
     if (comp.splitStyle === "span") {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
@@ -53,6 +54,63 @@ export function TemplateA({
         </div>
       );
     }
+
+    // "half-inset": image and title halves sit inside the TemplateLayout margin (inset).
+    // Captions occupy the top/bottom margin rows; the halves live in the padded middle.
+    if (comp.splitStyle === "half-inset") {
+      const imageHalf = (
+        <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 1 }}>
+          <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
+        </div>
+      );
+      const titleHalf = (
+        <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 3 }}>
+          {centeredTitle}
+        </div>
+      );
+      const middle = (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 40,
+          }}
+        >
+          {comp.splitOrder === "image-first" ? (
+            <>
+              {imageHalf}
+              {titleHalf}
+            </>
+          ) : (
+            <>
+              {titleHalf}
+              {imageHalf}
+            </>
+          )}
+        </div>
+      );
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <TemplateLayout
+            slots={slots}
+            captions={comp.captions}
+            captionColors={comp.captionColors}
+            captionHidden={comp.captionHidden}
+            captionAlign={comp.captionAlign}
+            captionCounts={comp.captionCounts}
+            gap={40}
+          >
+            {middle}
+          </TemplateLayout>
+        </div>
+      );
+    }
+
+    // "half" (default): image and title each take exactly half the canvas height, full bleed.
+    // Corner captions are absolutely positioned at the top/bottom edges.
+    // z-order: image=1, captions=2, title=3
     const imageTop = comp.splitOrder === "image-first";
     const titleAnchor: "top" | "bottom" = imageTop ? "bottom" : "top";
     const titleRowActive = isRowActive(
@@ -96,7 +154,7 @@ export function TemplateA({
             justifyContent: "center",
             padding: titlePadding,
             boxSizing: "border-box",
-            zIndex: 2,
+            zIndex: 3,
           } as React.CSSProperties
         }
       >
@@ -108,6 +166,7 @@ export function TemplateA({
       const rowSlots = getVisibleRowSlots(slots, anchor, comp.captionCounts, comp.captionHidden);
       return (
         <div
+          key={anchor}
           style={
             {
               position: "absolute",
@@ -118,6 +177,7 @@ export function TemplateA({
               display: "flex",
               gap: 40,
               alignItems: "flex-start",
+              zIndex: 2,
             } as React.CSSProperties
           }
         >

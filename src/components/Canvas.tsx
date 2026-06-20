@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TitleBlock } from "@/components/TitleBlock";
 import { computeMultiLayout, MULTI_PLACEHOLDER_ASPECTS } from "@/lib/multiLayout";
 import { TemplateA } from "@/components/TemplateA";
-import { TemplateBC } from "@/components/TemplateBC";
 import { TemplateD } from "@/components/TemplateD";
 import { FreeformCanvas } from "@/components/FreeformCanvas";
 import { SelectionProvider, useSelection } from "@/components/SelectionContext";
@@ -115,21 +114,8 @@ function FixedCanvas({
     if (comp.template === "D") {
       return <TemplateD comp={comp} w={w} h={h} imgSrc={imgSrc} sphereRef={sphereRef} />;
     }
-    if (comp.template === "A") {
-      return (
-        <TemplateA
-          comp={comp}
-          w={w}
-          h={h}
-          imgSrc={imgSrc}
-          title={title}
-          multiPlacements={multiPlacements}
-          sphereRef={sphereRef}
-        />
-      );
-    }
     return (
-      <TemplateBC
+      <TemplateA
         comp={comp}
         w={w}
         h={h}
