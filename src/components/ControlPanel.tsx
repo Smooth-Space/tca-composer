@@ -855,7 +855,8 @@ export function ControlPanel({
 
       {!isFreeform && (
         <Section title="Colors">
-          <div className="space-y-3">
+          <PaletteControls comp={comp} update={update} />
+          <div className="space-y-3 border-t border-border pt-4">
             <ColorField
               label="Background"
               value={comp.background}
