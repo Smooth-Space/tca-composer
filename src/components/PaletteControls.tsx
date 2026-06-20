@@ -128,20 +128,18 @@ function StepStrip({
 function ContrastReadout({ label, ratio }: { label: string; ratio: number }) {
   const pass = ratio >= 3.0;
   return (
-    <div className="flex items-center justify-between text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="flex items-center gap-1.5 font-mono">
-        {ratio.toFixed(2)}:1
+    <div className="flex items-center justify-between rounded-md border border-border px-2.5 py-2">
+      <span className="text-sm">{label}</span>
+      <span className="flex items-center gap-2">
+        <span className="font-mono text-xs text-muted-foreground">{ratio.toFixed(1)}:1</span>
         <span
           className={cn(
-            "flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold",
-            pass
-              ? "bg-success/15 text-success"
-              : "bg-muted text-muted-foreground",
+            "inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium",
+            pass ? "text-success" : "text-muted-foreground",
           )}
         >
           {pass ? <Check className="h-3 w-3" strokeWidth={3} /> : <X className="h-3 w-3" strokeWidth={3} />}
-          {pass ? "AA-large" : "fail"}
+          {pass ? "AA" : "fail"}
         </span>
       </span>
     </div>
@@ -201,8 +199,8 @@ export function PaletteControls({
         <HuePicker label="Hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
       ) : (
         <>
-          <HuePicker label="Type hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
           <HuePicker label="Background hue" value={p.hueB} onChange={(v) => reland({ hueB: v })} />
+          <HuePicker label="Type hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
         </>
       )}
 
@@ -242,7 +240,7 @@ export function PaletteControls({
       </div>
 
       {/* Live contrast readouts */}
-      <div className="space-y-1 rounded-md border border-border bg-muted/50 p-2">
+      <div className="space-y-1.5">
         <ContrastReadout label="Title on background" ratio={titleRatio} />
         <ContrastReadout label="Text on background" ratio={textRatio} />
       </div>
