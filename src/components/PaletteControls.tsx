@@ -169,7 +169,6 @@ export function PaletteControls({
 
   const fieldHue = fieldHueOf(p);
   const typeHue = typeHueOf(p);
-  const resolved = resolvePalette(p);
   const titleRatio = stepContrast(p, p.titleStep);
   const textRatio = stepContrast(p, p.textStep);
 
