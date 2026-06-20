@@ -1,9 +1,12 @@
 import {
-  isCaptionRowActive,
+  getVisibleRowSlots,
+  isRowActive,
   type CaptionSlot,
   type Captions,
   type CaptionColors,
   type CaptionFlags,
+  type CaptionAlign,
+  type CaptionCounts,
 } from "@/lib/composition";
 import { Caption } from "@/components/Caption";
 
@@ -12,23 +15,23 @@ function CaptionCell({
   captions,
   captionColors,
   captionHidden,
+  captionAlign,
 }: {
-  slot?: CaptionSlot;
+  slot: CaptionSlot;
   captions: Captions;
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
+  captionAlign: CaptionAlign;
 }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
-      {slot && (
-        <Caption
-          text={captions[slot.key]}
-          color={captionColors[slot.key]}
-          align={slot.align}
-          captionKey={slot.key}
-          hidden={captionHidden[slot.key]}
-        />
-      )}
+      <Caption
+        text={captions[slot.key]}
+        color={captionColors[slot.key]}
+        align={captionAlign[slot.key]}
+        captionKey={slot.key}
+        hidden={captionHidden[slot.key]}
+      />
     </div>
   );
 }
@@ -38,17 +41,21 @@ function CaptionRow({
   captions,
   captionColors,
   captionHidden,
+  captionAlign,
+  captionCounts,
   anchor,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
+  captionAlign: CaptionAlign;
+  captionCounts: CaptionCounts;
   anchor: "top" | "bottom";
 }) {
-  const rowSlots = slots.filter((s) => s.anchor === anchor);
-  const left = rowSlots.find((s) => s.column === "left");
-  const right = rowSlots.find((s) => s.column === "right");
+  // A single visible input spans the full width within the margins; two split into halves.
+  // Hidden fields are excluded so their sibling spans.
+  const rowSlots = getVisibleRowSlots(slots, anchor, captionCounts, captionHidden);
   return (
     <div
       style={{
@@ -57,18 +64,16 @@ function CaptionRow({
         alignItems: "flex-start",
       }}
     >
-      <CaptionCell
-        slot={left}
-        captions={captions}
-        captionColors={captionColors}
-        captionHidden={captionHidden}
-      />
-      <CaptionCell
-        slot={right}
-        captions={captions}
-        captionColors={captionColors}
-        captionHidden={captionHidden}
-      />
+      {rowSlots.map((slot) => (
+        <CaptionCell
+          key={slot.key}
+          slot={slot}
+          captions={captions}
+          captionColors={captionColors}
+          captionHidden={captionHidden}
+          captionAlign={captionAlign}
+        />
+      ))}
     </div>
   );
 }
@@ -78,18 +83,23 @@ export function TemplateLayout({
   captions,
   captionColors,
   captionHidden,
+  captionAlign,
+  captionCounts,
   gap = 0,
-  collapseEmptyRows = false,
   children,
 }: {
   slots: CaptionSlot[];
   captions: Captions;
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
+  captionAlign: CaptionAlign;
+  captionCounts: CaptionCounts;
   gap?: number;
-  collapseEmptyRows?: boolean;
   children: React.ReactNode;
 }) {
+  // Empty/hidden rows have no physical presence so the title/images fill the space.
+  const topActive = isRowActive(slots, captions, captionHidden, captionCounts, "top");
+  const bottomActive = isRowActive(slots, captions, captionHidden, captionCounts, "bottom");
   return (
     <div
       style={{
@@ -101,22 +111,26 @@ export function TemplateLayout({
         gap,
       }}
     >
-      {(!collapseEmptyRows || isCaptionRowActive(slots, captions, captionHidden, "top")) && (
+      {topActive && (
         <CaptionRow
           slots={slots}
           captions={captions}
           captionColors={captionColors}
           captionHidden={captionHidden}
+          captionAlign={captionAlign}
+          captionCounts={captionCounts}
           anchor="top"
         />
       )}
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{children}</div>
-      {(!collapseEmptyRows || isCaptionRowActive(slots, captions, captionHidden, "bottom")) && (
+      {bottomActive && (
         <CaptionRow
           slots={slots}
           captions={captions}
           captionColors={captionColors}
           captionHidden={captionHidden}
+          captionAlign={captionAlign}
+          captionCounts={captionCounts}
           anchor="bottom"
         />
       )}

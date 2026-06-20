@@ -1,4 +1,9 @@
-import { TEMPLATE_CAPTIONS, isCaptionRowActive, type Composition } from "@/lib/composition";
+import {
+  TEMPLATE_CAPTIONS,
+  getVisibleRowSlots,
+  isRowActive,
+  type Composition,
+} from "@/lib/composition";
 import type { Placement } from "@/lib/multiLayout";
 import { Caption } from "@/components/Caption";
 import { TemplateLayout } from "@/components/TemplateLayout";
@@ -36,8 +41,9 @@ export function TemplateA({
             captions={comp.captions}
             captionColors={comp.captionColors}
             captionHidden={comp.captionHidden}
+            captionAlign={comp.captionAlign}
+            captionCounts={comp.captionCounts}
             gap={40}
-            collapseEmptyRows
           >
             <div style={{ position: "absolute", inset: 0 }}>
               <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
@@ -49,7 +55,13 @@ export function TemplateA({
     }
     const imageTop = comp.splitOrder === "image-first";
     const titleAnchor: "top" | "bottom" = imageTop ? "bottom" : "top";
-    const titleRowActive = isCaptionRowActive(slots, comp.captions, comp.captionHidden, titleAnchor);
+    const titleRowActive = isRowActive(
+      slots,
+      comp.captions,
+      comp.captionHidden,
+      comp.captionCounts,
+      titleAnchor,
+    );
     const outerPad = titleRowActive ? 130 : 40;
     const titlePadding = imageTop
       ? `40px 40px ${outerPad}px 40px`
@@ -63,6 +75,7 @@ export function TemplateA({
             right: 0,
             height: h / 2,
             [imageTop ? "top" : "bottom"]: 0,
+            zIndex: 1,
           } as React.CSSProperties
         }
       >
@@ -83,6 +96,7 @@ export function TemplateA({
             justifyContent: "center",
             padding: titlePadding,
             boxSizing: "border-box",
+            zIndex: 2,
           } as React.CSSProperties
         }
       >
@@ -90,9 +104,8 @@ export function TemplateA({
       </div>
     );
     const cornerRow = (anchor: "top" | "bottom") => {
-      const rowSlots = slots.filter((s) => s.anchor === anchor);
-      const left = rowSlots.find((s) => s.column === "left");
-      const right = rowSlots.find((s) => s.column === "right");
+      // A single visible input spans the full width within the margins; two split into halves.
+      const rowSlots = getVisibleRowSlots(slots, anchor, comp.captionCounts, comp.captionHidden);
       return (
         <div
           style={
@@ -108,28 +121,17 @@ export function TemplateA({
             } as React.CSSProperties
           }
         >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {left && (
+          {rowSlots.map((slot) => (
+            <div key={slot.key} style={{ flex: 1, minWidth: 0 }}>
               <Caption
-                text={comp.captions[left.key]}
-                color={comp.captionColors[left.key]}
-                align="left"
-                captionKey={left.key}
-                hidden={comp.captionHidden[left.key]}
+                text={comp.captions[slot.key]}
+                color={comp.captionColors[slot.key]}
+                align={comp.captionAlign[slot.key]}
+                captionKey={slot.key}
+                hidden={comp.captionHidden[slot.key]}
               />
-            )}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {right && (
-              <Caption
-                text={comp.captions[right.key]}
-                color={comp.captionColors[right.key]}
-                align="left"
-                captionKey={right.key}
-                hidden={comp.captionHidden[right.key]}
-              />
-            )}
-          </div>
+            </div>
+          ))}
         </div>
       );
     };
@@ -162,6 +164,8 @@ export function TemplateA({
           captions={comp.captions}
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
+          captionAlign={comp.captionAlign}
+          captionCounts={comp.captionCounts}
         >
           {centeredTitle}
         </TemplateLayout>

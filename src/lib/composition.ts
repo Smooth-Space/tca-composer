@@ -9,16 +9,20 @@ export type Template = "A" | "B" | "D" | "freeform";
 export type SplitStyle = "half" | "span";
 
 export type CaptionKey = "text1" | "text2" | "text3" | "text4";
+export type Align = "left" | "center" | "right";
+export type RowAnchor = "top" | "bottom" | "middle";
 
 export type Captions = Record<CaptionKey, string>;
 export type CaptionColors = Record<CaptionKey, string>;
 export type CaptionFlags = Record<CaptionKey, boolean>;
+export type CaptionAlign = Record<CaptionKey, Align>;
+export type CaptionCounts = Record<RowAnchor, 1 | 2>;
 
 export interface CaptionSlot {
   key: CaptionKey;
-  anchor: "top" | "bottom" | "middle";
+  anchor: RowAnchor;
   column: "left" | "right";
-  align: "left" | "right";
+  align: Align; // seed/default only — rendering reads Composition.captionAlign
   label: string;
   descriptor?: string;
 }
@@ -50,14 +54,39 @@ export const TEMPLATE_VARIANTS: Record<Template, Variant[]> = {
   freeform: ["none"],
 };
 
-export function isCaptionRowActive(
+// The slots visible in a row, left-first, limited to the row's input count (1 or 2).
+export function getRowSlots(
+  slots: CaptionSlot[],
+  anchor: RowAnchor,
+  counts: CaptionCounts,
+): CaptionSlot[] {
+  const rowSlots = slots
+    .filter((s) => s.anchor === anchor)
+    .sort((a, b) => (a.column === b.column ? 0 : a.column === "left" ? -1 : 1));
+  return rowSlots.slice(0, counts[anchor]);
+}
+
+// Slots that actually occupy space in a row: within the count, excluding hidden fields.
+// A hidden field has no physical presence, so its sibling spans the full width.
+export function getVisibleRowSlots(
+  slots: CaptionSlot[],
+  anchor: RowAnchor,
+  counts: CaptionCounts,
+  captionHidden: CaptionFlags,
+): CaptionSlot[] {
+  return getRowSlots(slots, anchor, counts).filter((s) => !captionHidden[s.key]);
+}
+
+// A row is "active" when at least one visible slot has non-empty, non-hidden text.
+export function isRowActive(
   slots: CaptionSlot[],
   captions: Captions,
   captionHidden: CaptionFlags,
-  anchor: "top" | "bottom",
+  counts: CaptionCounts,
+  anchor: RowAnchor,
 ): boolean {
-  return slots.some(
-    (s) => s.anchor === anchor && !captionHidden[s.key] && (captions[s.key] ?? "").trim() !== "",
+  return getRowSlots(slots, anchor, counts).some(
+    (s) => !captionHidden[s.key] && (captions[s.key] ?? "").trim() !== "",
   );
 }
 
@@ -122,6 +151,8 @@ export interface Composition {
   captions: Captions;
   captionColors: CaptionColors;
   captionHidden: CaptionFlags;
+  captionAlign: CaptionAlign;
+  captionCounts: CaptionCounts;
   palette: PaletteState;
 }
 
@@ -153,6 +184,8 @@ export const defaultComposition: Composition = {
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
   captionHidden: { text1: false, text2: false, text3: false, text4: false },
+  captionAlign: { text1: "left", text2: "right", text3: "left", text4: "right" },
+  captionCounts: { top: 2, bottom: 2, middle: 2 },
   palette: { ...defaultPalette },
 };
 
@@ -212,6 +245,26 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
     text2: c.captionHidden?.text2 === true,
     text3: c.captionHidden?.text3 === true,
     text4: c.captionHidden?.text4 === true,
+  };
+
+  // caption alignment — each must be left/center/right, else fall back to default
+  const align = (c.captionAlign ?? {}) as Partial<CaptionAlign>;
+  const validAlign = (v: unknown, fallback: Align): Align =>
+    v === "left" || v === "center" || v === "right" ? v : fallback;
+  c.captionAlign = {
+    text1: validAlign(align.text1, "left"),
+    text2: validAlign(align.text2, "right"),
+    text3: validAlign(align.text3, "left"),
+    text4: validAlign(align.text4, "right"),
+  };
+
+  // caption counts — clamp each row to 1 or 2 inputs
+  const counts = (c.captionCounts ?? {}) as Partial<CaptionCounts>;
+  const clampCount = (v: unknown): 1 | 2 => (v === 1 ? 1 : 2);
+  c.captionCounts = {
+    top: clampCount(counts.top),
+    bottom: clampCount(counts.bottom),
+    middle: clampCount(counts.middle),
   };
 
   // drop a legacy field that may exist in older saves

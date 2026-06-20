@@ -6,14 +6,35 @@ import type {
   SplitOrder,
   SplitStyle,
   CaptionKey,
+  CaptionSlot,
+  Align,
+  RowAnchor,
 } from "@/lib/composition";
-import { TEMPLATE_CAPTIONS, TEMPLATE_VARIANTS, PLACEHOLDER_COLOR } from "@/lib/composition";
+import {
+  TEMPLATE_CAPTIONS,
+  TEMPLATE_VARIANTS,
+  PLACEHOLDER_COLOR,
+  getRowSlots,
+} from "@/lib/composition";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Plus, X, RefreshCw, ChevronDown, Play, Pause, Eye, EyeOff } from "lucide-react";
+import {
+  Plus,
+  X,
+  RefreshCw,
+  ChevronDown,
+  Play,
+  Pause,
+  Eye,
+  EyeOff,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { newSeed, resolveWave } from "@/lib/engine";
@@ -210,6 +231,113 @@ function FieldLabel({ label, descriptor }: { label: string; descriptor?: string 
     </div>
   );
 }
+
+function AlignControl({ value, onChange }: { value: Align; onChange: (v: Align) => void }) {
+  // Compact, ghost-style toggle meant to sit subtly inside a field box (secondary to the text).
+  const itemClass = "h-7 w-7 min-w-0 text-muted-foreground data-[state=on]:text-foreground";
+  return (
+    <ToggleGroup
+      type="single"
+      size="sm"
+      value={value}
+      onValueChange={(v) => v && onChange(v as Align)}
+      className="gap-0.5"
+    >
+      <ToggleGroupItem value="left" aria-label="Align left" className={itemClass}>
+        <AlignLeft className="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="center" aria-label="Align center" className={itemClass}>
+        <AlignCenter className="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="right" aria-label="Align right" className={itemClass}>
+        <AlignRight className="h-4 w-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
+function CaptionField({
+  slot,
+  value,
+  align,
+  hidden,
+  showRemove,
+  onChangeText,
+  onChangeAlign,
+  onToggleHidden,
+  onRemove,
+  refCb,
+  onFocus,
+}: {
+  slot: CaptionSlot;
+  value: string;
+  align: Align;
+  hidden: boolean;
+  showRemove: boolean;
+  onChangeText: (v: string) => void;
+  onChangeAlign: (a: Align) => void;
+  onToggleHidden: () => void;
+  onRemove: () => void;
+  refCb: (el: HTMLTextAreaElement | null) => void;
+  onFocus: () => void;
+}) {
+  return (
+    <div className="relative rounded-md border border-input bg-transparent shadow-sm focus-within:ring-1 focus-within:ring-ring">
+      <AutoTextarea
+        value={value}
+        onChange={(e) => onChangeText(e.target.value)}
+        placeholder={slot.label}
+        rows={2}
+        // Borderless inside the wrapper; generous bottom padding clears the icon strip.
+        className={cn(
+          "resize-none border-0 pb-11 shadow-none focus-visible:ring-0",
+          hidden && "opacity-50",
+        )}
+        ref={refCb}
+        onFocus={onFocus}
+      />
+      <div className="absolute bottom-1.5 left-1.5">
+        <AlignControl value={align} onChange={onChangeAlign} />
+      </div>
+      <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="block">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleHidden}>
+                  {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{hidden ? "Show field" : "Hide field"}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        {showRemove && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRemove}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Remove text</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const ROW_LABELS: Record<RowAnchor, string> = {
+  top: "Top row",
+  bottom: "Bottom row",
+  middle: "Middle row",
+};
+const ROW_ANCHORS: RowAnchor[] = ["top", "middle", "bottom"];
+const FULL_COUNTS = { top: 2, bottom: 2, middle: 2 } as const;
 
 function ColorField({
   label,
@@ -800,52 +928,62 @@ export function ControlPanel({
 
       {!isFreeform && (
         <Section title="Text">
-          <div className="space-y-2">
-            {TEMPLATE_CAPTIONS[comp.template].map((slot) => {
-              const hidden = comp.captionHidden[slot.key];
+          <div>
+            {ROW_ANCHORS.filter((anchor) =>
+              TEMPLATE_CAPTIONS[comp.template].some((s) => s.anchor === anchor),
+            ).map((anchor) => {
+              const fullSlots = getRowSlots(TEMPLATE_CAPTIONS[comp.template], anchor, FULL_COUNTS);
+              const count = comp.captionCounts[anchor];
+              const visibleSlots = fullSlots.slice(0, count);
+              const canAdd = count < fullSlots.length;
+              const setCount = (n: 1 | 2) =>
+                update({ captionCounts: { ...comp.captionCounts, [anchor]: n } });
               return (
-                <div key={slot.key} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <FieldLabel label={slot.label} descriptor={slot.descriptor} />
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="block">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() =>
-                                update({
-                                  captionHidden: { ...comp.captionHidden, [slot.key]: !hidden },
-                                })
-                              }
-                            >
-                              {hidden ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>{hidden ? "Show field" : "Hide field"}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <AutoTextarea
-                    value={comp.captions[slot.key]}
-                    onChange={(e) =>
-                      update({ captions: { ...comp.captions, [slot.key]: e.target.value } })
-                    }
-                    placeholder={slot.label}
-                    rows={2}
-                    className={cn("resize-none", hidden && "opacity-50")}
-                    ref={(el) => {
-                      if (el) titleRefs.current.set(slot.key, el);
-                    }}
-                    onFocus={() => onSelectTitle?.(slot.key)}
-                  />
+                <div
+                  key={anchor}
+                  className="space-y-2 border-t border-border pt-4 first:border-t-0 first:pt-0 [&:not(:first-child)]:mt-4"
+                >
+                  <Label className="text-xs font-medium text-foreground">{ROW_LABELS[anchor]}</Label>
+                  {visibleSlots.map((slot, i) => (
+                    <CaptionField
+                      key={slot.key}
+                      slot={slot}
+                      value={comp.captions[slot.key]}
+                      align={comp.captionAlign[slot.key]}
+                      hidden={comp.captionHidden[slot.key]}
+                      showRemove={i === 1}
+                      onChangeText={(v) =>
+                        update({ captions: { ...comp.captions, [slot.key]: v } })
+                      }
+                      onChangeAlign={(a) =>
+                        update({ captionAlign: { ...comp.captionAlign, [slot.key]: a } })
+                      }
+                      onToggleHidden={() =>
+                        update({
+                          captionHidden: {
+                            ...comp.captionHidden,
+                            [slot.key]: !comp.captionHidden[slot.key],
+                          },
+                        })
+                      }
+                      onRemove={() => setCount(1)}
+                      refCb={(el) => {
+                        if (el) titleRefs.current.set(slot.key, el);
+                      }}
+                      onFocus={() => onSelectTitle?.(slot.key)}
+                    />
+                  ))}
+                  {canAdd && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setCount(2)}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add text
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -867,7 +1005,9 @@ export function ControlPanel({
               value={comp.titleColor}
               onChange={(v) => update({ titleColor: v })}
             />
-            {TEMPLATE_CAPTIONS[comp.template].map((slot) => (
+            {ROW_ANCHORS.flatMap((anchor) =>
+              getRowSlots(TEMPLATE_CAPTIONS[comp.template], anchor, comp.captionCounts),
+            ).map((slot) => (
               <ColorField
                 key={slot.key}
                 label={slot.label}

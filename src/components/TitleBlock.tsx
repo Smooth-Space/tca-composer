@@ -123,7 +123,20 @@ export function TitleBlock({
         ...selectableStyle,
       }}
     >
-      {titles[0]?.text === "" && !hideSelection && <span style={{ opacity: 0.3 }}>Title</span>}
+      {titles[0]?.text === "" && !hideSelection && (
+        <span
+          aria-hidden="true"
+          style={{
+            visibility: "hidden",
+            fontSize: renderSize,
+            fontFamily: TITLE_FONT,
+            letterSpacing: TITLE_LETTER_SPACING,
+            lineHeight: TITLE_LINE_HEIGHT,
+          }}
+        >
+          {"\u00A0"}
+        </span>
+      )}
       {fitEnabled && (
         <>
           {/* content-width reference (canvas inner width); measured in same scaled space */}

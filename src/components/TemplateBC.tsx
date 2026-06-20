@@ -30,10 +30,10 @@ export function TemplateBC({
   // split: middle is title + image in splitOrder, 40px gap.
   if (comp.variant === "split") {
     const titleHalf = (
-      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{centeredTitle}</div>
+      <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 2 }}>{centeredTitle}</div>
     );
     const imageHalf = (
-      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+      <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 1 }}>
         <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
       </div>
     );
@@ -67,8 +67,9 @@ export function TemplateBC({
           captions={comp.captions}
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
+          captionAlign={comp.captionAlign}
+          captionCounts={comp.captionCounts}
           gap={40}
-          collapseEmptyRows
         >
           {middle}
         </TemplateLayout>
@@ -94,6 +95,8 @@ export function TemplateBC({
           captions={comp.captions}
           captionColors={comp.captionColors}
           captionHidden={comp.captionHidden}
+          captionAlign={comp.captionAlign}
+          captionCounts={comp.captionCounts}
           gap={comp.template === "B" ? 40 : 0}
         >
           {centeredTitle}

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Composition } from "@/lib/composition";
+import { TEMPLATE_CAPTIONS, getVisibleRowSlots, type Composition } from "@/lib/composition";
 import { computeAxes, type Axes } from "@/lib/engine";
 import { computeMultiLayout, MULTI_PLACEHOLDER_ASPECTS } from "@/lib/multiLayout";
 import { TitleLine } from "@/components/TitleLine";
@@ -35,7 +35,7 @@ function PinnedTitle({
   return (
     <div onClick={handleClick} onDoubleClick={handleDoubleClick} style={selectableStyle}>
       {isEmpty && !hideSelection && (
-        <div style={{ opacity: 0.3 }}>
+        <div style={{ visibility: "hidden" }} aria-hidden="true">
           <TitleLine
             text={placeholderLabel}
             axes={placeholderAxes}
@@ -116,9 +116,14 @@ export function TemplateD({
     [comp.images, w, h, comp.titleSizePx, comp.multiSeed],
   );
 
+  // Multi + animate: let the globe (inside BackgroundLayer) render in front of titles.
+  // Every other state keeps titles above images.
+  const contentZ = comp.variant === "multi" && comp.animate ? 0 : 1;
+  const bgZ = comp.variant === "multi" && comp.animate ? 1 : 0;
+
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+      <div style={{ position: "absolute", inset: 0, zIndex: bgZ }}>
         <BackgroundLayer
           comp={comp}
           w={w}
@@ -133,7 +138,7 @@ export function TemplateD({
         style={{
           position: "absolute",
           inset: 0,
-          zIndex: 1,
+          zIndex: contentZ,
           padding: 40,
           display: "flex",
           flexDirection: "column",
@@ -157,22 +162,32 @@ export function TemplateD({
               alignItems: "center",
             }}
           >
-            <Caption
-              text={comp.captions.text1}
-              color={comp.captionColors.text1}
-              align="left"
-              captionKey="text1"
-              hidden={comp.captionHidden.text1}
-              style={{ flex: 1, paddingLeft: comp.variant === "split" ? 40 : 0 }}
-            />
-            <Caption
-              text={comp.captions.text2}
-              color={comp.captionColors.text2}
-              align="right"
-              captionKey="text2"
-              hidden={comp.captionHidden.text2}
-              style={{ flex: 1, paddingRight: comp.variant === "split" ? 40 : 0 }}
-            />
+            {(() => {
+              // A single visible input spans the full width within the margins; two split into halves.
+              const rowSlots = getVisibleRowSlots(
+                TEMPLATE_CAPTIONS.D,
+                "middle",
+                comp.captionCounts,
+                comp.captionHidden,
+              );
+              const single = rowSlots.length === 1;
+              const splitPad = comp.variant === "split" ? 40 : 0;
+              return rowSlots.map((slot) => (
+                <Caption
+                  key={slot.key}
+                  text={comp.captions[slot.key]}
+                  color={comp.captionColors[slot.key]}
+                  align={comp.captionAlign[slot.key]}
+                  captionKey={slot.key}
+                  hidden={comp.captionHidden[slot.key]}
+                  style={{
+                    flex: 1,
+                    paddingLeft: single || slot.column === "left" ? splitPad : 0,
+                    paddingRight: single || slot.column === "right" ? splitPad : 0,
+                  }}
+                />
+              ));
+            })()}
           </div>
         </div>
 
