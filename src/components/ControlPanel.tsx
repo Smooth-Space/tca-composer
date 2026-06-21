@@ -56,6 +56,7 @@ interface Props {
   selectedTitleId?: string | null;
   onSelectTitle?: (id: string | null) => void;
   focusReq?: { id: string | null; mode: "end" | "all"; nonce: number };
+  fontsReady?: boolean;
 }
 
 const FORMATS: Format[] = ["1:1", "4:5", "9:16", "3:2"];
@@ -398,6 +399,7 @@ export function ControlPanel({
   selectedTitleId,
   onSelectTitle,
   focusReq,
+  fontsReady = false,
 }: Props) {
   const update = (patch: Partial<Composition>) => setComp((c) => ({ ...c, ...patch }));
   const fileRef = useRef<HTMLInputElement>(null);
@@ -935,8 +937,10 @@ export function ControlPanel({
         <div className="flex items-center justify-between pt-3">
           <Label className="text-xs">
             Title animation
-            {comp.titleMode === "heavy" && (
+            {comp.titleMode === "heavy" ? (
               <span className="ml-1 text-muted-foreground">(not in Heavy)</span>
+            ) : (
+              !fontsReady && <span className="ml-1 text-muted-foreground">(loading font…)</span>
             )}
           </Label>
           <div className="flex items-center gap-1">
@@ -956,7 +960,7 @@ export function ControlPanel({
             )}
             <Switch
               checked={comp.titleAnimate}
-              disabled={comp.animate || comp.titleMode === "heavy"}
+              disabled={comp.animate || comp.titleMode === "heavy" || !fontsReady}
               onCheckedChange={(v) =>
                 update({ titleAnimate: v, ...(v ? { animate: false } : {}) })
               }

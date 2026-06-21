@@ -14,6 +14,7 @@ import {
   type Format,
 } from "@/lib/composition";
 import { resolveWave } from "@/lib/engine";
+import { useFontsReady } from "@/lib/titleAnim";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -96,6 +97,10 @@ function Composer() {
     comp.titlePhase !== null ? comp.titlePhase : resolveWave(comp.titleMode, comp.titleSeed).phase;
 
   const [exportPhase, setExportPhase] = useState<number | null>(null);
+
+  // Gate live title animation on font load — the variable face must be parsed
+  // before the rAF starts writing per-frame variations, or a cold load can crash.
+  const fontsReady = useFontsReady();
 
   // Restore once on mount
   useEffect(() => {
@@ -338,6 +343,7 @@ function Composer() {
         selectedTitleId={selectedTitleId}
         onSelectTitle={setSelectedTitleId}
         focusReq={focusReq}
+        fontsReady={fontsReady}
       />
       <main className="flex-1">
         <Canvas
@@ -350,6 +356,7 @@ function Composer() {
           hideSelection={hideSelection}
           titleBasePhase={resolvedPhase}
           exportPhase={exportPhase}
+          fontsReady={fontsReady}
           onAreaWidth={(w) => {
             areaWidthRef.current = w;
           }}

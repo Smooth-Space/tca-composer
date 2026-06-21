@@ -26,6 +26,7 @@ export function Canvas({
   onAreaWidth,
   titleBasePhase,
   exportPhase,
+  fontsReady,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
@@ -37,6 +38,7 @@ export function Canvas({
   onAreaWidth?: (w: number) => void;
   titleBasePhase?: number;
   exportPhase?: number | null;
+  fontsReady?: boolean;
 }) {
   return (
     <SelectionProvider
@@ -54,6 +56,7 @@ export function Canvas({
           sphereRef={sphereRef}
           titleBasePhase={titleBasePhase}
           exportPhase={exportPhase}
+          fontsReady={fontsReady}
         />
       )}
     </SelectionProvider>
@@ -66,12 +69,14 @@ function FixedCanvas({
   sphereRef,
   titleBasePhase,
   exportPhase,
+  fontsReady,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
   sphereRef?: React.Ref<MultiSphereHandle>;
   titleBasePhase?: number;
   exportPhase?: number | null;
+  fontsReady?: boolean;
 }) {
   const { onSelectTitle } = useSelection();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -118,6 +123,7 @@ function FixedCanvas({
       titleAnimPlaying={comp.titleAnimPlaying}
       titleBasePhase={titleBasePhase}
       exportPhase={exportPhase}
+      fontsReady={fontsReady}
       titleSizePx={comp.titleSizePx}
       titleColor={comp.titleColor}
       titleSizeMode={comp.titleSizeMode}

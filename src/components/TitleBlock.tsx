@@ -16,6 +16,7 @@ interface TitleBlockProps {
   titleAnimPlaying?: boolean;
   titleBasePhase?: number;
   exportPhase?: number | null;
+  fontsReady?: boolean;
   titleSizePx: number;
   titleColor: string;
   titleSizeMode?: "fixed" | "fit";
@@ -37,6 +38,7 @@ export function TitleBlock({
   titleAnimPlaying = true,
   titleBasePhase = 0,
   exportPhase = null,
+  fontsReady = false,
   titleSizePx,
   titleColor,
   titleSizeMode = "fixed",
@@ -81,6 +83,7 @@ export function TitleBlock({
     mode: titleMode,
     seed: titleSeed,
     amplitude: titleAmplitude,
+    fontsReady,
   });
 
   // Phase used for the React-rendered spans: explicit export phase wins (frozen,
@@ -171,7 +174,9 @@ export function TitleBlock({
     const root = rootRef.current;
     if (!root) return;
     const spans = Array.from(root.querySelectorAll<HTMLElement>("[data-tspan]"));
-    if (!animActive || spans.length === 0) {
+    // Only pin once fonts are ready — measuring with a fallback face would lock in
+    // wrong advances. Re-runs when fontsReady flips, re-measuring with the real font.
+    if (!animActive || !fontsReady || spans.length === 0) {
       spans.forEach((el) => (el.style.width = ""));
       return;
     }
@@ -182,7 +187,7 @@ export function TitleBlock({
     const widths = letters.map((el) => el.offsetWidth);
     letters.forEach((el, i) => (el.style.width = `${widths[i]}px`));
     return () => letters.forEach((el) => (el.style.width = ""));
-  }, [animActive, flatChars, titleMode, titleSeed, titleAmplitude, renderSize, shiftEnabled]);
+  }, [animActive, fontsReady, flatChars, titleMode, titleSeed, titleAmplitude, renderSize, shiftEnabled]);
 
   const renderSpans = (row: string, r: number, animatable = false) => (
     <TitleSpans

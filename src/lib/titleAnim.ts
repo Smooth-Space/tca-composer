@@ -2,6 +2,42 @@ import { useEffect, useRef, useState } from "react";
 import { axesToCss, computeAxes, type Mode } from "@/lib/engine";
 
 const LOOP_SEC = 10;
+const TITLE_FONT_FAMILY = "ABC Arizona Plus Variable";
+
+/**
+ * True once the variable title font has finished loading/parsing. The live
+ * animation must not run before this — writing per-frame font-variation-settings
+ * while the face is still parsing can crash the tab on a cold load. SSR-safe:
+ * starts false (server + initial hydration), resolves true on the client after
+ * mount, so there's no hydration mismatch.
+ */
+export function useFontsReady(): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined" || !document.fonts) {
+      setReady(true); // no Font Loading API — don't block
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        await document.fonts.load(`1em '${TITLE_FONT_FAMILY}'`);
+      } catch {
+        // ignore — fall through to the global ready promise
+      }
+      try {
+        await document.fonts.ready;
+      } catch {
+        // ignore — settle anyway so we don't block forever on a failed face
+      }
+      if (!cancelled) setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return ready;
+}
 
 /**
  * Drives the title's per-character font-variation-settings over a 10-second
@@ -33,9 +69,20 @@ export function useTitleSpanAnimation(params: {
   mode: Mode;
   seed: number;
   amplitude: number | null;
+  fontsReady: boolean;
 }): number {
-  const { rootRef, animActive, playing, exportPhase, basePhase, flatChars, mode, seed, amplitude } =
-    params;
+  const {
+    rootRef,
+    animActive,
+    playing,
+    exportPhase,
+    basePhase,
+    flatChars,
+    mode,
+    seed,
+    amplitude,
+    fontsReady,
+  } = params;
 
   const [committedPhase, setCommittedPhase] = useState(basePhase);
   const ref = useRef({ playing, exporting: exportPhase !== null, phase: basePhase });
@@ -54,7 +101,10 @@ export function useTitleSpanAnimation(params: {
   }, [basePhase, animActive]);
 
   useEffect(() => {
-    if (!animActive || exportPhase !== null) return;
+    // Gate on fontsReady: don't start the rAF (per-frame fvs writes) until the
+    // variable font has loaded. Until then the title renders statically at the
+    // committed base phase; when fonts resolve, this effect re-runs and animates.
+    if (!animActive || exportPhase !== null || !fontsReady) return;
 
     const write = (phase: number) => {
       const root = rootRef.current;
@@ -109,7 +159,7 @@ export function useTitleSpanAnimation(params: {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [animActive, exportPhase, rootRef, flatChars, mode, seed, amplitude]);
+  }, [animActive, exportPhase, fontsReady, rootRef, flatChars, mode, seed, amplitude]);
 
   return committedPhase;
 }
