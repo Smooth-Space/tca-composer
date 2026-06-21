@@ -933,9 +933,14 @@ export function ControlPanel({
         </div>
 
         <div className="flex items-center justify-between pt-3">
-          <Label className="text-xs">Title animation</Label>
+          <Label className="text-xs">
+            Title animation
+            {comp.titleMode === "heavy" && (
+              <span className="ml-1 text-muted-foreground">(not in Heavy)</span>
+            )}
+          </Label>
           <div className="flex items-center gap-1">
-            {comp.titleAnimate && (
+            {comp.titleAnimate && comp.titleMode !== "heavy" && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -951,7 +956,7 @@ export function ControlPanel({
             )}
             <Switch
               checked={comp.titleAnimate}
-              disabled={comp.animate}
+              disabled={comp.animate || comp.titleMode === "heavy"}
               onCheckedChange={(v) =>
                 update({ titleAnimate: v, ...(v ? { animate: false } : {}) })
               }
@@ -1077,7 +1082,7 @@ export function ControlPanel({
                   : "Export MP4"}
               </Button>
             )}
-            {comp.titleAnimate && (
+            {comp.titleAnimate && comp.titleMode !== "heavy" && (
               <Button className="w-full" onClick={onExportTitleMp4} disabled={exportingMp4}>
                 {exportingMp4
                   ? `Exporting MP4… ${Math.round((mp4Progress ?? 0) * 100)}%`

@@ -14,7 +14,6 @@ import {
   type Format,
 } from "@/lib/composition";
 import { resolveWave } from "@/lib/engine";
-import { useTitlePhase } from "@/lib/titleAnim";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,15 +89,13 @@ function Composer() {
   };
   const hideSelection = exporting || exportingMp4;
 
-  // Resolved static phase — used as the loop's starting point.
+  // Resolved static phase — the title animation loop's starting point. Live
+  // playback runs inside TitleBlock (direct DOM writes, no per-frame React);
+  // exportPhase is only set during MP4 export to drive deterministic frames.
   const resolvedPhase =
     comp.titlePhase !== null ? comp.titlePhase : resolveWave(comp.titleMode, comp.titleSeed).phase;
 
-  const [animPhase, setExportPhase] = useTitlePhase(
-    comp.titleAnimate,
-    comp.titleAnimPlaying,
-    resolvedPhase,
-  );
+  const [exportPhase, setExportPhase] = useState<number | null>(null);
 
   // Restore once on mount
   useEffect(() => {
@@ -302,7 +299,7 @@ function Composer() {
           const p = (basePhase + i / total) % 1;
           setExportPhase(p);
           // Two rAF ticks: first for React to commit, second for the browser to paint.
-          await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
           return toCanvas(node, captureOpts);
         },
         onProgress: setMp4Progress,
@@ -351,7 +348,8 @@ function Composer() {
           onSelectTitle={setSelectedTitleId}
           onRequestEdit={onRequestEdit}
           hideSelection={hideSelection}
-          animatedPhase={animPhase}
+          titleBasePhase={resolvedPhase}
+          exportPhase={exportPhase}
           onAreaWidth={(w) => {
             areaWidthRef.current = w;
           }}

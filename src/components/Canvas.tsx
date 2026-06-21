@@ -24,7 +24,8 @@ export function Canvas({
   onRequestEdit,
   hideSelection,
   onAreaWidth,
-  animatedPhase,
+  titleBasePhase,
+  exportPhase,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
@@ -34,7 +35,8 @@ export function Canvas({
   onRequestEdit?: (id: string, mode: "end" | "all") => void;
   hideSelection?: boolean;
   onAreaWidth?: (w: number) => void;
-  animatedPhase?: number;
+  titleBasePhase?: number;
+  exportPhase?: number | null;
 }) {
   return (
     <SelectionProvider
@@ -50,7 +52,8 @@ export function Canvas({
           comp={comp}
           compositionRef={compositionRef}
           sphereRef={sphereRef}
-          animatedPhase={animatedPhase}
+          titleBasePhase={titleBasePhase}
+          exportPhase={exportPhase}
         />
       )}
     </SelectionProvider>
@@ -61,12 +64,14 @@ function FixedCanvas({
   comp,
   compositionRef,
   sphereRef,
-  animatedPhase,
+  titleBasePhase,
+  exportPhase,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
   sphereRef?: React.Ref<MultiSphereHandle>;
-  animatedPhase?: number;
+  titleBasePhase?: number;
+  exportPhase?: number | null;
 }) {
   const { onSelectTitle } = useSelection();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,7 +114,10 @@ function FixedCanvas({
       titleSeed={comp.titleSeed}
       titleAmplitude={comp.titleAmplitude}
       titlePhase={comp.titlePhase}
-      animatedPhase={animatedPhase}
+      titleAnimate={comp.titleAnimate}
+      titleAnimPlaying={comp.titleAnimPlaying}
+      titleBasePhase={titleBasePhase}
+      exportPhase={exportPhase}
       titleSizePx={comp.titleSizePx}
       titleColor={comp.titleColor}
       titleSizeMode={comp.titleSizeMode}

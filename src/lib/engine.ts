@@ -1,6 +1,12 @@
 export type Axes = { wght: number; SRFF: number; wdth: number };
 export type Mode = "light" | "mixed" | "heavy";
 
+// Single source of truth for the font-variation-settings string, so the static
+// React render and the live rAF DOM-writer produce byte-identical output.
+export function axesToCss(a: Axes): string {
+  return `'wght' ${a.wght}, 'SRFF' ${a.SRFF}, 'wdth' ${a.wdth}`;
+}
+
 type AxisSpec = { kind: "const"; value: number } | { kind: "lerp"; start: number; end: number };
 
 interface ModeConfig {
@@ -100,19 +106,25 @@ export function computeAxes(
     phase?: number | null;
     forceDistribution?: "sine" | "linear";
     forceAmplitude?: number;
+    round?: boolean;
   },
 ): Axes[] {
   const cfg = MODES[mode];
   const base = resolveWave(mode, seed);
   const amplitude = override?.amplitude ?? base.amplitude;
   const phase = override?.phase ?? base.phase;
+  // Static rendering rounds axes to integers (default). Animation passes
+  // round:false so font-variation-settings interpolates as continuous floats,
+  // avoiding visible stair-stepping during the slow loop.
+  const round = override?.round ?? true;
+  const q = (v: number) => (round ? Math.round(v) : v);
   const N = chars.length;
   return chars.map((_, i) => {
     const t = N > 1 ? i / (N - 1) : 0;
     const d = distAt(cfg, t, amplitude, phase, override?.forceDistribution, override?.forceAmplitude);
     return {
-      wght: Math.round(axisValue(cfg.wght, d)),
-      SRFF: Math.round(axisValue(cfg.SRFF, d)),
+      wght: q(axisValue(cfg.wght, d)),
+      SRFF: q(axisValue(cfg.SRFF, d)),
       wdth: cfg.wdth,
     };
   });
