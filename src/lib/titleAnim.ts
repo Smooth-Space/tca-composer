@@ -74,6 +74,9 @@ export function useTitleSpanAnimation(params: {
         // the base phase) so word boundaries don't reflow sub-pixel each frame.
         // Still iterate every [data-tspan] so i stays aligned with the axes array.
         if (spans[i].dataset.tspace !== undefined) continue;
+        // Set fvs on the outer letter box; the inner strut + centered glyph inherit
+        // it (font-variation-settings is an inherited property), so the visible
+        // centered glyph animates without needing to be targeted directly.
         spans[i].style.fontVariationSettings = axesToCss(ax[i]);
       }
     };

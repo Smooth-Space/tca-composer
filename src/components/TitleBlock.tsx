@@ -160,11 +160,12 @@ export function TitleBlock({
 
   const renderSize = fitEnabled ? fittedSize : titleSizePx;
 
-  // Per-letter box pinning for the animated path: measure each glyph's natural
+  // Per-letter box pinning for the animated path: measure each letter's natural
   // (committed-phase) advance and lock the inline-block box to it, so the boxes —
-  // and therefore every letter's position — stay fixed while the axes animate.
-  // The glyph itself is left-anchored within its box (see TitleLine) and spills
-  // via overflow:visible, so its drawing origin never moves frame-to-frame.
+  // and therefore the line's layout — stay fixed while the axes animate. The
+  // measured width is the outer box's offsetWidth, which equals the in-flow strut's
+  // advance (the abspos centered glyph is excluded from layout — see TitleLine).
+  // The visible glyph is centered in this fixed box and pivots from its own centre.
   // Cleared when inactive.
   useLayoutEffect(() => {
     const root = rootRef.current;
