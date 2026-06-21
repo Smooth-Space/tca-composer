@@ -161,7 +161,10 @@ export const defaultComposition: Composition = {
   titleSizePx: 120,
   titleSizeMode: "fixed",
   titleMode: "mixed",
-  titleSeed: (Math.random() * 0xffffffff) >>> 0,
+  // Deterministic default seed: module evaluation must produce identical markup on
+  // server and client, or the SSR'd title axes mismatch the client's first render
+  // (hydration error every load). Fresh randomness happens only on user reset.
+  titleSeed: 0x1a2b3c4d,
   titleAmplitude: null,
   titlePhase: null,
   titleShift: false,
@@ -170,7 +173,8 @@ export const defaultComposition: Composition = {
   images: [],
   splitOrder: "image-first",
   splitStyle: "half",
-  multiSeed: (Math.random() * 0xffffffff) >>> 0,
+  // Deterministic default seed (see titleSeed) — keeps SSR/client first render identical.
+  multiSeed: 0x5e6f7a8b,
   animate: false,
   animSeed: newSeed(),
   animPlaying: true,

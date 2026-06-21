@@ -49,6 +49,12 @@ export function TitleSpans({
         // Animated letter: pinned-width outer box (fixed footprint) + hidden
         // in-flow strut (baseline/height) + abspos centered glyph (pivots from
         // its own centre via translateX(-50%), sub-pixel composited → no jitter).
+        //
+        // The strut is pinned to a CONSTANT base-phase variation (its own explicit
+        // fvs overrides the outer node's inherited, animating value). It only exists
+        // to set the box height/baseline, so it must not recompute its layout box
+        // every frame — only the visible glyph (which inherits the animated outer
+        // fvs) re-lays-out per frame.
         if (animatable && !isSpace) {
           return (
             <span
@@ -61,7 +67,13 @@ export function TitleSpans({
                 fontVariationSettings: a ? axesToCss(a) : undefined,
               }}
             >
-              <span aria-hidden="true" style={{ visibility: "hidden" }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  visibility: "hidden",
+                  fontVariationSettings: spaceA ? axesToCss(spaceA) : undefined,
+                }}
+              >
                 {ch}
               </span>
               <span
