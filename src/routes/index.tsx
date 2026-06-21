@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { get, set, del } from "idb-keyval";
-import { toJpeg, toPng } from "html-to-image";
+import { toJpeg, toPng, toCanvas } from "html-to-image";
 import { ControlPanel } from "@/components/ControlPanel";
 import { Canvas } from "@/components/Canvas";
-import { exportLoopMp4 } from "@/lib/mp4Export";
+import { exportLoopMp4, exportTitleMp4 } from "@/lib/mp4Export";
 import { exportFreeformSVG } from "@/lib/freeformSvg";
 import type { MultiSphereHandle } from "@/components/MultiSphere";
 import {
@@ -13,6 +13,8 @@ import {
   type Composition,
   type Format,
 } from "@/lib/composition";
+import { resolveWave } from "@/lib/engine";
+import { useTitlePhase } from "@/lib/titleAnim";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -87,6 +89,16 @@ function Composer() {
     setFocusReq((r) => ({ id, mode, nonce: r.nonce + 1 }));
   };
   const hideSelection = exporting || exportingMp4;
+
+  // Resolved static phase — used as the loop's starting point.
+  const resolvedPhase =
+    comp.titlePhase !== null ? comp.titlePhase : resolveWave(comp.titleMode, comp.titleSeed).phase;
+
+  const [animPhase, setExportPhase] = useTitlePhase(
+    comp.titleAnimate,
+    comp.titleAnimPlaying,
+    resolvedPhase,
+  );
 
   // Restore once on mount
   useEffect(() => {
@@ -254,6 +266,56 @@ function Composer() {
     }
   }
 
+  async function handleExportTitleMp4() {
+    const node = compositionRef.current;
+    if (!node) return;
+    if (!("VideoEncoder" in window)) {
+      alert("MP4 export needs a Chromium browser (Chrome or Edge).");
+      return;
+    }
+
+    setExportingMp4(true);
+    setMp4Progress(0);
+    try {
+      await document.fonts.ready;
+      const [w, h] = NATIVE[comp.format];
+      const basePhase = resolvedPhase;
+      const captureOpts = {
+        width: w,
+        height: h,
+        canvasWidth: w,
+        canvasHeight: h,
+        pixelRatio: 1,
+        backgroundColor: comp.background,
+        style: {
+          transform: "none",
+          transformOrigin: "top left",
+          margin: "0",
+        },
+      };
+      await exportTitleMp4({
+        w,
+        h,
+        fps: 30,
+        durationSec: 10,
+        renderFrame: async (i, total) => {
+          const p = (basePhase + i / total) % 1;
+          setExportPhase(p);
+          // Two rAF ticks: first for React to commit, second for the browser to paint.
+          await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          return toCanvas(node, captureOpts);
+        },
+        onProgress: setMp4Progress,
+        filename: `tca-title-${comp.format.replace(":", "x")}-${Date.now()}.mp4`,
+      });
+    } catch (err) {
+      console.error("Title MP4 export failed", err);
+    } finally {
+      setExportPhase(null); // resume live rAF
+      setExportingMp4(false);
+    }
+  }
+
   async function handleExportSvg() {
     try {
       await document.fonts.ready;
@@ -272,6 +334,7 @@ function Composer() {
         exporting={exporting}
         onReset={handleReset}
         onExportMp4={handleExportMp4}
+        onExportTitleMp4={handleExportTitleMp4}
         exportingMp4={exportingMp4}
         mp4Progress={mp4Progress}
         onExportSvg={handleExportSvg}
@@ -288,6 +351,7 @@ function Composer() {
           onSelectTitle={setSelectedTitleId}
           onRequestEdit={onRequestEdit}
           hideSelection={hideSelection}
+          animatedPhase={animPhase}
           onAreaWidth={(w) => {
             areaWidthRef.current = w;
           }}

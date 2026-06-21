@@ -49,6 +49,7 @@ interface Props {
   exporting: boolean;
   onReset: () => void;
   onExportMp4?: () => void;
+  onExportTitleMp4?: () => void;
   exportingMp4?: boolean;
   mp4Progress?: number;
   onExportSvg?: () => void;
@@ -390,6 +391,7 @@ export function ControlPanel({
   exporting,
   onReset,
   onExportMp4,
+  onExportTitleMp4,
   exportingMp4,
   mp4Progress,
   onExportSvg,
@@ -658,7 +660,10 @@ export function ControlPanel({
                     )}
                     <Switch
                       checked={comp.animate}
-                      onCheckedChange={(v) => update({ animate: v })}
+                      disabled={comp.titleAnimate}
+                      onCheckedChange={(v) =>
+                        update({ animate: v, ...(v ? { titleAnimate: false } : {}) })
+                      }
                     />
                   </div>
                 </div>
@@ -734,7 +739,10 @@ export function ControlPanel({
                     )}
                     <Switch
                       checked={comp.animate}
-                      onCheckedChange={(v) => update({ animate: v })}
+                      disabled={comp.titleAnimate}
+                      onCheckedChange={(v) =>
+                        update({ animate: v, ...(v ? { titleAnimate: false } : {}) })
+                      }
                     />
                   </div>
                 </div>
@@ -924,6 +932,33 @@ export function ControlPanel({
           )}
         </div>
 
+        <div className="flex items-center justify-between pt-3">
+          <Label className="text-xs">Title animation</Label>
+          <div className="flex items-center gap-1">
+            {comp.titleAnimate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => update({ titleAnimPlaying: !comp.titleAnimPlaying })}
+              >
+                {comp.titleAnimPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            <Switch
+              checked={comp.titleAnimate}
+              disabled={comp.animate}
+              onCheckedChange={(v) =>
+                update({ titleAnimate: v, ...(v ? { animate: false } : {}) })
+              }
+            />
+          </div>
+        </div>
+
         <AdvancedWave comp={comp} update={update} />
       </Section>
 
@@ -1037,6 +1072,13 @@ export function ControlPanel({
             </Button>
             {(comp.variant === "multi" || comp.variant === "split") && comp.animate && (
               <Button className="w-full" onClick={onExportMp4} disabled={exportingMp4}>
+                {exportingMp4
+                  ? `Exporting MP4… ${Math.round((mp4Progress ?? 0) * 100)}%`
+                  : "Export MP4"}
+              </Button>
+            )}
+            {comp.titleAnimate && (
+              <Button className="w-full" onClick={onExportTitleMp4} disabled={exportingMp4}>
                 {exportingMp4
                   ? `Exporting MP4… ${Math.round((mp4Progress ?? 0) * 100)}%`
                   : "Export MP4"}

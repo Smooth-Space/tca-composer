@@ -62,8 +62,15 @@ function resolveRandoms(cfg: ModeConfig, rng: () => number) {
   return { amplitude, phase };
 }
 
-function distAt(cfg: ModeConfig, t: number, amplitude: number, phase: number) {
-  if (cfg.distribution === "linear") return t;
+function distAt(
+  cfg: ModeConfig,
+  t: number,
+  amplitude: number,
+  phase: number,
+  forceDistribution?: "sine" | "linear",
+) {
+  const dist = forceDistribution ?? cfg.distribution;
+  if (dist === "linear") return t;
   return (Math.sin(2 * Math.PI * (amplitude * t + phase)) + 1) / 2; // sine, 0..1
 }
 
@@ -86,7 +93,11 @@ export function computeAxes(
   chars: string[],
   mode: Mode,
   seed: number,
-  override?: { amplitude?: number | null; phase?: number | null },
+  override?: {
+    amplitude?: number | null;
+    phase?: number | null;
+    forceDistribution?: "sine" | "linear";
+  },
 ): Axes[] {
   const cfg = MODES[mode];
   const base = resolveWave(mode, seed);
@@ -95,7 +106,7 @@ export function computeAxes(
   const N = chars.length;
   return chars.map((_, i) => {
     const t = N > 1 ? i / (N - 1) : 0;
-    const d = distAt(cfg, t, amplitude, phase);
+    const d = distAt(cfg, t, amplitude, phase, override?.forceDistribution);
     return {
       wght: Math.round(axisValue(cfg.wght, d)),
       SRFF: Math.round(axisValue(cfg.SRFF, d)),

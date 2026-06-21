@@ -24,6 +24,7 @@ export function Canvas({
   onRequestEdit,
   hideSelection,
   onAreaWidth,
+  animatedPhase,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
@@ -33,6 +34,7 @@ export function Canvas({
   onRequestEdit?: (id: string, mode: "end" | "all") => void;
   hideSelection?: boolean;
   onAreaWidth?: (w: number) => void;
+  animatedPhase?: number;
 }) {
   return (
     <SelectionProvider
@@ -44,7 +46,12 @@ export function Canvas({
       {comp.template === "freeform" ? (
         <FreeformCanvas comp={comp} compositionRef={compositionRef} onAreaWidth={onAreaWidth} />
       ) : (
-        <FixedCanvas comp={comp} compositionRef={compositionRef} sphereRef={sphereRef} />
+        <FixedCanvas
+          comp={comp}
+          compositionRef={compositionRef}
+          sphereRef={sphereRef}
+          animatedPhase={animatedPhase}
+        />
       )}
     </SelectionProvider>
   );
@@ -54,10 +61,12 @@ function FixedCanvas({
   comp,
   compositionRef,
   sphereRef,
+  animatedPhase,
 }: {
   comp: Composition;
   compositionRef?: React.Ref<HTMLDivElement>;
   sphereRef?: React.Ref<MultiSphereHandle>;
+  animatedPhase?: number;
 }) {
   const { onSelectTitle } = useSelection();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,6 +109,7 @@ function FixedCanvas({
       titleSeed={comp.titleSeed}
       titleAmplitude={comp.titleAmplitude}
       titlePhase={comp.titlePhase}
+      animatedPhase={animatedPhase}
       titleSizePx={comp.titleSizePx}
       titleColor={comp.titleColor}
       titleSizeMode={comp.titleSizeMode}

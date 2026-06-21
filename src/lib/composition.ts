@@ -140,6 +140,8 @@ export interface Composition {
   animSeed: number;
   animPlaying: boolean;
   globeScale: number;
+  titleAnimate: boolean;
+  titleAnimPlaying: boolean;
   imageOverlay: number;
   captions: Captions;
   captionColors: CaptionColors;
@@ -173,6 +175,8 @@ export const defaultComposition: Composition = {
   animSeed: newSeed(),
   animPlaying: true,
   globeScale: 1.0,
+  titleAnimate: false,
+  titleAnimPlaying: true,
   imageOverlay: 0.2,
   captions: { text1: "Text 1", text2: "Text 2", text3: "Text 3", text4: "Text 4" },
   captionColors: { text1: "#000000", text2: "#000000", text3: "#000000", text4: "#000000" },
@@ -213,6 +217,10 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
   if (typeof c.titleShift !== "boolean") c.titleShift = false;
   if (typeof c.animate !== "boolean") c.animate = false;
   if (typeof c.animPlaying !== "boolean") c.animPlaying = true;
+  if (typeof c.titleAnimate !== "boolean") c.titleAnimate = false;
+  if (typeof c.titleAnimPlaying !== "boolean") c.titleAnimPlaying = true;
+  // mutual exclusivity: title animation and template animation cannot both be on
+  if (c.titleAnimate && c.animate) c.animate = false;
 
   // optional waveform overrides: number | null
   c.titleAmplitude = typeof c.titleAmplitude === "number" ? c.titleAmplitude : null;

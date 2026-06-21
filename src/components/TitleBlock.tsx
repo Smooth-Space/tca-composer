@@ -11,6 +11,7 @@ interface TitleBlockProps {
   titleSeed: number;
   titleAmplitude?: number | null;
   titlePhase?: number | null;
+  animatedPhase?: number;
   titleSizePx: number;
   titleColor: string;
   titleSizeMode?: "fixed" | "fit";
@@ -28,6 +29,7 @@ export function TitleBlock({
   titleSeed,
   titleAmplitude = null,
   titlePhase = null,
+  animatedPhase,
   titleSizePx,
   titleColor,
   titleSizeMode = "fixed",
@@ -51,13 +53,17 @@ export function TitleBlock({
   const rows = useMemo(() => lines.map((l) => l.text), [lines]);
 
   // One flat stream across the single field's rows; axes computed once (newlines excluded).
+  // animatedPhase (from useTitlePhase) takes precedence over the static titlePhase when provided.
+  const effectivePhase = animatedPhase !== undefined ? animatedPhase : titlePhase;
+  const isAnimating = animatedPhase !== undefined;
   const axes = useMemo(
     () =>
       computeAxes(Array.from((t0?.text ?? "").replace(/\n/g, "")), titleMode, titleSeed, {
         amplitude: titleAmplitude,
-        phase: titlePhase,
+        phase: effectivePhase,
+        forceDistribution: isAnimating && titleMode === "mixed" ? "sine" : undefined,
       }),
-    [t0, titleMode, titleSeed, titleAmplitude, titlePhase],
+    [t0, titleMode, titleSeed, titleAmplitude, effectivePhase, isAnimating],
   );
 
   // Start index of each row within the flat stream (no mutable counter in JSX).
