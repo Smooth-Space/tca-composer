@@ -1,5 +1,14 @@
 import { newSeed } from "@/lib/engine";
-import { type TcaScale, isTcaScale, clampStep } from "@/lib/tcaColors";
+import { type TcaScale, isTcaScale } from "@/lib/tcaColors";
+import {
+  BG_ROLES,
+  FG_ROLES,
+  GRAY_BG_STEPS,
+  legalChromaticFg,
+  legalGrayFg,
+  type ColorRole,
+  type GrayStep,
+} from "@/lib/palette";
 
 export type Format = "1:1" | "4:5" | "9:16" | "3:2";
 export type Mode = "light" | "mixed" | "heavy";
@@ -90,18 +99,26 @@ export interface PaletteState {
   formula: PaletteFormula;
   hueA: TcaScale; // type hue (title/text); also the single hue in mono
   hueB: TcaScale; // field hue (background) — used only in "mixed"
-  bgStep: number; // 1..12
-  titleStep: number; // 1..12 on hueA
-  textStep: number; // 1..12 on hueA
+  bgRole: ColorRole; // any of BG_ROLES (chromatic hues)
+  titleRole: ColorRole; // any of FG_ROLES, must be legal for bgRole
+  textRole: ColorRole; // any of FG_ROLES, must be legal for bgRole
+  // Grayscale is a separate path (see palette.ts). These raw steps are used
+  // instead of the roles above whenever the relevant hue is "gray".
+  grayBgStep?: GrayStep;
+  grayTitleStep?: GrayStep;
+  grayTextStep?: GrayStep;
 }
 
 export const defaultPalette: PaletteState = {
   formula: "mono",
   hueA: "gray",
   hueB: "gray",
-  bgStep: 1,
-  titleStep: 12,
-  textStep: 12,
+  bgRole: "light",
+  titleRole: "dark",
+  textRole: "dark",
+  grayBgStep: 1,
+  grayTitleStep: 12,
+  grayTextStep: 12,
 };
 
 export interface Title {
@@ -281,15 +298,53 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
   // drop a legacy field that may exist in older saves
   delete (c as unknown as Record<string, unknown>).titleShiftOffsets;
 
-  // palette state
+  // palette state — role-based. Legacy step-based saves have no role fields, so
+  // they fall back to defaults (light bg + first legal fg). Foreground roles are
+  // coerced to the first legal option when missing/illegal for the background.
   const p = (c.palette ?? {}) as Partial<PaletteState>;
+  const formula: PaletteFormula = p.formula === "mixed" ? "mixed" : "mono";
+  const hueA = isTcaScale(p.hueA) ? p.hueA : "gray";
+  const hueB = isTcaScale(p.hueB) ? p.hueB : "gray";
+  const bgRole: ColorRole = BG_ROLES.includes(p.bgRole as ColorRole)
+    ? (p.bgRole as ColorRole)
+    : "light";
+  const grayBgStep: GrayStep = (GRAY_BG_STEPS as number[]).includes(p.grayBgStep as number)
+    ? (p.grayBgStep as GrayStep)
+    : 1;
+  // Legality depends on formula + hues (mixed gray↔chromatic bridge), so compute
+  // it from a preliminary palette. The legal* helpers don't read the fg fields,
+  // so placeholders here are safe.
+  const pre: PaletteState = {
+    formula,
+    hueA,
+    hueB,
+    bgRole,
+    titleRole: "dark",
+    textRole: "dark",
+    grayBgStep,
+    grayTitleStep: 12,
+    grayTextStep: 12,
+  };
+  const chromFg = legalChromaticFg(pre);
+  const grayFg = legalGrayFg(pre);
+  const coerceFg = (r: unknown): ColorRole =>
+    FG_ROLES.includes(r as ColorRole) && chromFg.includes(r as ColorRole)
+      ? (r as ColorRole)
+      : chromFg[0];
+  const coerceGrayFg = (r: unknown): GrayStep => {
+    const s: GrayStep = (GRAY_BG_STEPS as number[]).includes(r as number) ? (r as GrayStep) : 12;
+    return grayFg.includes(s) ? s : (grayFg[0] ?? 12);
+  };
   c.palette = {
-    formula: p.formula === "mixed" ? "mixed" : "mono",
-    hueA: isTcaScale(p.hueA) ? p.hueA : "gray",
-    hueB: isTcaScale(p.hueB) ? p.hueB : "gray",
-    bgStep: clampStep(p.bgStep ?? 1),
-    titleStep: clampStep(p.titleStep ?? 12),
-    textStep: clampStep(p.textStep ?? 12),
+    formula,
+    hueA,
+    hueB,
+    bgRole,
+    titleRole: coerceFg(p.titleRole),
+    textRole: coerceFg(p.textRole),
+    grayBgStep,
+    grayTitleStep: coerceGrayFg(p.grayTitleStep),
+    grayTextStep: coerceGrayFg(p.grayTextStep),
   };
 
   return c;

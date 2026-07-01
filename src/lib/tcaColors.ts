@@ -1,14 +1,15 @@
-export type TcaScale = "red" | "gold" | "green" | "teal" | "blue" | "purple" | "gray";
+export type TcaScale = "yellow" | "red" | "gold" | "green" | "teal" | "blue" | "purple" | "gray";
 
-export const TCA_SCALES: TcaScale[] = ["gray", "red", "gold", "green", "teal", "blue", "purple"];
+export const TCA_SCALES: TcaScale[] = ["gray", "yellow", "red", "gold", "green", "teal", "blue", "purple"];
 
 export const TCA: Record<TcaScale, string[]> = {
-  red:    ["#FFFBF8","#FFF5F1","#FFECE4","#FFE3D8","#FFD8C9","#FFCBB8","#FFB9A1","#FF9B7A","#E65929","#D0440B","#5A0F00","#370800"],
-  gold:   ["#FFFCF7","#FFF7EF","#FFEFE0","#FFE7D2","#FEDEC1","#FBD2AE","#F7C393","#F1A964","#F39009","#B25E00","#4D2100","#301100"],
-  green:  ["#FDFDF8","#FAF9F1","#F4F3E4","#EFEDD8","#E9E6CA","#E1DDB9","#D6D1A2","#C5BD7B","#A49834","#827500","#363000","#201C00"],
+  yellow: ["#FFFDF9","#FFFBEC","#FEF8D3","#FDF6C5","#FBF2B8","#F7E797","#F4DA6A","#F2CE35","#F2C900","#917500","#423600","#221B00"],
+  red:    ["#FFFBF8","#FFF5F1","#FFECE4","#FFD9D0","#FFD8C9","#FFCBB8","#FFB9A1","#FF9B7A","#E65929","#D0440B","#5A0F00","#370800"],
+  gold:   ["#FFFCF7","#FFF7EF","#FFEFE0","#FFECC5","#FEDEC1","#FBD2AE","#F7C393","#F1A964","#F39009","#B25E00","#4D2100","#301100"],
+  green:  ["#FDFDF8","#FAF9F1","#F4F3E4","#F2F6D0","#E9E6CA","#E1DDB9","#D6D1A2","#C5BD7B","#C9DB75","#6B8518","#212900","#201C00"],
   teal:   ["#F8FEFD","#F0FCF9","#E3F7F3","#D6F3ED","#C7EEE7","#B4E7DE","#9ADED2","#6ACFC0","#00CDB9","#008374","#003A32","#00231D"],
-  blue:   ["#FBFDFF","#F5F9FF","#ECF2FF","#E3ECFF","#D9E4FF","#CCDBFF","#BBCEFC","#A1B9F7","#6784D7","#5470C1","#1E2C56","#101934"],
-  purple: ["#FFFBFE","#FDF7FB","#F9EEF7","#F6E6F3","#F2DDED","#ECD2E7","#E4C2DE","#D7AACF","#C588BB","#9B6192","#40233C","#261324"],
+  blue:   ["#FBFDFF","#F5F9FF","#ECF2FF","#E3ECFF","#D9E4FF","#CCDBFF","#BBCEFC","#A1B9F7","#6784D7","#5470C1","#111B3A","#101934"],
+  purple: ["#FFFBFE","#FDF7FB","#F9EEF7","#F2E6FA","#F2DDED","#ECD2E7","#E4C2DE","#D7AACF","#C588BB","#9B6192","#40233C","#261324"],
   gray:   ["#FDFBF7","#F8F5F0","#F2EDE7","#EBE6DF","#E4DFD7","#DBD6CD","#CFC9C0","#BAB3A9","#8D877E","#787269","#68645D","#23201B"],
 };
 

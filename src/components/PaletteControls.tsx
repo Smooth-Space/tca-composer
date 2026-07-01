@@ -2,13 +2,21 @@ import type { Composition, PaletteFormula, PaletteState } from "@/lib/compositio
 import { TCA_SCALES, tcaColor, type TcaScale } from "@/lib/tcaColors";
 import {
   applyPalette,
-  bestPassingStep,
+  contrastRatio,
   fieldHueOf,
-  isStepSelectable,
-  stepContrast,
   typeHueOf,
+  resolveBgHex,
+  resolveFgHex,
+  effectiveBgRole,
+  legalChromaticFg,
+  legalGrayFg,
+  BG_ROLES,
+  FG_ROLES,
+  GRAY_BG_STEPS,
+  resolveGrayHex,
   TITLE_THRESHOLD,
-  TEXT_THRESHOLD,
+  type ColorRole,
+  type GrayStep,
 } from "@/lib/palette";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -16,6 +24,7 @@ import { X, Check } from "lucide-react";
 
 const HUE_LABEL: Record<TcaScale, string> = {
   gray: "Gray",
+  yellow: "Yellow",
   red: "Red",
   gold: "Gold",
   green: "Green",
@@ -27,6 +36,7 @@ const HUE_LABEL: Record<TcaScale, string> = {
 // Representative step for each hue's round picker chip.
 const HUE_CHIP_STEP: Record<TcaScale, number> = {
   gray: 12,
+  yellow: 9,
   red: 9,
   gold: 9,
   green: 9,
@@ -34,6 +44,33 @@ const HUE_CHIP_STEP: Record<TcaScale, number> = {
   blue: 9,
   purple: 9,
 };
+
+const ROLE_LABEL: Record<ColorRole, string> = {
+  light: "Light",
+  brand: "Brand",
+  shade: "Shade",
+  dark: "Dark",
+};
+
+// Neutral names for the three gray steps (no brand/shade concept for gray).
+const GRAY_STEP_LABEL: Record<GrayStep, string> = {
+  1: "White",
+  2: "Off-white",
+  12: "Black",
+};
+
+// Shared chip classes. Disabled = opacity + not-allowed + hairline border only
+// (no X, no overlay) — a true disabled button, matching Radix's disabled read.
+function chipClass(legal: boolean, selected: boolean): string {
+  return cn(
+    "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-medium transition-shadow",
+    !legal
+      ? "cursor-not-allowed border-border opacity-50"
+      : selected
+        ? "border-ring ring-2 ring-ring"
+        : "border-border hover:border-foreground/40",
+  );
+}
 
 function HuePicker({
   label,
@@ -68,56 +105,76 @@ function HuePicker({
   );
 }
 
-function StepStrip({
-  palette,
-  hue,
+// A row of chromatic role chips. Illegal roles are truly disabled (opacity + cursor).
+function RoleChips({
+  roles,
   current,
-  threshold,
+  swatchOf,
+  isLegal,
   onPick,
 }: {
-  palette: PaletteState;
-  hue: TcaScale;
-  current: number;
-  threshold?: number;
-  onPick: (step: number) => void;
+  roles: ColorRole[];
+  current: ColorRole;
+  swatchOf: (role: ColorRole) => string;
+  isLegal: (role: ColorRole) => boolean;
+  onPick: (role: ColorRole) => void;
 }) {
   return (
-    <div className="grid grid-cols-12 gap-0.5">
-      {Array.from({ length: 12 }, (_, i) => i + 1).map((step) => {
-        const selectable = threshold === undefined || isStepSelectable(palette, step, threshold);
-        const selected = step === current;
-        const ratio = threshold !== undefined ? stepContrast(palette, step) : undefined;
+    <div className="flex gap-1.5">
+      {roles.map((role) => {
+        const legal = isLegal(role);
+        return (
+          <button
+            key={role}
+            type="button"
+            disabled={!legal}
+            onClick={() => legal && onPick(role)}
+            title={ROLE_LABEL[role]}
+            className={chipClass(legal, role === current)}
+          >
+            <span
+              className="h-4 w-4 rounded-full border border-black/10"
+              style={{ background: swatchOf(role) }}
+            />
+            <span>{ROLE_LABEL[role]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// A row of gray step chips. Illegal steps are truly disabled (same treatment as
+// chromatic chips); never a Brand/Shade chip.
+function GrayChips({
+  steps,
+  current,
+  isLegal,
+  onPick,
+}: {
+  steps: GrayStep[];
+  current: GrayStep;
+  isLegal: (step: GrayStep) => boolean;
+  onPick: (step: GrayStep) => void;
+}) {
+  return (
+    <div className="flex gap-1.5">
+      {steps.map((step) => {
+        const legal = isLegal(step);
         return (
           <button
             key={step}
             type="button"
-            disabled={!selectable}
-            onClick={() => selectable && onPick(step)}
-            title={ratio !== undefined ? `Step ${step} · ${ratio.toFixed(1)}:1` : `Step ${step}`}
-            className={cn(
-              "relative h-8 rounded-sm border transition-shadow",
-              selected
-                ? "border-ring ring-2 ring-ring"
-                : selectable
-                  ? "border-border hover:border-foreground/40"
-                  : "border-border cursor-not-allowed",
-            )}
-            style={{ background: tcaColor(hue, step) }}
+            disabled={!legal}
+            onClick={() => legal && onPick(step)}
+            title={GRAY_STEP_LABEL[step]}
+            className={chipClass(legal, step === current)}
           >
-            {!selectable && (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span
-                  className="flex h-4 w-4 items-center justify-center rounded-full"
-                  style={{ background: "rgba(0,0,0,0.12)" }}
-                >
-                  <X
-                    className="h-3 w-3"
-                    strokeWidth={2.5}
-                    style={{ color: step <= 9 ? "#23201B" : "#FDFBF7" }}
-                  />
-                </span>
-              </span>
-            )}
+            <span
+              className="h-4 w-4 rounded-full border border-black/10"
+              style={{ background: resolveGrayHex(step) }}
+            />
+            <span>{GRAY_STEP_LABEL[step]}</span>
           </button>
         );
       })}
@@ -126,7 +183,7 @@ function StepStrip({
 }
 
 function ContrastReadout({ label, ratio }: { label: string; ratio: number }) {
-  const pass = ratio >= 3.0;
+  const pass = ratio >= TITLE_THRESHOLD;
   return (
     <div className="flex items-center justify-between rounded-md border border-border px-2.5 py-2">
       <span className="text-sm">{label}</span>
@@ -158,20 +215,90 @@ export function PaletteControls({
   // Apply a new palette state to the resolved fields.
   const apply = (next: PaletteState) => update(applyPalette(comp, next));
 
-  // When formula / hue / background changes, re-land title & text on best passing steps.
+  // When formula / hue / background changes, re-land title & text (chromatic roles
+  // and gray steps) onto their first legal option under the (bridge-aware)
+  // legality for the new background.
   const reland = (partial: Partial<PaletteState>) => {
     const merged: PaletteState = { ...p, ...partial };
-    const titleStep = bestPassingStep(merged, TITLE_THRESHOLD);
-    apply({ ...merged, titleStep, textStep: titleStep });
+    const chromFg = legalChromaticFg(merged);
+    const titleRole = chromFg.includes(merged.titleRole) ? merged.titleRole : chromFg[0];
+    const textRole = chromFg.includes(merged.textRole) ? merged.textRole : chromFg[0];
+    const grayFg = legalGrayFg(merged);
+    const gt = merged.grayTitleStep ?? 12;
+    const gx = merged.grayTextStep ?? 12;
+    const grayTitleStep = grayFg.includes(gt) ? gt : (grayFg[0] ?? 12);
+    const grayTextStep = grayFg.includes(gx) ? gx : (grayFg[0] ?? 12);
+    apply({ ...merged, titleRole, textRole, grayTitleStep, grayTextStep });
   };
 
+  const isMixed = p.formula === "mixed";
   const fieldHue = fieldHueOf(p);
   const typeHue = typeHueOf(p);
-  const titleRatio = stepContrast(p, p.titleStep);
-  const textRatio = stepContrast(p, p.textStep);
+  const bgIsGray = fieldHue === "gray";
+  const typeIsGray = typeHue === "gray";
+  const grayBg = p.grayBgStep ?? 1;
+
+  // Bridge-aware legality + the background's effective role (drives the Brand→Shade
+  // substitution, incl. a near-white gray background).
+  const effBg = effectiveBgRole(p);
+  const chromFgLegal = legalChromaticFg(p);
+  const grayFgLegal = legalGrayFg(p);
+
+  // Resolved hexes for the readouts (informational only — not gating).
+  const bgHex = bgIsGray ? resolveGrayHex(grayBg) : resolveBgHex(fieldHue, p.bgRole);
+  const titleHex = typeIsGray
+    ? resolveGrayHex(p.grayTitleStep ?? 12)
+    : resolveFgHex(typeHue, effBg, p.titleRole);
+  const textHex = typeIsGray
+    ? resolveGrayHex(p.grayTextStep ?? 12)
+    : resolveFgHex(typeHue, effBg, p.textRole);
+  const titleRatio = contrastRatio(bgHex, titleHex);
+  const textRatio = contrastRatio(bgHex, textHex);
+
+  // Background chips (chromatic roles or gray steps), always all selectable.
+  const backgroundChips = bgIsGray ? (
+    <GrayChips
+      steps={GRAY_BG_STEPS}
+      current={grayBg}
+      isLegal={() => true}
+      onPick={(step) => reland({ grayBgStep: step })}
+    />
+  ) : (
+    <RoleChips
+      roles={BG_ROLES}
+      current={p.bgRole}
+      swatchOf={(role) => resolveBgHex(fieldHue, role)}
+      isLegal={() => true}
+      onPick={(role) => reland({ bgRole: role })}
+    />
+  );
+
+  // Foreground chip row builder (Title / Text), gated by the bridged legality.
+  const foregroundChips = (
+    role: ColorRole,
+    grayStep: GrayStep,
+    setRole: (r: ColorRole) => void,
+    setGray: (s: GrayStep) => void,
+  ) =>
+    typeIsGray ? (
+      <GrayChips
+        steps={GRAY_BG_STEPS}
+        current={grayStep}
+        isLegal={(s) => grayFgLegal.includes(s)}
+        onPick={setGray}
+      />
+    ) : (
+      <RoleChips
+        roles={FG_ROLES}
+        current={role}
+        swatchOf={(r) => resolveFgHex(typeHue, effBg, r)}
+        isLegal={(r) => chromFgLegal.includes(r)}
+        onPick={setRole}
+      />
+    );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Formula */}
       <div className="space-y-1.5">
         <Label className="text-xs">Formula</Label>
@@ -194,52 +321,45 @@ export function PaletteControls({
         </div>
       </div>
 
-      {/* Hue(s) */}
-      {p.formula === "mono" ? (
-        <HuePicker label="Hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
-      ) : (
-        <>
+      {/* Mono: one shared hue picker governs both blocks below */}
+      {!isMixed && <HuePicker label="Hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />}
+
+      {/* Background block */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold text-foreground">Background</Label>
+        {isMixed && (
           <HuePicker label="Background hue" value={p.hueB} onChange={(v) => reland({ hueB: v })} />
+        )}
+        {backgroundChips}
+      </div>
+
+      {/* Type block */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold text-foreground">Type</Label>
+        {isMixed && (
           <HuePicker label="Type hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
-        </>
-      )}
-
-      {/* Background strip */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">Background</Label>
-        <StepStrip
-          palette={p}
-          hue={fieldHue}
-          current={p.bgStep}
-          onPick={(step) => reland({ bgStep: step })}
-        />
+        )}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Title</Label>
+          {foregroundChips(
+            p.titleRole,
+            p.grayTitleStep ?? 12,
+            (r) => apply({ ...p, titleRole: r }),
+            (s) => apply({ ...p, grayTitleStep: s }),
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Text</Label>
+          {foregroundChips(
+            p.textRole,
+            p.grayTextStep ?? 12,
+            (r) => apply({ ...p, textRole: r }),
+            (s) => apply({ ...p, grayTextStep: s }),
+          )}
+        </div>
       </div>
 
-      {/* Title strip */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">Title</Label>
-        <StepStrip
-          palette={p}
-          hue={typeHue}
-          current={p.titleStep}
-          threshold={TITLE_THRESHOLD}
-          onPick={(step) => apply({ ...p, titleStep: step })}
-        />
-      </div>
-
-      {/* Text strip */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">Text</Label>
-        <StepStrip
-          palette={p}
-          hue={typeHue}
-          current={p.textStep}
-          threshold={TEXT_THRESHOLD}
-          onPick={(step) => apply({ ...p, textStep: step })}
-        />
-      </div>
-
-      {/* Live contrast readouts */}
+      {/* Live contrast readouts — informational only, not gating */}
       <div className="space-y-1.5">
         <ContrastReadout label="Title on background" ratio={titleRatio} />
         <ContrastReadout label="Text on background" ratio={textRatio} />
