@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Composition, PaletteFormula, PaletteState } from "@/lib/composition";
 import { TCA_SCALES, tcaColor, type TcaScale } from "@/lib/tcaColors";
 import {
@@ -231,6 +232,39 @@ export function PaletteControls({
     apply({ ...merged, titleRole, textRole, grayTitleStep, grayTextStep });
   };
 
+  // Full variant: the entire background is a user image, so there's no known solid
+  // background to gate against. Foreground resolves to PLAIN role colors (no
+  // Brand→Shade substitution — that only makes sense against a Light solid bg) and
+  // every option is always selectable. bgRole is left untouched in state.
+  const isFull = comp.variant === "full";
+  const FULL_GRAY_STEPS: GrayStep[] = [1, 12]; // White / Black only, no pairing
+  const fgFullHex = (hue: TcaScale, role: ColorRole, grayStep: GrayStep) =>
+    hue === "gray" ? resolveGrayHex(grayStep) : resolveBgHex(hue, role);
+  const applyFull = (patch: Partial<PaletteState>) => {
+    const next: PaletteState = { ...p, ...patch };
+    const hue = next.hueA;
+    const titleHex = fgFullHex(hue, next.titleRole, next.grayTitleStep ?? 12);
+    const textHex = fgFullHex(hue, next.textRole, next.grayTextStep ?? 12);
+    update({
+      palette: next,
+      titleColor: titleHex,
+      captionColors: { text1: textHex, text2: textHex, text3: textHex, text4: textHex },
+    });
+  };
+
+  // Re-resolve on transitions in/out of Full: entering re-resolves the foreground to
+  // plain (un-substituted) colors; leaving re-lands Title/Text against the real
+  // background that's back in play. Fires only on an actual variant change.
+  const prevVariantRef = useRef(comp.variant);
+  useEffect(() => {
+    const prev = prevVariantRef.current;
+    if (prev === comp.variant) return;
+    prevVariantRef.current = comp.variant;
+    if (comp.variant === "full") applyFull({});
+    else if (prev === "full") reland({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comp.variant]);
+
   const isMixed = p.formula === "mixed";
   const fieldHue = fieldHueOf(p);
   const typeHue = typeHueOf(p);
@@ -297,73 +331,118 @@ export function PaletteControls({
       />
     );
 
+  // Full-variant foreground chips: always selectable, no legality gating, no
+  // Brand Shade; gray offers only White (1) and Black (12); swatches are plain
+  // role colors (no substitution).
+  const fullForegroundChips = (
+    role: ColorRole,
+    grayStep: GrayStep,
+    setRole: (r: ColorRole) => void,
+    setGray: (s: GrayStep) => void,
+  ) =>
+    typeIsGray ? (
+      <GrayChips steps={FULL_GRAY_STEPS} current={grayStep} isLegal={() => true} onPick={setGray} />
+    ) : (
+      <RoleChips
+        roles={FG_ROLES}
+        current={role}
+        swatchOf={(r) => resolveBgHex(typeHue, r)}
+        isLegal={() => true}
+        onPick={setRole}
+      />
+    );
+
   return (
     <div className="space-y-5">
-      {/* Formula */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">Formula</Label>
-        <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-          {(["mono", "mixed"] as PaletteFormula[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => reland({ formula: f })}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium transition-colors",
-                p.formula === f
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f === "mono" ? "Monochrome" : "Mixed-hue"}
-            </button>
-          ))}
+      {/* Formula — hidden in Full (no separate Background, so only one hue applies) */}
+      {!isFull && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Formula</Label>
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            {(["mono", "mixed"] as PaletteFormula[]).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => reland({ formula: f })}
+                className={cn(
+                  "rounded-md py-1.5 text-sm font-medium transition-colors",
+                  p.formula === f
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f === "mono" ? "Monochrome" : "Mixed-hue"}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Mono: one shared hue picker governs both blocks below */}
-      {!isMixed && <HuePicker label="Hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />}
+      {/* Single shared hue picker: Full (governs Title/Text) or non-mixed Mono */}
+      {isFull ? (
+        <HuePicker label="Hue" value={p.hueA} onChange={(v) => applyFull({ hueA: v })} />
+      ) : (
+        !isMixed && <HuePicker label="Hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
+      )}
 
-      {/* Background block */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold text-foreground">Background</Label>
-        {isMixed && (
-          <HuePicker label="Background hue" value={p.hueB} onChange={(v) => reland({ hueB: v })} />
-        )}
-        {backgroundChips}
-      </div>
+      {/* Background block — omitted in Full (the image is the background) */}
+      {!isFull && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-foreground">Background</Label>
+          {isMixed && (
+            <HuePicker label="Background hue" value={p.hueB} onChange={(v) => reland({ hueB: v })} />
+          )}
+          {backgroundChips}
+        </div>
+      )}
 
       {/* Type block */}
       <div className="space-y-2">
         <Label className="text-xs font-semibold text-foreground">Type</Label>
-        {isMixed && (
+        {!isFull && isMixed && (
           <HuePicker label="Type hue" value={p.hueA} onChange={(v) => reland({ hueA: v })} />
         )}
         <div className="space-y-1.5">
           <Label className="text-xs">Title</Label>
-          {foregroundChips(
-            p.titleRole,
-            p.grayTitleStep ?? 12,
-            (r) => apply({ ...p, titleRole: r }),
-            (s) => apply({ ...p, grayTitleStep: s }),
-          )}
+          {isFull
+            ? fullForegroundChips(
+                p.titleRole,
+                p.grayTitleStep ?? 12,
+                (r) => applyFull({ titleRole: r }),
+                (s) => applyFull({ grayTitleStep: s }),
+              )
+            : foregroundChips(
+                p.titleRole,
+                p.grayTitleStep ?? 12,
+                (r) => apply({ ...p, titleRole: r }),
+                (s) => apply({ ...p, grayTitleStep: s }),
+              )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Text</Label>
-          {foregroundChips(
-            p.textRole,
-            p.grayTextStep ?? 12,
-            (r) => apply({ ...p, textRole: r }),
-            (s) => apply({ ...p, grayTextStep: s }),
-          )}
+          {isFull
+            ? fullForegroundChips(
+                p.textRole,
+                p.grayTextStep ?? 12,
+                (r) => applyFull({ textRole: r }),
+                (s) => applyFull({ grayTextStep: s }),
+              )
+            : foregroundChips(
+                p.textRole,
+                p.grayTextStep ?? 12,
+                (r) => apply({ ...p, textRole: r }),
+                (s) => apply({ ...p, grayTextStep: s }),
+              )}
         </div>
       </div>
 
-      {/* Live contrast readouts — informational only, not gating */}
-      <div className="space-y-1.5">
-        <ContrastReadout label="Title on background" ratio={titleRatio} />
-        <ContrastReadout label="Text on background" ratio={textRatio} />
-      </div>
+      {/* Live contrast readouts — omitted in Full (nothing real to measure) */}
+      {!isFull && (
+        <div className="space-y-1.5">
+          <ContrastReadout label="Title on background" ratio={titleRatio} />
+          <ContrastReadout label="Text on background" ratio={textRatio} />
+        </div>
+      )}
     </div>
   );
 }
