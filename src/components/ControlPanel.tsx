@@ -495,7 +495,15 @@ export function ControlPanel({
           <SegmentedControl
             options={FORMATS}
             value={comp.format}
-            onChange={(f) => update({ format: f })}
+            onChange={(f) =>
+              update({
+                format: f,
+                // half-inset isn't offered for Template A at 3:2 — coerce a stale value.
+                ...(comp.template === "A" && f === "3:2" && comp.splitStyle === "half-inset"
+                  ? { splitStyle: "half" as SplitStyle }
+                  : {}),
+              })
+            }
             columns={4}
           />
         </Section>
@@ -524,6 +532,10 @@ export function ControlPanel({
                 template: t,
                 titles,
                 variant: TEMPLATE_VARIANTS[t].includes(c.variant) ? c.variant : "none",
+                // half-inset isn't offered for Template A at 3:2 — coerce a stale value.
+                ...(t === "A" && c.format === "3:2" && c.splitStyle === "half-inset"
+                  ? { splitStyle: "half" as SplitStyle }
+                  : {}),
               };
             })
           }
@@ -634,17 +646,26 @@ export function ControlPanel({
                 >
                   <Plus className="mr-1 h-4 w-4" /> Add images ({comp.images.length}/5)
                 </Button>
-                {comp.template === "A" && (
-                  <SegmentedControl
-                    options={["half", "half-inset", "span"] as SplitStyle[]}
-                    value={comp.splitStyle}
-                    onChange={(s) => update({ splitStyle: s })}
-                    columns={3}
-                    getLabel={(s) =>
-                      s === "half" ? "Half" : s === "half-inset" ? "Half inset" : "Span"
-                    }
-                  />
-                )}
+                {comp.template === "A" &&
+                  (() => {
+                    // half-inset isn't offered for Template A at 3:2 (side-by-side).
+                    // Column count derives from the option count so the grid always
+                    // fills its width (no left-hugging when only two options show).
+                    const splitStyleOptions = (
+                      comp.format === "3:2" ? ["half", "span"] : ["half", "half-inset", "span"]
+                    ) as SplitStyle[];
+                    return (
+                      <SegmentedControl
+                        options={splitStyleOptions}
+                        value={comp.splitStyle}
+                        onChange={(s) => update({ splitStyle: s })}
+                        columns={splitStyleOptions.length}
+                        getLabel={(s) =>
+                          s === "half" ? "Half" : s === "half-inset" ? "Half inset" : "Span"
+                        }
+                      />
+                    );
+                  })()}
                 {comp.template === "A" && comp.splitStyle !== "span" && (
                   <SegmentedControl
                     options={["image-first", "title-first"] as SplitOrder[]}
@@ -912,6 +933,19 @@ export function ControlPanel({
             />
           </div>
         )}
+
+        {comp.template === "A" &&
+          comp.variant === "split" &&
+          comp.splitStyle === "half" &&
+          comp.format === "3:2" && (
+            <div className="flex items-center justify-between pt-3">
+              <Label className="text-xs">Span</Label>
+              <Switch
+                checked={comp.titleSpanColumns}
+                onCheckedChange={(v) => update({ titleSpanColumns: v })}
+              />
+            </div>
+          )}
 
         <div className="space-y-2 pt-3">
           <div className="flex items-center justify-between">

@@ -108,6 +108,68 @@ export function TemplateA({
       );
     }
 
+    // "half" at 3:2 only: side-by-side (vertical split down the middle). The image
+    // fills one half; TemplateLayout (title + all captions) fills the other, reused
+    // as-is so caption placement falls out naturally. splitOrder picks the side.
+    if (comp.splitStyle === "half" && comp.format === "3:2") {
+      const imageLeft = comp.splitOrder === "image-first";
+      const imageSide = (
+        <div
+          style={
+            {
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              width: "50%",
+              [imageLeft ? "left" : "right"]: 0,
+              zIndex: 1,
+            } as React.CSSProperties
+          }
+        >
+          <SplitImageRegion comp={comp} imgSrc={imgSrc} sphereRef={sphereRef} />
+        </div>
+      );
+      const textSide = (
+        <div
+          style={
+            {
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              width: "50%",
+              [imageLeft ? "right" : "left"]: 0,
+              zIndex: 3,
+            } as React.CSSProperties
+          }
+        >
+          <TemplateLayout
+            slots={slots}
+            captions={comp.captions}
+            captionColors={comp.captionColors}
+            captionHidden={comp.captionHidden}
+            captionAlign={comp.captionAlign}
+            captionCounts={comp.captionCounts}
+            gap={40}
+          >
+            {/* When titleSpanColumns, the title moves to a full-width overlay below;
+                captions stay placed by TemplateLayout around an empty middle. */}
+            {comp.titleSpanColumns ? null : centeredTitle}
+          </TemplateLayout>
+        </div>
+      );
+      return (
+        <div style={{ position: "absolute", inset: 0 }}>
+          {imageSide}
+          {textSide}
+          {/* Title spanning both halves: centered across the full canvas, above the
+              image (z 1) and the text-side captions (z 3). Captions are unaffected. */}
+          {comp.titleSpanColumns && (
+            <div style={{ position: "absolute", inset: 0, zIndex: 4 }}>{centeredTitle}</div>
+          )}
+        </div>
+      );
+    }
+
     // "half" (default): image and title each take exactly half the canvas height, full bleed.
     // Corner captions are absolutely positioned at the top/bottom edges.
     // z-order: image=1, captions=2, title=3

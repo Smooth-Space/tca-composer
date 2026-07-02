@@ -149,6 +149,10 @@ export interface Composition {
   titleShift: boolean;
   titleShiftSeed: number;
   titleShiftAmount: number;
+  // Template A / split / half / 3:2 only: center the title across the full canvas
+  // width (spanning both halves) instead of confining it to the text column.
+  // (Distinct from SplitStyle's "span" value.)
+  titleSpanColumns: boolean;
   images: ImageItem[];
   splitOrder: SplitOrder;
   splitStyle: SplitStyle;
@@ -184,6 +188,7 @@ export const defaultComposition: Composition = {
   titleAmplitude: null,
   titlePhase: null,
   titleShift: false,
+  titleSpanColumns: false,
   titleShiftSeed: newSeed(),
   titleShiftAmount: 1,
   images: [],
@@ -220,6 +225,10 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
   }
   if (c.splitStyle !== "half" && c.splitStyle !== "half-inset" && c.splitStyle !== "span")
     c.splitStyle = "half";
+  // "half-inset" isn't offered for Template A at 3:2 (side-by-side layout) — coerce
+  // a stale value to "half" so state never holds an unselectable option.
+  if (c.template === "A" && c.format === "3:2" && c.splitStyle === "half-inset")
+    c.splitStyle = "half";
 
   // seeds — must be finite numbers
   if (typeof c.titleSeed !== "number" || !Number.isFinite(c.titleSeed)) c.titleSeed = newSeed();
@@ -234,6 +243,7 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
 
   // booleans
   if (typeof c.titleShift !== "boolean") c.titleShift = false;
+  if (typeof c.titleSpanColumns !== "boolean") c.titleSpanColumns = false;
   if (typeof c.animate !== "boolean") c.animate = false;
   if (typeof c.animPlaying !== "boolean") c.animPlaying = true;
   if (typeof c.titleAnimate !== "boolean") c.titleAnimate = false;
