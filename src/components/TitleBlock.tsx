@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { computeAxes, type Mode } from "@/lib/engine";
 import { titleDisplay, applyItalic } from "@/lib/titleItalic";
-import type { Title } from "@/lib/composition";
+import type { Title, Align } from "@/lib/composition";
 import { TitleSpans } from "@/components/TitleLine";
 import { TITLE_FONT, TITLE_LETTER_SPACING, TITLE_LINE_HEIGHT, shiftOffsets } from "@/lib/typo";
 import { useSelectable } from "@/components/SelectionContext";
@@ -23,6 +23,9 @@ interface TitleBlockProps {
   titleShiftSeed?: number;
   titleShiftAmount?: number;
   contentWidthPx?: number;
+  // Freeform only. Defaults to "center" so Templates A/D, which don't pass it,
+  // render exactly as they did before alignment existed.
+  align?: Align;
 }
 
 const FIT_REF_SIZE = 200;
@@ -44,6 +47,7 @@ export function TitleBlock({
   titleShiftSeed = 0,
   titleShiftAmount = 1,
   contentWidthPx = 1000,
+  align = "center",
 }: TitleBlockProps) {
   const { handleClick, handleDoubleClick, hideSelection, selectableStyle } = useSelectable(
     titles[0]?.id ?? null,
@@ -150,7 +154,19 @@ export function TitleBlock({
     return () => {
       active = false;
     };
-  }, [fitEnabled, rows, titleMode, titleSeed, contentWidthPx]);
+    // flatItalic/amplitude/phase belong here: they change glyph advances (italic
+    // is ~2% narrower) without changing the row text, so omitting them left a
+    // fitted line at a stale size after italicising or rerolling the wave.
+  }, [
+    fitEnabled,
+    rows,
+    titleMode,
+    titleSeed,
+    contentWidthPx,
+    flatItalic,
+    titleAmplitude,
+    titlePhase,
+  ]);
 
   const renderSize = fitEnabled ? fittedSize : titleSizePx;
 
@@ -198,7 +214,10 @@ export function TitleBlock({
       style={{
         width: "100%",
         lineHeight: TITLE_LINE_HEIGHT,
-        textAlign: "center",
+        // Governs where the lines of a SOFT-WRAPPED row sit inside the row box.
+        // The row box's own placement is set by its margins below — both are
+        // needed, and they must agree.
+        textAlign: align,
         fontFamily: TITLE_FONT,
         fontSize: renderSize,
         letterSpacing: TITLE_LETTER_SPACING,
@@ -254,37 +273,44 @@ export function TitleBlock({
           </div>
         </>
       )}
-      {/* Visible rows are animatable (three-node box-pinned structure) ONLY during
-          export (exportPhase set); the live canvas always renders the static path. */}
-      {rows.map((row, r) => {
-        const lineInner = (
-          <div
-            style={{
-              width: shiftEnabled ? undefined : "fit-content",
-              maxWidth: "100%",
-              marginLeft: shiftEnabled ? undefined : "auto",
-              marginRight: shiftEnabled ? undefined : "auto",
-              flex: shiftEnabled ? "0 0 auto" : undefined,
-              whiteSpace: fitEnabled ? "nowrap" : "normal",
-              overflowWrap: "normal",
-              wordBreak: "normal",
-              hyphens: "none",
-            }}
-          >
-            {renderSpans(row, r, animActive && exportPhase !== null)}
-          </div>
-        );
-        if (shiftEnabled) {
-          return (
-            <div key={lines[r].key} style={{ display: "flex", width: "100%" }}>
-              <div style={{ flex: `${offsets[r]} 0 0px`, transition: "flex 400ms ease" }} />
-              {lineInner}
-              <div style={{ flex: `${1 - offsets[r]} 0 0px`, transition: "flex 400ms ease" }} />
+      {/* data-title-rows scopes the SVG exporter's line-break query to the VISIBLE
+          rows, excluding the hidden fit-measurement line and the empty placeholder
+          above — both of which also contain character spans. */}
+      <div data-title-rows="">
+        {/* Visible rows are animatable (three-node box-pinned structure) ONLY during
+            export (exportPhase set); the live canvas always renders the static path. */}
+        {rows.map((row, r) => {
+          const lineInner = (
+            <div
+              style={{
+                width: shiftEnabled ? undefined : "fit-content",
+                maxWidth: "100%",
+                // Places the row BOX within the full width. Shift drives its own
+                // offset via the flex spacers below, so it opts out entirely.
+                marginLeft: shiftEnabled ? undefined : align === "left" ? 0 : "auto",
+                marginRight: shiftEnabled ? undefined : align === "right" ? 0 : "auto",
+                flex: shiftEnabled ? "0 0 auto" : undefined,
+                whiteSpace: fitEnabled ? "nowrap" : "normal",
+                overflowWrap: "normal",
+                wordBreak: "normal",
+                hyphens: "none",
+              }}
+            >
+              {renderSpans(row, r, animActive && exportPhase !== null)}
             </div>
           );
-        }
-        return <div key={lines[r].key}>{lineInner}</div>;
-      })}
+          if (shiftEnabled) {
+            return (
+              <div key={lines[r].key} style={{ display: "flex", width: "100%" }}>
+                <div style={{ flex: `${offsets[r]} 0 0px`, transition: "flex 400ms ease" }} />
+                {lineInner}
+                <div style={{ flex: `${1 - offsets[r]} 0 0px`, transition: "flex 400ms ease" }} />
+              </div>
+            );
+          }
+          return <div key={lines[r].key}>{lineInner}</div>;
+        })}
+      </div>
     </div>
   );
 }

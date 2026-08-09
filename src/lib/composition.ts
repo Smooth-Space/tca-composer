@@ -154,6 +154,9 @@ export interface Composition {
   // width (spanning both halves) instead of confining it to the text column.
   // (Distinct from SplitStyle's "span" value.)
   titleSpanColumns: boolean;
+  // Freeform only. Templates A/D don't pass it to TitleBlock, so they stay centred.
+  // Ignored while titleShift is on — shift is a deliberate ragged layout and wins.
+  titleAlign: Align;
   images: ImageItem[];
   splitOrder: SplitOrder;
   splitStyle: SplitStyle;
@@ -194,6 +197,7 @@ export const defaultComposition: Composition = {
   titlePhase: null,
   titleShift: false,
   titleSpanColumns: false,
+  titleAlign: "center",
   titleShiftSeed: newSeed(),
   titleShiftAmount: 1,
   images: [],
@@ -302,6 +306,10 @@ export function normalizeComposition(data: Partial<Composition> | undefined): Co
     text3: validAlign(align.text3, "left"),
     text4: validAlign(align.text4, "right"),
   };
+
+  // Freeform title alignment — same validator, so saves predating this field
+  // (and any garbage value) fall back to the previous hard-centred behaviour.
+  c.titleAlign = validAlign(c.titleAlign, "center");
 
   // caption counts — clamp each row to 1 or 2 inputs
   const counts = (c.captionCounts ?? {}) as Partial<CaptionCounts>;

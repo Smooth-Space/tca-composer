@@ -316,7 +316,9 @@ function Composer() {
   async function handleExportSvg() {
     try {
       await document.fonts.ready;
-      await exportFreeformSVG(comp, areaWidthRef.current);
+      // Pass the rendered artboard so the exporter can read the browser's actual
+      // line breaks; without it, soft-wrapped titles export as one long line.
+      await exportFreeformSVG(comp, areaWidthRef.current, compositionRef.current);
     } catch (err) {
       console.error("SVG export failed", err);
     }

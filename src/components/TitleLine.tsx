@@ -114,9 +114,13 @@ export function TitleSpans({
         }
 
         // Static / non-animatable (also Template D + fit-measurement): plain inline.
+        // data-tchar lets the SVG exporter recover the browser's real line breaks
+        // by grouping these spans by vertical position — document order is the
+        // flat-stream order, so a span's ordinal is its axis index.
         return (
           <span
             key={i}
+            data-tchar=""
             style={{
               display: "inline",
               fontVariationSettings: a ? axesToCss(a) : undefined,

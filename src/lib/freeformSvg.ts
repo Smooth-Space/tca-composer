@@ -101,7 +101,67 @@ function lineNaturalWidthFactor(
   return advUnits / upm + LETTER_SPACING_EM * (n - 1);
 }
 
-export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
+/** One visual line: its characters plus where they start in the flat axis stream. */
+interface VisualRow {
+  chars: string[];
+  startIdx: number;
+}
+
+/**
+ * Recover the browser's ACTUAL line breaks from the rendered canvas.
+ *
+ * The CSS renderer soft-wraps at the container width; this glyph-path renderer has
+ * no line-breaking of its own, so without this a wrapped title exported as one long
+ * line. Rather than reimplement line-breaking in fontkit and hope it matches, read
+ * the result: every character is its own span, so grouping spans by their vertical
+ * position yields exactly the lines on screen.
+ *
+ * Returns null when the DOM isn't available or nothing matches, so the caller can
+ * fall back to newline-splitting (the pre-existing behaviour).
+ */
+function readVisualRows(node: HTMLElement | null | undefined): VisualRow[] | null {
+  if (!node) return null;
+  // Scoped to data-title-rows so the hidden fit-measurement line and the empty-title
+  // placeholder — which also contain character spans — are excluded.
+  const spans = Array.from(node.querySelectorAll<HTMLElement>("[data-title-rows] [data-tchar]"));
+  if (spans.length === 0) return null;
+
+  const rows: VisualRow[] = [];
+  let current: VisualRow | null = null;
+  let lastTop = NaN;
+  for (let i = 0; i < spans.length; i++) {
+    const rect = spans[i].getBoundingClientRect();
+    // Round to absorb sub-pixel jitter within a line; different lines differ by
+    // roughly the line height, far above this threshold.
+    const top = Math.round(rect.top);
+    if (!current || Math.abs(top - lastTop) > 1) {
+      current = { chars: [], startIdx: i };
+      rows.push(current);
+      lastTop = top;
+    }
+    current.chars.push(spans[i].textContent ?? "");
+  }
+
+  // A space sitting at a wrap point collapses to zero width in CSS and is not
+  // painted; drawing it here would shift the line. Trim edges, keeping startIdx
+  // aligned with however many leading characters were dropped.
+  for (const row of rows) {
+    while (row.chars.length && /^\s*$/.test(row.chars[0])) {
+      row.chars.shift();
+      row.startIdx++;
+    }
+    while (row.chars.length && /^\s*$/.test(row.chars[row.chars.length - 1])) {
+      row.chars.pop();
+    }
+  }
+  return rows.filter((r) => r.chars.length > 0);
+}
+
+export async function exportFreeformSVG(
+  comp: Composition,
+  areaWidth: number,
+  node?: HTMLElement | null,
+) {
   const font = await loadFont();
   // Same shared helper TitleBlock uses: strips inline-italic markup and applies
   // Mixed-mode uppercase (both display-only). Going through titleDisplay rather
@@ -119,28 +179,41 @@ export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
     display.flatItalic,
   );
 
+  // Prefer the browser's real line breaks so soft-wrapped text exports exactly as
+  // it looks on canvas. Falls back to newline-splitting when the DOM isn't there.
+  const visualRows: VisualRow[] =
+    readVisualRows(node) ??
+    rows.map((text, r) => ({ chars: Array.from(text), startIdx: rowStart[r] }));
+
+  // Shift and fit are still keyed off authored rows: fit is single-line-only by
+  // design, and shift's offsets are seeded per authored line, not per wrapped line.
   const fitEnabled = comp.titleSizeMode === "fit" && rows.length === 1;
   const shiftEnabled = comp.titleShift && rows.length >= 2;
-  const offsets = shiftOffsets(rows.length, comp.titleShiftSeed, comp.titleShiftAmount);
+  const offsets = shiftOffsets(visualRows.length, comp.titleShiftSeed, comp.titleShiftAmount);
 
   const all: PlacedGlyph[] = [];
 
-  for (let r = 0; r < rows.length; r++) {
-    const chars = Array.from(rows[r]);
+  for (let r = 0; r < visualRows.length; r++) {
+    const { chars, startIdx } = visualRows[r];
     let fontSize = comp.titleSizePx;
     if (fitEnabled) {
-      const factor = lineNaturalWidthFactor(font, chars, axes, rowStart[r]);
+      const factor = lineNaturalWidthFactor(font, chars, axes, startIdx);
       if (factor > 0) fontSize = areaWidth / factor;
     }
     const lineHeightPx = fontSize * LINE_HEIGHT;
     const baseline = r * lineHeightPx + fontSize * 0.8;
-    const line = buildLine(font, chars, axes, rowStart[r], fontSize, baseline);
+    const line = buildLine(font, chars, axes, startIdx, fontSize, baseline);
 
+    // Must mirror TitleBlock: shift wins over alignment, and fit fills the width.
     let offsetX: number;
     if (fitEnabled) {
       offsetX = 0;
     } else if (shiftEnabled) {
       offsetX = offsets[r] * (areaWidth - line.width);
+    } else if (comp.titleAlign === "left") {
+      offsetX = 0;
+    } else if (comp.titleAlign === "right") {
+      offsetX = areaWidth - line.width;
     } else {
       offsetX = (areaWidth - line.width) / 2;
     }

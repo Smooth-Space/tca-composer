@@ -236,7 +236,16 @@ function FieldLabel({ label, descriptor }: { label: string; descriptor?: string 
   );
 }
 
-function AlignControl({ value, onChange }: { value: Align; onChange: (v: Align) => void }) {
+function AlignControl({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: Align;
+  onChange: (v: Align) => void;
+  // Optional so the caption fields, which have no disabled state, are unaffected.
+  disabled?: boolean;
+}) {
   // Compact, ghost-style toggle meant to sit subtly inside a field box (secondary to the text).
   const itemClass = "h-7 w-7 min-w-0 text-muted-foreground data-[state=on]:text-foreground";
   return (
@@ -245,7 +254,8 @@ function AlignControl({ value, onChange }: { value: Align; onChange: (v: Align) 
       size="sm"
       value={value}
       onValueChange={(v) => v && onChange(v as Align)}
-      className="gap-0.5"
+      disabled={disabled}
+      className={cn("gap-0.5", disabled && "opacity-40")}
     >
       <ToggleGroupItem value="left" aria-label="Align left" className={itemClass}>
         <AlignLeft className="h-4 w-4" />
@@ -1016,6 +1026,24 @@ export function ControlPanel({
                 }
               />
             </div>
+          </div>
+        )}
+
+        {isFreeform && (
+          <div className="pt-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Align</Label>
+              <AlignControl
+                value={comp.titleAlign}
+                onChange={(a) => update({ titleAlign: a })}
+                disabled={comp.titleShift}
+              />
+            </div>
+            {comp.titleShift && (
+              <p className="pt-1 text-xs text-muted-foreground">
+                Turn off Shift lines to set alignment.
+              </p>
+            )}
           </div>
         )}
 
