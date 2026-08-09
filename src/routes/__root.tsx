@@ -73,14 +73,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      // Site-wide defaults, and the only place this metadata is defined. Routes
+      // previously re-declared title/description here AND in the route file, which
+      // is how "author: Lovable" survived a rename that only touched the route —
+      // the two copies drifted and the un-overridden tags shipped to production.
+      { title: "The Contemporary Austin — Composer" },
+      { name: "description", content: "A typographic composition tool for The Contemporary Austin." },
+      { name: "author", content: "The Contemporary Austin" },
+      { property: "og:title", content: "The Contemporary Austin — Composer" },
+      {
+        property: "og:description",
+        content: "A typographic composition tool for The Contemporary Austin.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

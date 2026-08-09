@@ -16,15 +16,10 @@ import {
 import { resolveWave } from "@/lib/engine";
 import { useFontsReady } from "@/lib/titleAnim";
 
+// No head() here on purpose: this route inherits the site-wide metadata from
+// __root.tsx. Duplicating title/description in both files is what let them drift
+// out of sync. Add an override here only if a future route needs a different title.
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Typographic Composer" },
-      { name: "description", content: "A minimal tool for building typographic compositions." },
-      { property: "og:title", content: "Typographic Composer" },
-      { property: "og:description", content: "A minimal tool for building typographic compositions." },
-    ],
-  }),
   component: Index,
 });
 
