@@ -1,10 +1,19 @@
-export type Axes = { wght: number; SRFF: number; wdth: number };
+export type Axes = { wght: number; SRFF: number; wdth: number; slnt: number };
 export type Mode = "light" | "mixed" | "heavy";
+
+// Slant is NOT part of the wave — computeAxes always emits UPRIGHT_SLNT. Italics
+// are overlaid per character by the render paths (see lib/titleItalic.ts), which
+// is why this axis has no entry in ModeConfig.
+//
+// -14 is the font's designed italic, not an approximation: all 75 named Italic
+// instances in ABC Arizona Plus sit at exactly slnt -14 (the axis runs -14..0).
+export const ITALIC_SLNT = -14;
+export const UPRIGHT_SLNT = 0;
 
 // Single source of truth for the font-variation-settings string, so the static
 // React render and the live rAF DOM-writer produce byte-identical output.
 export function axesToCss(a: Axes): string {
-  return `'wght' ${a.wght}, 'SRFF' ${a.SRFF}, 'wdth' ${a.wdth}`;
+  return `'wght' ${a.wght}, 'SRFF' ${a.SRFF}, 'wdth' ${a.wdth}, 'slnt' ${a.slnt ?? UPRIGHT_SLNT}`;
 }
 
 type AxisSpec = { kind: "const"; value: number } | { kind: "lerp"; start: number; end: number };
@@ -134,6 +143,7 @@ export function computeAxes(
       wght: q(axisValue(cfg.wght, d)),
       SRFF: q(axisValue(cfg.SRFF, d)),
       wdth: cfg.wdth,
+      slnt: UPRIGHT_SLNT,
     };
   });
 }

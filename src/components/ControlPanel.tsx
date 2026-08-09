@@ -34,13 +34,15 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Italic,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { newSeed, resolveWave } from "@/lib/engine";
+import { toggleItalicRange, isRangeItalic } from "@/lib/titleItalic";
 import { cn } from "@/lib/utils";
 import { PaletteControls } from "@/components/PaletteControls";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface Props {
   comp: Composition;
@@ -423,6 +425,101 @@ export function ControlPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusReq?.nonce]);
+
+  // ---- Inline italics -------------------------------------------------------
+  // The textarea is controlled, so a selection set inside the handler is wiped by
+  // the re-render that follows. Stash the wanted range and reapply it after React
+  // commits, which also keeps a second Cmd+I toggling the same visible characters.
+  const pendingSel = useRef<{ el: HTMLTextAreaElement; start: number; end: number } | null>(null);
+  useLayoutEffect(() => {
+    const p = pendingSel.current;
+    if (!p) return;
+    pendingSel.current = null;
+    p.el.focus();
+    p.el.setSelectionRange(p.start, p.end);
+  });
+
+  // A caret/selection change is a DOM fact React does not re-render on, so the
+  // button's enabled/pressed state is driven off `selectionchange` — the one event
+  // covering mouse drags, keyboard selection, and programmatic setSelectionRange
+  // alike. Bumping only when the focused textarea's range actually changes keeps a
+  // drag from re-rendering the whole panel on every intermediate event.
+  const [selTick, setSelTick] = useState(0);
+  const selSig = useRef("");
+  useEffect(() => {
+    const onSelectionChange = () => {
+      const el = document.activeElement;
+      const sig =
+        el instanceof HTMLTextAreaElement ? `${el.selectionStart}:${el.selectionEnd}` : "";
+      if (sig === selSig.current) return;
+      selSig.current = sig;
+      setSelTick((n) => n + 1);
+    };
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => document.removeEventListener("selectionchange", onSelectionChange);
+  }, []);
+
+  const titleSelection = (idx: number) => {
+    const id = comp.titles[idx]?.id;
+    const el = id ? titleRefs.current.get(id) : undefined;
+    if (!el || document.activeElement !== el) return null;
+    return { el, start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
+  };
+
+  const applyItalicToggle = (idx: number) => {
+    const sel = titleSelection(idx);
+    if (!sel || sel.start === sel.end) return; // collapsed → no-op
+    const raw = comp.titles[idx]?.text ?? "";
+    const next = toggleItalicRange(raw, sel.start, sel.end);
+    if (next.text === raw) return;
+    setComp((c) => {
+      const titles = [...c.titles];
+      if (!titles[idx]) return c;
+      titles[idx] = { ...titles[idx], text: next.text };
+      return { ...c, titles };
+    });
+    pendingSel.current = { el: sel.el, start: next.selStart, end: next.selEnd };
+  };
+
+  const italicState = (idx: number) => {
+    void selTick; // re-evaluated whenever the selection changes
+    const sel = titleSelection(idx);
+    if (!sel || sel.start === sel.end) return { enabled: false, active: false };
+    return {
+      enabled: true,
+      active: isRangeItalic(comp.titles[idx]?.text ?? "", sel.start, sel.end),
+    };
+  };
+
+  const titleKeyDown = (idx: number) => (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "i" || e.key === "I")) {
+      e.preventDefault();
+      applyItalicToggle(idx);
+    }
+  };
+
+  // A plain render function, not a nested component: declaring a component inside
+  // the body gives React a new type every render and remounts the subtree.
+  const renderItalicButton = (idx: number) => {
+    const { enabled, active } = italicState(idx);
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label="Italic"
+        aria-pressed={active}
+        disabled={isExporting || !enabled}
+        className={cn("h-7 w-7 p-0", active && "bg-accent")}
+        // Take the click without stealing focus, so the textarea still owns the
+        // selection when the handler reads selectionStart/End.
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => applyItalicToggle(idx)}
+      >
+        <Italic className="h-3.5 w-3.5" />
+      </Button>
+    );
+  };
 
   const usesImage = comp.variant === "split" || comp.variant === "full";
   const isFreeform = comp.template === "freeform";
@@ -853,7 +950,10 @@ export function ControlPanel({
                   key={idx}
                   className={cn("space-y-1", idx > 0 && "border-t border-border pt-5")}
                 >
-                  <Label className="text-xs">{label}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">{label}</Label>
+                    {renderItalicButton(idx)}
+                  </div>
                   <AutoTextarea
                     value={t?.text ?? ""}
                     rows={1}
@@ -862,6 +962,7 @@ export function ControlPanel({
                       if (el && id) titleRefs.current.set(id, el);
                     }}
                     onFocus={() => onSelectTitle?.(comp.titles[idx]?.id ?? null)}
+                    onKeyDown={titleKeyDown(idx)}
                     onChange={(e) =>
                       setComp((c) => {
                         const titles = [...c.titles];
@@ -878,7 +979,8 @@ export function ControlPanel({
             })}
           </div>
         ) : (
-          <div className="space-y-5 pt-5">
+          <div className="space-y-1 pt-5">
+            <div className="flex items-center justify-end">{renderItalicButton(0)}</div>
             <AutoTextarea
               value={comp.titles[0]?.text ?? ""}
               rows={1}
@@ -887,6 +989,7 @@ export function ControlPanel({
                 if (el && id) titleRefs.current.set(id, el);
               }}
               onFocus={() => onSelectTitle?.(comp.titles[0]?.id ?? null)}
+              onKeyDown={titleKeyDown(0)}
               onChange={(e) =>
                 setComp((c) => {
                   const first = c.titles[0] ?? { id: crypto.randomUUID(), text: "" };

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { TEMPLATE_CAPTIONS, getVisibleRowSlots, type Composition } from "@/lib/composition";
 import { computeAxes, type Axes } from "@/lib/engine";
+import { titleDisplay, applyItalic } from "@/lib/titleItalic";
 import { computeMultiLayout, MULTI_PLACEHOLDER_ASPECTS } from "@/lib/multiLayout";
 import { TitleLine } from "@/components/TitleLine";
 import { Caption } from "@/components/Caption";
@@ -13,16 +14,20 @@ function PinnedTitle({
   comp,
   dLines,
   dAxes,
+  cleanText,
 }: {
   pin: 0 | 1;
   comp: Composition;
   dLines: { text: string; startOffset: number; pin: 0 | 1; key: string }[];
   dAxes: Axes[];
+  // Markup-stripped text, so a title holding only italic delimiters still counts
+  // as empty and shows its placeholder.
+  cleanText: string;
 }) {
   const { handleClick, handleDoubleClick, hideSelection, selectableStyle } = useSelectable(
     comp.titles[pin]?.id ?? null,
   );
-  const isEmpty = (comp.titles[pin]?.text ?? "").trim() === "";
+  const isEmpty = cleanText.trim() === "";
   const placeholderLabel = pin === 0 ? "Title 1" : "Title 2";
   const placeholderAxes = useMemo(
     () =>
@@ -75,35 +80,38 @@ export function TemplateD({
   imgSrc: string;
   sphereRef?: React.Ref<MultiSphereHandle>;
 }) {
-  // Mixed mode renders uppercase — display-only (stored text is never mutated),
-  // applied per-title before splitting/flattening so axis indices stay aligned.
-  const dTitles = useMemo(() => {
+  // Both titles are parsed independently (markup + Mixed-mode uppercase, both
+  // display-only) and then concatenated into ONE shared axis stream, so the wave
+  // runs continuously across the pair exactly as it did before italics existed.
+  const dParsed = useMemo(() => {
     const up = comp.titleMode === "mixed";
-    const raw = [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""];
-    return up ? raw.map((t) => t.toUpperCase()) : raw;
+    return [comp.titles[0]?.text ?? "", comp.titles[1]?.text ?? ""].map((t) => titleDisplay(t, up));
   }, [comp.titles, comp.titleMode]);
   const dAxes = useMemo(
     () =>
-      computeAxes(
-        dTitles.flatMap((t) => Array.from(t.replace(/\n/g, ""))),
-        comp.titleMode,
-        comp.titleSeed,
-        { amplitude: comp.titleAmplitude, phase: comp.titlePhase },
+      applyItalic(
+        computeAxes(
+          dParsed.flatMap((d) => d.flatChars),
+          comp.titleMode,
+          comp.titleSeed,
+          { amplitude: comp.titleAmplitude, phase: comp.titlePhase },
+        ),
+        dParsed.flatMap((d) => d.flatItalic),
       ),
-    [dTitles, comp.titleMode, comp.titleSeed, comp.titleAmplitude, comp.titlePhase],
+    [dParsed, comp.titleMode, comp.titleSeed, comp.titleAmplitude, comp.titlePhase],
   );
   // Rows for each title, with global start offsets into the shared axis stream.
   const dLines = useMemo(() => {
     const out: { text: string; startOffset: number; pin: 0 | 1; key: string }[] = [];
     let acc = 0;
-    dTitles.forEach((t, pin) => {
-      t.split("\n").forEach((text, i) => {
-        out.push({ text, startOffset: acc, pin: pin as 0 | 1, key: `${pin}-${i}` });
-        acc += Array.from(text).length;
+    dParsed.forEach((d, pin) => {
+      d.rows.forEach((text, i) => {
+        out.push({ text, startOffset: acc + d.rowStart[i], pin: pin as 0 | 1, key: `${pin}-${i}` });
       });
+      acc += d.flatChars.length;
     });
     return out;
-  }, [dTitles]);
+  }, [dParsed]);
 
   const multiPlacements = useMemo(
     () =>
@@ -150,7 +158,13 @@ export function TemplateD({
       >
         {/* zIndex:1 within this stacking context keeps titles above captions (zIndex:0) */}
         <div style={{ position: "relative", zIndex: 1 }}>
-          <PinnedTitle pin={0} comp={comp} dLines={dLines} dAxes={dAxes} />
+          <PinnedTitle
+            pin={0}
+            comp={comp}
+            dLines={dLines}
+            dAxes={dAxes}
+            cleanText={dParsed[0].text}
+          />
         </div>
 
         <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 0 }}>
@@ -198,7 +212,13 @@ export function TemplateD({
         </div>
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <PinnedTitle pin={1} comp={comp} dLines={dLines} dAxes={dAxes} />
+          <PinnedTitle
+            pin={1}
+            comp={comp}
+            dLines={dLines}
+            dAxes={dAxes}
+            cleanText={dParsed[1].text}
+          />
         </div>
       </div>
     </div>

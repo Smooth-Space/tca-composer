@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { computeAxes, type Mode } from "@/lib/engine";
+import { titleDisplay, applyItalic } from "@/lib/titleItalic";
 import type { Title } from "@/lib/composition";
 import { TitleSpans } from "@/components/TitleLine";
 import { TITLE_FONT, TITLE_LETTER_SPACING, TITLE_LINE_HEIGHT, shiftOffsets } from "@/lib/typo";
@@ -49,19 +50,17 @@ export function TitleBlock({
   );
   // A/B/C use one multi-line title field (titles[0]) only.
   const t0 = titles[0];
-  // Mixed mode renders uppercase — display-only, the stored text is never mutated.
-  // Applied before splitting/flattening so character indices stay aligned with the
-  // axis arrays. .toUpperCase() (not locale) keeps length stable.
+  // titleDisplay strips inline-italic markup and applies Mixed-mode uppercase (both
+  // display-only — the stored text is never mutated), returning rows, the flat
+  // character stream, and italic flags aligned 1:1 with it. Shared with freeformSvg
+  // so the CSS and glyph-path renderers cannot drift.
   const rawText = t0?.text ?? "";
-  const displayText = titleMode === "mixed" ? rawText.toUpperCase() : rawText;
+  const display = useMemo(() => titleDisplay(rawText, titleMode === "mixed"), [rawText, titleMode]);
+  const rows = display.rows;
   const lines = useMemo(
-    () =>
-      displayText
-        .split("\n")
-        .map((text, i) => ({ text, titleId: t0?.id, key: `${t0?.id ?? "t"}-${i}` })),
-    [displayText, t0?.id],
+    () => rows.map((text, i) => ({ text, titleId: t0?.id, key: `${t0?.id ?? "t"}-${i}` })),
+    [rows, t0?.id],
   );
-  const rows = useMemo(() => lines.map((l) => l.text), [lines]);
 
   // Heavy mode is excluded from animation (its narrow axis ranges animate poorly),
   // so a saved `titleAnimate: true` in Heavy renders statically.
@@ -70,7 +69,8 @@ export function TitleBlock({
   const rootRef = useRef<HTMLDivElement>(null);
   // Flat character stream (newlines excluded), shared by the static render and
   // the live rAF DOM-writer so span indices line up 1:1.
-  const flatChars = useMemo(() => Array.from(displayText.replace(/\n/g, "")), [displayText]);
+  const flatChars = display.flatChars;
+  const flatItalic = display.flatItalic;
 
   // Live playback was removed (the per-frame rAF loop was unstable). The canvas
   // now always renders a single static frame; only MP4 export animates, by driving
@@ -82,16 +82,21 @@ export function TitleBlock({
   // non-animated titles.
   const reactPhase = exportPhase !== null ? exportPhase : animActive ? titleBasePhase : titlePhase;
 
+  // Slant is overlaid AFTER the wave, never fed into it: computeAxes sees only the
+  // clean character stream, so italic markup can never shift wght/SRFF.
   const axes = useMemo(
     () =>
-      computeAxes(flatChars, titleMode, titleSeed, {
-        amplitude: titleAmplitude,
-        phase: reactPhase,
-        forceDistribution: animActive && titleMode === "mixed" ? "sine" : undefined,
-        forceAmplitude: animActive && titleMode !== "mixed" ? 1 : undefined,
-        round: animActive ? false : undefined,
-      }),
-    [flatChars, titleMode, titleSeed, titleAmplitude, reactPhase, animActive],
+      applyItalic(
+        computeAxes(flatChars, titleMode, titleSeed, {
+          amplitude: titleAmplitude,
+          phase: reactPhase,
+          forceDistribution: animActive && titleMode === "mixed" ? "sine" : undefined,
+          forceAmplitude: animActive && titleMode !== "mixed" ? 1 : undefined,
+          round: animActive ? false : undefined,
+        }),
+        flatItalic,
+      ),
+    [flatChars, flatItalic, titleMode, titleSeed, titleAmplitude, reactPhase, animActive],
   );
 
   // Constant base-phase axes, consulted only for whitespace in the animated path.
@@ -100,26 +105,21 @@ export function TitleBlock({
   // Same params as `axes` but locked to titleBasePhase.
   const baseAxes = useMemo(
     () =>
-      computeAxes(flatChars, titleMode, titleSeed, {
-        amplitude: titleAmplitude,
-        phase: titleBasePhase,
-        forceDistribution: animActive && titleMode === "mixed" ? "sine" : undefined,
-        forceAmplitude: animActive && titleMode !== "mixed" ? 1 : undefined,
-        round: animActive ? false : undefined,
-      }),
-    [flatChars, titleMode, titleSeed, titleAmplitude, titleBasePhase, animActive],
+      applyItalic(
+        computeAxes(flatChars, titleMode, titleSeed, {
+          amplitude: titleAmplitude,
+          phase: titleBasePhase,
+          forceDistribution: animActive && titleMode === "mixed" ? "sine" : undefined,
+          forceAmplitude: animActive && titleMode !== "mixed" ? 1 : undefined,
+          round: animActive ? false : undefined,
+        }),
+        flatItalic,
+      ),
+    [flatChars, flatItalic, titleMode, titleSeed, titleAmplitude, titleBasePhase, animActive],
   );
 
-  // Start index of each row within the flat stream (no mutable counter in JSX).
-  const rowStart = useMemo(() => {
-    const starts: number[] = [];
-    let acc = 0;
-    for (const r of rows) {
-      starts.push(acc);
-      acc += Array.from(r).length;
-    }
-    return starts;
-  }, [rows]);
+  // Start index of each row within the flat stream.
+  const rowStart = display.rowStart;
 
   const fitEnabled = titleSizeMode === "fit" && rows.length === 1;
   const shiftEnabled = titleShift && rows.length >= 2;
@@ -206,7 +206,7 @@ export function TitleBlock({
         ...selectableStyle,
       }}
     >
-      {titles[0]?.text === "" && !hideSelection && (
+      {display.text === "" && !hideSelection && (
         <span
           aria-hidden="true"
           style={{

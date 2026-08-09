@@ -1,5 +1,6 @@
 import { create } from "fontkit";
-import { computeAxes } from "@/lib/engine";
+import { computeAxes, type Axes } from "@/lib/engine";
+import { titleDisplay, applyItalic } from "@/lib/titleItalic";
 import { shiftOffsets } from "@/lib/typo";
 import type { Composition } from "@/lib/composition";
 
@@ -34,7 +35,7 @@ interface BuiltLine {
 function buildLine(
   font: any,
   chars: string[],
-  axes: { wght: number; SRFF: number; wdth: number }[],
+  axes: Axes[],
   startIdx: number,
   fontSize: number,
   baseline: number,
@@ -47,7 +48,12 @@ function buildLine(
   for (let i = 0; i < chars.length; i++) {
     const ch = chars[i];
     const a = axes[startIdx + i];
-    const variation = a ? font.getVariation({ wght: a.wght, wdth: a.wdth, SRFF: a.SRFF }) : font;
+    // slnt must be passed here AND in lineNaturalWidthFactor: fontkit shears the
+    // outlines natively, and slanted glyphs are ~2% narrower, so omitting it in
+    // either place desyncs SVG output from the canvas.
+    const variation = a
+      ? font.getVariation({ wght: a.wght, wdth: a.wdth, SRFF: a.SRFF, slnt: a.slnt })
+      : font;
     const run = variation.layout(ch);
     let advUnits = 0;
     for (let g = 0; g < run.glyphs.length; g++) {
@@ -74,7 +80,7 @@ function buildLine(
 function lineNaturalWidthFactor(
   font: any,
   chars: string[],
-  axes: { wght: number; SRFF: number; wdth: number }[],
+  axes: Axes[],
   startIdx: number,
 ): number {
   // width(S) = S * factor   (advances + letter-spacing both scale with S)
@@ -82,7 +88,12 @@ function lineNaturalWidthFactor(
   let advUnits = 0;
   for (let i = 0; i < chars.length; i++) {
     const a = axes[startIdx + i];
-    const variation = a ? font.getVariation({ wght: a.wght, wdth: a.wdth, SRFF: a.SRFF }) : font;
+    // slnt included deliberately — italic advances are narrower, and this drives
+    // "fit" sizing. Dropping it here would size fit titles ~2% differently from
+    // the DOM-measured canvas, visible only in SVG export.
+    const variation = a
+      ? font.getVariation({ wght: a.wght, wdth: a.wdth, SRFF: a.SRFF, slnt: a.slnt })
+      : font;
     const run = variation.layout(chars[i]);
     for (let g = 0; g < run.positions.length; g++) advUnits += run.positions[g].xAdvance;
   }
@@ -92,24 +103,21 @@ function lineNaturalWidthFactor(
 
 export async function exportFreeformSVG(comp: Composition, areaWidth: number) {
   const font = await loadFont();
-  // Mixed mode renders uppercase (display-only — matches TitleBlock; never mutates
-  // the stored text). .toUpperCase() keeps char-index alignment with the axes.
+  // Same shared helper TitleBlock uses: strips inline-italic markup and applies
+  // Mixed-mode uppercase (both display-only). Going through titleDisplay rather
+  // than re-deriving rows/flat chars here is what keeps this glyph-path renderer
+  // aligned with the CSS one.
   const rawText = comp.titles[0]?.text ?? "";
-  const text = comp.titleMode === "mixed" ? rawText.toUpperCase() : rawText;
-  const rows = text.split("\n");
-  const flat = Array.from(text.replace(/\n/g, ""));
-  const axes = computeAxes(flat, comp.titleMode, comp.titleSeed, {
-    amplitude: comp.titleAmplitude,
-    phase: comp.titlePhase,
-  });
-
-  // Start index of each row within the flat (newline-free) stream.
-  const rowStart: number[] = [];
-  let acc = 0;
-  for (const r of rows) {
-    rowStart.push(acc);
-    acc += Array.from(r).length;
-  }
+  const display = titleDisplay(rawText, comp.titleMode === "mixed");
+  const rows = display.rows;
+  const rowStart = display.rowStart;
+  const axes = applyItalic(
+    computeAxes(display.flatChars, comp.titleMode, comp.titleSeed, {
+      amplitude: comp.titleAmplitude,
+      phase: comp.titlePhase,
+    }),
+    display.flatItalic,
+  );
 
   const fitEnabled = comp.titleSizeMode === "fit" && rows.length === 1;
   const shiftEnabled = comp.titleShift && rows.length >= 2;
