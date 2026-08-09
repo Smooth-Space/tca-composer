@@ -342,7 +342,14 @@ function Composer() {
         focusReq={focusReq}
         fontsReady={fontsReady}
       />
-      <main className="flex-1">
+      {/* min-w-0 is load-bearing. Flex items default to min-width:auto, so they
+          refuse to shrink below their content. FreeformCanvas measures this element
+          and then sets the artboard to an explicit pixel width — which becomes this
+          item's own minimum, so it could only ever ratchet WIDER, never back. The
+          artboard then stayed stuck at its widest size, was clipped by the parent's
+          overflow-hidden, and text wrapped against a width that no longer matched
+          what was on screen. */}
+      <main className="min-w-0 flex-1">
         <Canvas
           comp={comp}
           compositionRef={compositionRef}
