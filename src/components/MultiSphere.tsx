@@ -58,8 +58,16 @@ export const MultiSphere = forwardRef<MultiSphereHandle, Props>(function MultiSp
   const seekRef = useRef<(t: number) => void>(() => {});
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const exportingRef = useRef(false);
+  // playing and globeScale are read by the scene-build effect below purely as
+  // initial state. Going through refs keeps them out of its dependency array —
+  // listing them there would dispose and rebuild the entire scene (geometries,
+  // textures, renderer, canvas) and reset the timeline every time the slider
+  // moves or playback toggles. Ongoing changes are applied by the two small
+  // effects after it instead.
   const playingRef = useRef(playing);
   playingRef.current = playing;
+  const globeScaleRef = useRef(globeScale);
+  globeScaleRef.current = globeScale;
 
   useImperativeHandle(
     ref,
@@ -88,7 +96,7 @@ export const MultiSphere = forwardRef<MultiSphereHandle, Props>(function MultiSp
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100);
     // Frame the whole globe from outside; globeScale dollies the camera.
-    camera.position.set(0, 0, cameraDistance(w, h, globeScale));
+    camera.position.set(0, 0, cameraDistance(w, h, globeScaleRef.current));
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
@@ -228,7 +236,7 @@ export const MultiSphere = forwardRef<MultiSphereHandle, Props>(function MultiSp
         y: startY + step1 + step2 + step3,
       });
     tlRef.current = tl;
-    if (!playing) tl.pause();
+    if (!playingRef.current) tl.pause();
 
     let raf = 0;
     const tmpQ = new THREE.Quaternion();
