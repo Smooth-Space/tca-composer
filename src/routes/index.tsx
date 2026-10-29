@@ -4,7 +4,8 @@ import { get, set, del } from "idb-keyval";
 import { toJpeg, toPng, toCanvas } from "html-to-image";
 import { ControlPanel } from "@/components/ControlPanel";
 import { Canvas } from "@/components/Canvas";
-import { exportLoopMp4, exportTitleMp4 } from "@/lib/mp4Export";
+import { exportLoopMp4, exportTitleMp4, probeMp4Support, MP4_UNSUPPORTED } from "@/lib/mp4Export";
+import { toast } from "sonner";
 import { exportFreeformSVG } from "@/lib/freeformSvg";
 import type { MultiSphereHandle } from "@/components/MultiSphere";
 import {
@@ -22,6 +23,14 @@ import { useFontsReady } from "@/lib/titleAnim";
 export const Route = createFileRoute("/")({
   component: Index,
 });
+
+// Export failures used to be console-only, which made a failed export look
+// identical to a slow one. Prefer the thrown message when there is one — the
+// MP4 path raises a specific, actionable string — and fall back otherwise.
+function errorMessage(err: unknown, fallback: string): string {
+  const msg = err instanceof Error ? err.message : "";
+  return msg.trim() ? msg : fallback;
+}
 
 const STORAGE_KEY = "tca-composition";
 const VERSION = 8;
@@ -199,6 +208,7 @@ function Composer() {
       a.click();
     } catch (err) {
       console.error("Export failed", err);
+      toast.error(errorMessage(err, "Image export failed."));
     } finally {
       setExporting(false);
     }
@@ -211,8 +221,10 @@ function Composer() {
     const canvas = sphere.getCanvas();
     const durationSec = sphere.durationSec();
     if (!canvas || durationSec <= 0) return;
-    if (!("VideoEncoder" in window)) {
-      alert("MP4 export needs a Chromium browser (Chrome or Edge).");
+    // A real capability probe, not a feature-detect: Safari has VideoEncoder but
+    // cannot produce a muxable H.264 stream. Costs a few ms and is cached.
+    if (!(await probeMp4Support())) {
+      toast.error(MP4_UNSUPPORTED);
       return;
     }
 
@@ -259,6 +271,7 @@ function Composer() {
       });
     } catch (err) {
       console.error("MP4 export failed", err);
+      toast.error(errorMessage(err, "MP4 export failed."));
     } finally {
       sphereRef.current?.setExporting(false);
       setExportingMp4(false);
@@ -268,8 +281,10 @@ function Composer() {
   async function handleExportTitleMp4() {
     const node = compositionRef.current;
     if (!node) return;
-    if (!("VideoEncoder" in window)) {
-      alert("MP4 export needs a Chromium browser (Chrome or Edge).");
+    // A real capability probe, not a feature-detect: Safari has VideoEncoder but
+    // cannot produce a muxable H.264 stream. Costs a few ms and is cached.
+    if (!(await probeMp4Support())) {
+      toast.error(MP4_UNSUPPORTED);
       return;
     }
 
@@ -311,6 +326,7 @@ function Composer() {
       });
     } catch (err) {
       console.error("Title MP4 export failed", err);
+      toast.error(errorMessage(err, "Title MP4 export failed."));
     } finally {
       setExportPhase(null); // resume live rAF
       setExportingMp4(false);
@@ -325,6 +341,7 @@ function Composer() {
       await exportFreeformSVG(comp, areaWidthRef.current, compositionRef.current);
     } catch (err) {
       console.error("SVG export failed", err);
+      toast.error(errorMessage(err, "SVG export failed."));
     }
   }
 

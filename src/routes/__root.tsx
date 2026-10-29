@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 
@@ -112,6 +113,9 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        {/* Mounted once here so any route can raise a toast. The shadcn wrapper
+            existed but was never mounted, so toast() calls silently did nothing. */}
+        <Toaster position="bottom-center" />
         <Scripts />
       </body>
     </html>

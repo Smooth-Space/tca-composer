@@ -20,6 +20,79 @@ async function pickCodec(w: number, h: number, fps: number, bitrate: number) {
   throw new Error("No supported H.264 codec for this resolution.");
 }
 
+export const MP4_UNSUPPORTED =
+  "MP4 export needs Chrome or Edge. This browser has WebCodecs but does not return an H.264 decoder config, which is required to write the file.";
+
+/**
+ * Can this browser actually produce a muxable H.264 MP4?
+ *
+ * `"VideoEncoder" in window` stopped being a proxy for "Chromium" when Safari
+ * 16.4 shipped WebCodecs. Safari encodes frames happily but never hands back a
+ * `decoderConfig` in the chunk metadata, and mp4-muxer needs that to write the
+ * avcC/colr boxes — it dereferences `info.decoderConfig.colorSpace` unguarded in
+ * finalize(). So a Safari export used to encode every frame of the composition
+ * and then die with a TypeError from inside the muxer, logged to the console and
+ * invisible in the UI.
+ *
+ * Encoding one 64x64 frame answers the question in a few milliseconds. The
+ * result is cached — it cannot change for the life of the page.
+ */
+let supportProbe: Promise<boolean> | null = null;
+
+export function probeMp4Support(): Promise<boolean> {
+  supportProbe ??= runSupportProbe();
+  return supportProbe;
+}
+
+async function runSupportProbe(): Promise<boolean> {
+  if (typeof VideoEncoder === "undefined" || typeof VideoFrame === "undefined") return false;
+
+  const SIZE = 64;
+  const BITRATE = 1_000_000;
+  const FPS = 30;
+
+  let codec: string;
+  try {
+    codec = await pickCodec(SIZE, SIZE, FPS, BITRATE);
+  } catch {
+    return false;
+  }
+
+  let encoder: VideoEncoder | null = null;
+  try {
+    let sawDecoderConfig = false;
+    encoder = new VideoEncoder({
+      output: (_chunk, meta) => {
+        if (meta?.decoderConfig) sawDecoderConfig = true;
+      },
+      error: () => {},
+    });
+    encoder.configure({ codec, width: SIZE, height: SIZE, bitrate: BITRATE, framerate: FPS });
+
+    const cap = document.createElement("canvas");
+    cap.width = SIZE;
+    cap.height = SIZE;
+    const ctx = cap.getContext("2d");
+    if (!ctx) return false;
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    const frame = new VideoFrame(cap, { timestamp: 0 });
+    encoder.encode(frame, { keyFrame: true });
+    frame.close();
+    await encoder.flush(); // output callbacks have all fired by here
+    return sawDecoderConfig;
+  } catch {
+    return false;
+  } finally {
+    try {
+      encoder?.close();
+    } catch {
+      /* already closed or errored */
+    }
+  }
+}
+
 // Globe/conveyor export: synchronous seekAndRender drives the animation canvas,
 // which is then composited with a pre-rendered title overlay.
 export async function exportLoopMp4({
@@ -47,8 +120,7 @@ export async function exportLoopMp4({
   filename: string;
   rect: { x: number; y: number; w: number; h: number };
 }) {
-  if (!("VideoEncoder" in window))
-    throw new Error("MP4 export needs a Chromium browser (Chrome/Edge).");
+  if (!(await probeMp4Support())) throw new Error(MP4_UNSUPPORTED);
   const bitrate = 12_000_000;
   const codec = await pickCodec(w, h, fps, bitrate);
 
@@ -57,9 +129,20 @@ export async function exportLoopMp4({
     video: { codec: "avc", width: w, height: h },
     fastStart: "in-memory", // moov atom at front — needed for web/social playback
   });
+  // decoderConfig arrives on the first chunk's metadata and is what mp4-muxer
+  // needs to write avcC/colr. Tracking it turns an unguarded dereference inside
+  // finalize() into a message that says what to do. Encoder errors are captured
+  // rather than logged, so a failed encode cannot finish as a silent no-op.
+  let sawDecoderConfig = false;
+  let encoderError: unknown = null;
   const encoder = new VideoEncoder({
-    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: (e) => console.error(e),
+    output: (chunk, meta) => {
+      if (meta?.decoderConfig) sawDecoderConfig = true;
+      muxer.addVideoChunk(chunk, meta);
+    },
+    error: (e) => {
+      encoderError ??= e;
+    },
   });
   encoder.configure({ codec, width: w, height: h, bitrate, framerate: fps });
 
@@ -84,6 +167,8 @@ export async function exportLoopMp4({
   }
 
   await encoder.flush();
+  if (encoderError) throw encoderError;
+  if (!sawDecoderConfig) throw new Error(MP4_UNSUPPORTED);
   muxer.finalize();
   const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
   const a = document.createElement("a");
@@ -114,8 +199,7 @@ export async function exportTitleMp4({
   onProgress?: (p: number) => void;
   filename: string;
 }) {
-  if (!("VideoEncoder" in window))
-    throw new Error("MP4 export needs a Chromium browser (Chrome/Edge).");
+  if (!(await probeMp4Support())) throw new Error(MP4_UNSUPPORTED);
   const bitrate = 12_000_000;
   const codec = await pickCodec(w, h, fps, bitrate);
 
@@ -124,9 +208,20 @@ export async function exportTitleMp4({
     video: { codec: "avc", width: w, height: h },
     fastStart: "in-memory",
   });
+  // decoderConfig arrives on the first chunk's metadata and is what mp4-muxer
+  // needs to write avcC/colr. Tracking it turns an unguarded dereference inside
+  // finalize() into a message that says what to do. Encoder errors are captured
+  // rather than logged, so a failed encode cannot finish as a silent no-op.
+  let sawDecoderConfig = false;
+  let encoderError: unknown = null;
   const encoder = new VideoEncoder({
-    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: (e) => console.error(e),
+    output: (chunk, meta) => {
+      if (meta?.decoderConfig) sawDecoderConfig = true;
+      muxer.addVideoChunk(chunk, meta);
+    },
+    error: (e) => {
+      encoderError ??= e;
+    },
   });
   encoder.configure({ codec, width: w, height: h, bitrate, framerate: fps });
 
@@ -142,6 +237,8 @@ export async function exportTitleMp4({
   }
 
   await encoder.flush();
+  if (encoderError) throw encoderError;
+  if (!sawDecoderConfig) throw new Error(MP4_UNSUPPORTED);
   muxer.finalize();
   const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
   const a = document.createElement("a");
