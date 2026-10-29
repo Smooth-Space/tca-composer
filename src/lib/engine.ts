@@ -138,7 +138,14 @@ export function computeAxes(
   const N = chars.length;
   return chars.map((_, i) => {
     const t = N > 1 ? i / (N - 1) : 0;
-    const d = distAt(cfg, t, amplitude, phase, override?.forceDistribution, override?.forceAmplitude);
+    const d = distAt(
+      cfg,
+      t,
+      amplitude,
+      phase,
+      override?.forceDistribution,
+      override?.forceAmplitude,
+    );
     return {
       wght: q(axisValue(cfg.wght, d)),
       SRFF: q(axisValue(cfg.SRFF, d)),

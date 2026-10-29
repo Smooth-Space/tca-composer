@@ -183,9 +183,7 @@ export function TemplateA({
       titleAnchor,
     );
     const outerPad = titleRowActive ? 130 : 40;
-    const titlePadding = imageTop
-      ? `40px 40px ${outerPad}px 40px`
-      : `${outerPad}px 40px 40px 40px`;
+    const titlePadding = imageTop ? `40px 40px ${outerPad}px 40px` : `${outerPad}px 40px 40px 40px`;
     const imageHalf = (
       <div
         style={

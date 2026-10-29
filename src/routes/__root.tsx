@@ -78,7 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // is how "author: Lovable" survived a rename that only touched the route —
       // the two copies drifted and the un-overridden tags shipped to production.
       { title: "The Contemporary Austin — Composer" },
-      { name: "description", content: "A typographic composition tool for The Contemporary Austin." },
+      {
+        name: "description",
+        content: "A typographic composition tool for The Contemporary Austin.",
+      },
       { name: "author", content: "The Contemporary Austin" },
       { property: "og:title", content: "The Contemporary Austin — Composer" },
       {

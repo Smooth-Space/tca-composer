@@ -65,7 +65,7 @@ position `t` is the index over the total count, never per-row.
 - [`src/lib/palette.ts`](src/lib/palette.ts) — the role model. Fields pick named
   roles, not raw steps: **Light(4) / Brand(9) / Brand Shade(10) / Dark(11)**.
   `LEGAL_FG` is a fixed, verified legality table gating which foreground roles
-  are allowed per background — selection is *not* gated by a live contrast
+  are allowed per background — selection is _not_ gated by a live contrast
   check. Gray is a separate system using raw steps 1/2/12 with its own legality,
   plus a gray↔chromatic bridge (`grayAsRole`) for mixed-hue mode. The one
   substitution in the system: Brand foreground on a Light background renders as

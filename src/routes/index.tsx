@@ -76,9 +76,11 @@ function Composer() {
   const [exportingMp4, setExportingMp4] = useState(false);
   const [mp4Progress, setMp4Progress] = useState(0);
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null);
-  const [focusReq, setFocusReq] = useState<{ id: string | null; mode: "end" | "all"; nonce: number }>(
-    { id: null, mode: "end", nonce: 0 },
-  );
+  const [focusReq, setFocusReq] = useState<{
+    id: string | null;
+    mode: "end" | "all";
+    nonce: number;
+  }>({ id: null, mode: "end", nonce: 0 });
   const onRequestEdit = (id: string, mode: "end" | "all") => {
     setSelectedTitleId(id);
     setFocusReq((r) => ({ id, mode, nonce: r.nonce + 1 }));
@@ -299,7 +301,9 @@ function Composer() {
           const p = (basePhase + i / total) % 1;
           setExportPhase(p);
           // Two rAF ticks: first for React to commit, second for the browser to paint.
-          await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+          await new Promise<void>((r) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => r())),
+          );
           return toCanvas(node, captureOpts);
         },
         onProgress: setMp4Progress,

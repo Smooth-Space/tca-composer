@@ -196,7 +196,11 @@ function ContrastReadout({ label, ratio }: { label: string; ratio: number }) {
             pass ? "text-success" : "text-muted-foreground",
           )}
         >
-          {pass ? <Check className="h-3 w-3" strokeWidth={3} /> : <X className="h-3 w-3" strokeWidth={3} />}
+          {pass ? (
+            <Check className="h-3 w-3" strokeWidth={3} />
+          ) : (
+            <X className="h-3 w-3" strokeWidth={3} />
+          )}
           {pass ? "AA" : "fail"}
         </span>
       </span>
@@ -390,7 +394,11 @@ export function PaletteControls({
         <div className="space-y-2">
           <Label className="text-xs font-semibold text-foreground">Background</Label>
           {isMixed && (
-            <HuePicker label="Background hue" value={p.hueB} onChange={(v) => reland({ hueB: v })} />
+            <HuePicker
+              label="Background hue"
+              value={p.hueB}
+              onChange={(v) => reland({ hueB: v })}
+            />
           )}
           {backgroundChips}
         </div>

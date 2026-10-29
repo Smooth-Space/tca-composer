@@ -194,7 +194,16 @@ export function TitleBlock({
     const widths = letters.map((el) => el.offsetWidth);
     letters.forEach((el, i) => (el.style.width = `${widths[i]}px`));
     return () => letters.forEach((el) => (el.style.width = ""));
-  }, [animActive, fontsReady, flatChars, titleMode, titleSeed, titleAmplitude, renderSize, shiftEnabled]);
+  }, [
+    animActive,
+    fontsReady,
+    flatChars,
+    titleMode,
+    titleSeed,
+    titleAmplitude,
+    renderSize,
+    shiftEnabled,
+  ]);
 
   const renderSpans = (row: string, r: number, animatable = false) => (
     <TitleSpans

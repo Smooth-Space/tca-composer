@@ -39,10 +39,38 @@ export interface CaptionSlot {
 
 export const TEMPLATE_CAPTIONS: Record<Template, CaptionSlot[]> = {
   A: [
-    { key: "text1", anchor: "top", column: "left", align: "left", label: "Text 1", descriptor: "top-left" },
-    { key: "text2", anchor: "top", column: "right", align: "left", label: "Text 2", descriptor: "top-right" },
-    { key: "text3", anchor: "bottom", column: "left", align: "left", label: "Text 3", descriptor: "bottom-left" },
-    { key: "text4", anchor: "bottom", column: "right", align: "left", label: "Text 4", descriptor: "bottom-right" },
+    {
+      key: "text1",
+      anchor: "top",
+      column: "left",
+      align: "left",
+      label: "Text 1",
+      descriptor: "top-left",
+    },
+    {
+      key: "text2",
+      anchor: "top",
+      column: "right",
+      align: "left",
+      label: "Text 2",
+      descriptor: "top-right",
+    },
+    {
+      key: "text3",
+      anchor: "bottom",
+      column: "left",
+      align: "left",
+      label: "Text 3",
+      descriptor: "bottom-left",
+    },
+    {
+      key: "text4",
+      anchor: "bottom",
+      column: "right",
+      align: "left",
+      label: "Text 4",
+      descriptor: "bottom-right",
+    },
   ],
   D: [
     { key: "text1", anchor: "middle", column: "left", align: "left", label: "Text 1" },
