@@ -1,10 +1,13 @@
-export const TITLE_FONT = "'ABC Arizona Plus Variable'";
+export const TITLE_FONT = "'ABC Arizona Superfamily Variable'";
 export const TITLE_LETTER_SPACING = "-0.05em";
 export const TITLE_LINE_HEIGHT = 0.85;
-export const CAPTION_FONT = "'ABC Arizona Plus Variable'";
+// Captions previously pinned the variable font to wght 400 / SRFF 0 / wdth 100,
+// which is the static Arizona Sans Regular by another route. Using the real
+// static face instead means captions paint off a 58KB download rather than
+// waiting on the 1.2MB variable, and there are no axes left to set.
+export const CAPTION_FONT = "'ABC Arizona Sans'";
 export const CAPTION_SIZE_PX = 36;
 export const CAPTION_LINE_HEIGHT = 1.1;
-export const CAPTION_VARIATION = "'wght' 400, 'SRFF' 0, 'wdth' 100";
 
 import { makeRng } from "@/lib/engine";
 

@@ -4,7 +4,9 @@ import { titleDisplay, applyItalic } from "@/lib/titleItalic";
 import { shiftOffsets } from "@/lib/typo";
 import type { Composition } from "@/lib/composition";
 
-const FONT_URL = "/fonts/ABCArizonaPlusVariable-Trial.ttf";
+// .ttf, not the .woff2 the CSS uses: fontkit reads woff2 metadata but throws
+// on its cmap, so glyph layout needs the uncompressed face.
+const FONT_URL = "/fonts/ABCArizonaSuperfamilyVariable.ttf";
 // Exported solely so the renderer-parity test can assert these stay in step with
 // TITLE_LETTER_SPACING / TITLE_LINE_HEIGHT in lib/typo.ts. This file deliberately
 // keeps its own copies (glyph-path layout, not CSS) — the test is what stops the

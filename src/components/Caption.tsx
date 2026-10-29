@@ -1,4 +1,4 @@
-import { CAPTION_FONT, CAPTION_LINE_HEIGHT, CAPTION_SIZE_PX, CAPTION_VARIATION } from "@/lib/typo";
+import { CAPTION_FONT, CAPTION_LINE_HEIGHT, CAPTION_SIZE_PX } from "@/lib/typo";
 import type { Align, CaptionKey } from "@/lib/composition";
 import { useSelectable } from "@/components/SelectionContext";
 
@@ -30,7 +30,6 @@ export function Caption({
         overflowWrap: "anywhere",
         textAlign: align,
         fontFamily: CAPTION_FONT,
-        fontVariationSettings: CAPTION_VARIATION,
         fontSize: CAPTION_SIZE_PX,
         lineHeight: CAPTION_LINE_HEIGHT,
         color,

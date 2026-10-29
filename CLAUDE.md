@@ -1,7 +1,7 @@
 # TCA Composer
 
 Browser-based typographic tool for The Contemporary Austin. A designer composes
-title/caption layouts over templates using ABC Arizona Plus Variable, with
+title/caption layouts over templates using ABC Arizona Superfamily Variable, with
 per-character variable-axis styling that produces a "wave" across the text.
 Exports to JPG, MP4, and SVG.
 
@@ -85,9 +85,24 @@ position `t` is the index over the total count, never per-row.
 - Templates are `freeform` / `A` / `D`. SVG export is offered for `freeform`
   only, and renders `fill="#000000"` on a hardcoded white artboard — outside the
   palette system by design.
-- Two copies of the font ship: `styles.css` loads the `.woff2`, `freeformSvg.ts`
-  fetches the `-Trial.ttf`. They're currently identical files. Swapping in the
-  licensed font means updating **both** references.
+- **Fonts are licensed** (Dinamo). Three files in `public/fonts`:
+  - `ABCArizonaSuperfamilyVariable.woff2` (1.2MB) — the `@font-face` the CSS path
+    uses for titles.
+  - `ABCArizonaSuperfamilyVariable.ttf` (4.2MB) — the same face, fetched lazily by
+    `freeformSvg.ts` for SVG export only. It is a separate file because **fontkit
+    cannot lay out woff2** — it reads the metadata but throws on the cmap. Both
+    must be replaced together; `fonts.test.ts` asserts they stay the same face.
+  - `ABCArizonaSans-Regular.woff2` (58KB) — static, captions only. Captions sit at
+    fixed axes, so they use the real static face and paint without waiting on the
+    variable font.
+- `wdth: 85` means something different here than it did under the trial font. The
+  trial's axis ran 65..100, the licensed one runs 50..100, so the same number
+  interpolates further toward the wide master — type sets ~3% wider than it did
+  before v1.13. The clamp is deliberate brand styling; `81` would reproduce the
+  old trial rendering if that is ever wanted.
+- `fonts.test.ts` fails if any file in `public/fonts` carries a trial marker in
+  its name table. The trial `.woff2` shipped for months partly because its
+  _filename_ looked clean — only the internal name said "Unlicensed Trial".
 
 ## Working agreements
 

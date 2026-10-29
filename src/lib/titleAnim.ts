@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const TITLE_FONT_FAMILY = "ABC Arizona Plus Variable";
+const TITLE_FONT_FAMILY = "ABC Arizona Superfamily Variable";
 
 /**
  * True once the variable title font has finished loading/parsing.

@@ -4,11 +4,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Licensed ABC Arizona, from Dinamo. Two faces, two jobs:
+ *
+ * 1. Superfamily Variable drives the title — every character carries its own
+ *    font-variation-settings (see lib/engine.ts). The declared weight/stretch
+ *    ranges below are deliberately narrower than the font's own (wght 200..700,
+ *    wdth 50..100): the clamp is brand styling, not a limitation.
+ * 2. Arizona Sans Regular is a static face used only for captions, which sit at
+ *    fixed axes anyway. It is 58KB against the variable's 1.2MB, so captions
+ *    paint without waiting on the variable font.
+ *
+ * A third copy of the variable font ships as .ttf for the SVG exporter — fontkit
+ * cannot lay out woff2 (it reads the metadata but throws on cmap), which is why
+ * the two formats both exist. See lib/freeformSvg.ts.
+ */
 @font-face {
-  font-family: "ABC Arizona Plus Variable";
-  src: url("/fonts/ABCArizonaPlusVariable.woff2") format("woff2-variations");
+  font-family: "ABC Arizona Superfamily Variable";
+  src: url("/fonts/ABCArizonaSuperfamilyVariable.woff2") format("woff2-variations");
   font-weight: 250 625;
   font-stretch: 85% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ABC Arizona Sans";
+  src: url("/fonts/ABCArizonaSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
