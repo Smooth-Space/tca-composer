@@ -5,8 +5,12 @@ import { shiftOffsets } from "@/lib/typo";
 import type { Composition } from "@/lib/composition";
 
 const FONT_URL = "/fonts/ABCArizonaPlusVariable-Trial.ttf";
-const LETTER_SPACING_EM = -0.05;
-const LINE_HEIGHT = 0.85;
+// Exported solely so the renderer-parity test can assert these stay in step with
+// TITLE_LETTER_SPACING / TITLE_LINE_HEIGHT in lib/typo.ts. This file deliberately
+// keeps its own copies (glyph-path layout, not CSS) — the test is what stops the
+// two renderers drifting apart silently.
+export const LETTER_SPACING_EM = -0.05;
+export const LINE_HEIGHT = 0.85;
 
 let fontPromise: Promise<any> | null = null;
 async function loadFont() {
