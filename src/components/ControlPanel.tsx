@@ -20,6 +20,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { applySmartQuoteAt, isStraightQuote } from "@/lib/smartQuotes";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -175,16 +176,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const AutoTextarea = forwardRef<HTMLTextAreaElement, React.ComponentProps<typeof Textarea>>(
-  function AutoTextarea({ onFocus, ...props }, ref) {
+  function AutoTextarea({ onFocus, onChange, ...props }, ref) {
     const grow = (el: HTMLTextAreaElement | null) => {
       if (!el) return;
       el.style.height = "auto";
       el.style.height = `${el.scrollHeight}px`;
     };
+
+    // Curly quotes, applied to the single character just typed. Every title and
+    // caption field goes through this wrapper, so this is the only place it needs
+    // to live.
+    //
+    // Scoped to inputType "insertText" on purpose: a paste arrives as
+    // insertFromPaste and is left exactly as pasted, which is how an inch mark in
+    // "36 × 24"" survives. Replacement is always one character for one, so the
+    // caret the browser already set stays correct and selection is untouched.
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const native = e.nativeEvent as InputEvent;
+      if (native?.inputType === "insertText" && isStraightQuote(native.data ?? "")) {
+        const el = e.currentTarget;
+        const caret = el.selectionStart ?? 0;
+        const i = caret - 1;
+        if (el.value[i] === native.data) {
+          // Mutating the node before delegating means e.target.value already reads
+          // the curly form, so every consumer stays a plain (e) => e.target.value.
+          el.value = applySmartQuoteAt(el.value, i);
+          el.setSelectionRange(caret, caret);
+        }
+      }
+      onChange?.(e);
+    };
+
     return (
       <Textarea
         {...props}
         ref={ref}
+        onChange={handleChange}
         onInput={(e) => grow(e.currentTarget)}
         onFocus={(e) => {
           grow(e.currentTarget);
