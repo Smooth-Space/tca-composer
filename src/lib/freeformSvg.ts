@@ -1,4 +1,4 @@
-import { create } from "fontkit";
+import { create, type Font } from "fontkit";
 import { computeAxes, type Axes } from "@/lib/engine";
 import { titleDisplay, applyItalic } from "@/lib/titleItalic";
 import { shiftOffsets } from "@/lib/typo";
@@ -12,12 +12,14 @@ const FONT_URL = "/fonts/ABCArizonaPlusVariable-Trial.ttf";
 export const LETTER_SPACING_EM = -0.05;
 export const LINE_HEIGHT = 0.85;
 
-let fontPromise: Promise<any> | null = null;
+let fontPromise: Promise<Font> | null = null;
 async function loadFont() {
   if (!fontPromise) {
     fontPromise = fetch(FONT_URL)
       .then((r) => r.arrayBuffer())
-      .then((buf) => create(new Uint8Array(buf) as unknown as Buffer));
+      // create() is typed Font | FontCollection; the Arizona .ttf is a single
+      // face, never a .ttc collection, so this narrows rather than guesses.
+      .then((buf) => create(new Uint8Array(buf) as unknown as Buffer) as Font);
   }
   return fontPromise;
 }
@@ -37,7 +39,7 @@ interface BuiltLine {
 
 // Lay out one line at fontSize S with per-glyph variation axes; x starts at 0.
 function buildLine(
-  font: any,
+  font: Font,
   chars: string[],
   axes: Axes[],
   startIdx: number,
@@ -82,7 +84,7 @@ function buildLine(
 }
 
 function lineNaturalWidthFactor(
-  font: any,
+  font: Font,
   chars: string[],
   axes: Axes[],
   startIdx: number,

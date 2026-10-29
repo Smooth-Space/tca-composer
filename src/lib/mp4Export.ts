@@ -5,7 +5,7 @@ const CODECS = ["avc1.640028", "avc1.640032", "avc1.4d0028"]; // High@4.0, High@
 async function pickCodec(w: number, h: number, fps: number, bitrate: number) {
   for (const codec of CODECS) {
     try {
-      const { supported } = await (window as any).VideoEncoder.isConfigSupported({
+      const { supported } = await VideoEncoder.isConfigSupported({
         codec,
         width: w,
         height: h,
