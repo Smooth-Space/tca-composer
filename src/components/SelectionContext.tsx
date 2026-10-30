@@ -49,10 +49,17 @@ export function useSelectable(id: string | null) {
       e.stopPropagation();
       if (id) onRequestEdit(id, "all");
     },
+    // Deliberately no selection outline. The artboard is a preview of the
+    // exported artwork, so nothing should sit on top of it that will not be in
+    // the export — the 2px blue ring that used to live here was off-palette and
+    // framed the composition at exactly the moment you were trying to judge it.
+    //
+    // Selection stays legible without it: clicking an element focuses its field
+    // in the control panel, and cursor:text marks the element as editable. If a
+    // canvas indicator is ever wanted again, it belongs in the TCA palette and
+    // must stay gated on hideSelection so it cannot reach an export.
     selectableStyle: {
       cursor: "text",
-      outline: selected && !hideSelection ? "2px solid rgba(80,120,255,0.7)" : "none",
-      outlineOffset: 4,
     } as React.CSSProperties,
   };
 }
